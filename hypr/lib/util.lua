@@ -22,6 +22,17 @@ function require_optional(name)
     return false
 end
 
+-- The first of `names` that is a command in $PATH, else the first name.
+-- Looks at the directories itself, so a config load starts no process.
+function first_available(names)
+    for _, name in ipairs(names) do
+        for dir in (os.getenv("PATH") or ""):gmatch("[^:]+") do
+            if file_exists(dir .. "/" .. name) then return name end
+        end
+    end
+    return names[1]
+end
+
 -- Absolute workspace id for slot `i` (1..10) inside the current group of
 -- `workspaceGroupSize` workspaces, so SUPER+1 on workspace 13 goes to 11.
 function workspace_in_group(i)

@@ -3,8 +3,7 @@
 -- Load order is fixed and every setting has exactly one home, so nothing
 -- silently overrides anything else. Machine-written files load last:
 --   generated/colors.lua    matugen (wallpaper colors)
---   generated/monitors.lua  settings app, Displays page (per machine; else the
---                           older tracked monitors.lua)
+--   generated/monitors.lua  install.sh and the settings app's Displays page (per machine)
 --   core/settings.lua       settings app choices (~/.config/someshell/hypr.json)
 
 require("lib.util")
@@ -35,7 +34,5 @@ end
 -- Any output the monitors file does not name: its fastest mode, so a new machine
 -- does not start at 60 Hz on a high-refresh panel.
 hl.monitor({ output = "", mode = "highrr", position = "auto", scale = 1 })
-if not require_optional("generated.monitors") then
-    require_optional("monitors")
-end
+require_optional("generated.monitors")
 require("core.settings")

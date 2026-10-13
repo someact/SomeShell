@@ -278,6 +278,26 @@ unlink_one() {
     done
 }
 
+# The repo's keyboard layout is plain "us". A machine that already ran with
+# other layouts (from this repo's older default or another config) keeps them,
+# as a setting, unless one is saved already.
+keep_layout() {
+    local file="$CONFIG/someshell/hypr.json"
+    [[ -n "$LAYOUT_BEFORE" && "$LAYOUT_BEFORE" != "us" ]] || return 0
+    command -v jq >/dev/null || return 0
+    if [[ ! -f "$file" ]]; then
+        mkdir -p "$(dirname "$file")"
+        echo '{}' >"$file"
+    fi
+    [[ -z "$(jq -r '.hyprland.input.kb_layout // empty' "$file" 2>/dev/null)" ]] || return 0
+    if jq --arg l "$LAYOUT_BEFORE" '.hyprland.input.kb_layout = $l' "$file" >"$file.new" 2>/dev/null; then
+        mv "$file.new" "$file"
+        ok "kept the keyboard layout: $LAYOUT_BEFORE"
+    else
+        rm -f "$file.new"
+    fi
+}
+
 # --- Migration from SomeHypr ---------------------------------------------------
 
 # Moves what the old name left behind to the new one. Every step checks first,
@@ -442,6 +462,12 @@ done
 
 [[ $EUID -ne 0 ]] || die "Run as your user, not root (it asks for sudo when needed)"
 
+# Read before a pull or relink can change it (Hyprland reloads when its files change)
+LAYOUT_BEFORE=""
+if hypr_running; then
+    LAYOUT_BEFORE="$(hyprctl getoption input:kb_layout -j 2>/dev/null | jq -r '.str // empty' 2>/dev/null || true)"
+fi
+
 case "$MODE" in
     check)
         verify
@@ -468,6 +494,7 @@ setup_services
 verify || die "Config does not verify, nothing linked"
 carry_state
 migrate_legacy
+keep_layout
 say "Links"
 for entry in "${LINKS[@]}"; do link_one "${entry%%:*}" "${entry#*:}"; done
 screens

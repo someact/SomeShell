@@ -9,17 +9,22 @@ Command {
     name: "project"
     icon: "folder_code"
     args: "<name>"
-    description: "Open a project in the code editor"
+    description: dir !== "" ? "Open a project in the code editor" : "Set a projects folder in Settings → Island → Search"
 
+    // Config.search.projectsDir; without one the command lists nothing
+    readonly property string dir: Config.search.projectsDir.replace(/^~/, Paths.home).replace(/\/+$/, "")
+    onDirChanged: projects = []
     property var projects: []
     property string editor: "code"
 
     function run(arg) {
         const hit = suggest(arg)[0];
         if (hit)
-            Quickshell.execDetached(["sh", "-c", root.editor + ' "$1"', "_", Paths.projects + "/" + hit.value]);
+            Quickshell.execDetached(["sh", "-c", root.editor + ' "$1"', "_", dir + "/" + hit.value]);
     }
     function suggest(arg) {
+        if (dir === "")
+            return [];
         if (projects.length === 0)
             scan.running = true;
         if (arg === "")
@@ -29,7 +34,7 @@ Command {
 
     // Project list and the editor from hypr/user.lua, read once on first use
     property Process scan: Process {
-        command: ["sh", "-c", 'ls -1 "$1"; echo "--editor--"; hyprctl repl "return codeEditor"', "_", Paths.projects]
+        command: ["sh", "-c", 'ls -1 "$1"; echo "--editor--"; hyprctl repl "return codeEditor"', "_", root.dir]
         stdout: StdioCollector {
             onStreamFinished: {
                 const parts = text.split("--editor--");

@@ -46,7 +46,6 @@ Singleton {
     readonly property string monitors: hyprDir + "/generated/monitors.lua"   // written by the Displays page (per machine, gitignored)
     readonly property string scripts: hyprDir + "/scripts"
     readonly property string wallpapers: home + "/Pictures/Wallpapers"
-    readonly property string projects: "/mnt/ssd_backup/Projects"
 
     function url(path) {
         return path.startsWith("file://") ? path : "file://" + path;

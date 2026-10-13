@@ -107,6 +107,7 @@ Singleton {
             }
             property JsonObject search: JsonObject {
                 property int maxResults: 8
+                property string projectsDir: ""       // /project lists its folders; empty: the command is off
             }
             property JsonObject notifications: JsonObject {
                 property bool dnd: false
@@ -117,7 +118,7 @@ Singleton {
                 // intelli: hide while a window covers it · auto: show on hover only · never: always shown, reserves space
                 property string autohide: "intelli"
                 property int iconSize: 44
-                property list<string> pinned: ["org.kde.dolphin", "kitty", "brave-origin", "antigravity"]
+                property list<string> pinned: ["org.kde.dolphin", "kitty", "zen"]
             }
             property JsonObject overview: JsonObject {
                 property int rows: 2
@@ -130,7 +131,7 @@ Singleton {
                 property string shotDir: ""           // empty: ~/Pictures/Screenshots
                 property string recordDir: ""         // empty: ~/Videos
                 property string encoder: "auto"       // wf-recorder -c: auto (NVENC with an NVIDIA GPU, else x264) | h264_nvenc | libx264
-                property string translateTo: "th"     // translate-shell target language
+                property string translateTo: "en"     // translate-shell target language
                 property bool snapWindows: true       // click a window to select it
             }
             property JsonObject overlay: JsonObject {

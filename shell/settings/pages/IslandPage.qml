@@ -297,6 +297,19 @@ Page {
                 onMoved: v => Config.search.maxResults = v
             }
         }
+        SettingRow {
+            icon: "folder_code"
+            title: "Projects folder"
+            subtitle: "/project opens one of its folders in the code editor"
+            changed: Config.search.projectsDir !== ""
+            onReset: Config.search.projectsDir = ""
+            Field {
+                implicitWidth: 260
+                placeholder: "~/Projects"
+                text: Config.search.projectsDir
+                onCommitted: t => Config.search.projectsDir = t.trim()
+            }
+        }
     }
 
     Section {
