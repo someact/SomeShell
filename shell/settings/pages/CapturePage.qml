@@ -60,9 +60,9 @@ Page {
         SettingRow {
             icon: "memory"
             title: "Encoder"
-            subtitle: Config.capture.encoder === "h264_nvenc" ? "NVIDIA hardware encoder: almost no CPU, fine for games" : "Software x264: smaller files, uses the CPU"
+            subtitle: Config.capture.encoder === "h264_nvenc" ? "NVIDIA hardware encoder: almost no CPU, fine for games" : Config.capture.encoder === "libx264" ? "Software x264: smaller files, uses the CPU" : "NVENC with an NVIDIA GPU, x264 otherwise"
             Choice {
-                model: [{ value: "h264_nvenc", label: "NVENC" }, { value: "libx264", label: "x264" }]
+                model: [{ value: "auto", label: "Auto" }, { value: "h264_nvenc", label: "NVENC" }, { value: "libx264", label: "x264" }]
                 value: Config.capture.encoder
                 onPicked: v => Config.capture.encoder = v
             }

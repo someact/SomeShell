@@ -7,8 +7,9 @@ import Quickshell.Hyprland
 import qs.core
 
 // Screen recording with wf-recorder, owned by the shell so the island knows
-// when it runs. NVENC by default (Config.capture.encoder); stopping sends
-// SIGINT so the file is finalized. The CLI fallback (hypr/scripts/record.sh)
+// when it runs. Config.capture.encoder picks the encoder (auto: NVENC with an
+// NVIDIA GPU, x264 otherwise); stopping sends SIGINT so the file is
+// finalized. The CLI fallback (hypr/scripts/record.sh)
 // only runs while the shell is down.
 Singleton {
     id: root
@@ -33,7 +34,9 @@ Singleton {
         root.file = `${dir}/recording_${stamp}.mp4`;
         root.sound = !!withSound;
         const args = ["wf-recorder", "-y", "-f", root.file];
-        const enc = Config.capture.encoder;
+        let enc = Config.capture.encoder;
+        if (enc === "auto")
+            enc = Gpu.nvidia ? "h264_nvenc" : "libx264";
         if (enc === "h264_nvenc")
             args.push("-c", enc, "-p", "preset=p5", "-p", "rc=vbr", "-p", "cq=23");
         else if (enc !== "")

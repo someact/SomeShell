@@ -59,5 +59,6 @@ ShellRoot {
     Component.onCompleted: {
         Schedule.check();
         GameClients.pids;
+        Gpu.nvidia;     // detected before anything asks (singletons load on first use)
     }
 }

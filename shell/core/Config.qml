@@ -129,7 +129,7 @@ Singleton {
                 property bool saveShots: false        // also save region shots (always copied)
                 property string shotDir: ""           // empty: ~/Pictures/Screenshots
                 property string recordDir: ""         // empty: ~/Videos
-                property string encoder: "h264_nvenc" // wf-recorder -c (libx264 for CPU encoding)
+                property string encoder: "auto"       // wf-recorder -c: auto (NVENC with an NVIDIA GPU, else x264) | h264_nvenc | libx264
                 property string translateTo: "th"     // translate-shell target language
                 property bool snapWindows: true       // click a window to select it
             }
