@@ -24,7 +24,7 @@ Phases 0–11 (Hyprland Lua rewrite, the shell, wallpaper and theming, dock, ove
 - [ ] On the other machine: `git remote set-url origin https://github.com/someact/SomeShell && ./install.sh --update`
 - [ ] Vesktop: turn on `someshell.theme.css` (the theme file has a new name)
 
-### 12b Fixes from the code review (2026-10-14)
+### 12b Fixes from the code review (2026-10-14) ✅
 Most of these only break on a machine that is not the one the code was written on.
 - [x] 1. The shell forces the NVIDIA EGL vendor file (`shell.qml`, `settings.qml` pragma), so it cannot start on AMD/Intel or a hybrid laptop. Move it to a launcher that sets it only when NVIDIA is the only GPU — done in `hypr/scripts/shell.sh`; AMD/Intel path untested here
 - [x] 2. Recording defaults to `h264_nvenc`. Default `auto`: NVENC with an NVIDIA GPU, else x264 — `services/Gpu.qml`; the x264 path was recorded once here
@@ -37,7 +37,7 @@ Most of these only break on a machine that is not the one the code was written o
 - [x] 9. The location lookup for weather and sun times uses plain http
 - [x] 10. `HYPR_DIR`, `record.sh` and the Appearance page ignore `XDG_CONFIG_HOME` — hypridle.conf and hyprlock.conf still name ~/.config (their format has no variable for it)
 - [x] 11. Game mode forced on followed by `hyprctl reload` left the shell showing game mode for good: the shell now reads the state again after every reload (a forced mode ends with the reload). The suspected first-run write race (`config.json`, `wallpaper.json` right after a detached `mkdir -p`) did not reproduce in three fresh starts each, so nothing changed there
-- [x] 12. Small: a failed `grim` shows a message; night light checks `hyprsunset` again after a toggle
+- [x] 12. Small: a failed `grim` shows a message; night light checks `hyprsunset` again after a toggle (not toggled by hand yet)
 
 ## Phase 13: Features
 
@@ -78,6 +78,7 @@ Carried over from Phase 11. The repo is already public.
 - [ ] `scripts/check.sh`: the CLAUDE.md checks plus shellcheck in one command
 - [ ] `services/Brightness.qml` takes the first backlight device by name; `services/Lock.qml` sizes the blurred backdrop from the first screen only
 - [ ] `hypr/scripts/fuzzel-emoji.sh` is 1,950 lines of data inside a script
+- [ ] Saved screenshots are named with `date`, which follows the locale calendar (year 2569 under `th_TH`), while recordings use Qt and say 2026
 
 ## Verification
 
