@@ -35,7 +35,7 @@ Most of these only break on a machine that is not the one the code was written o
 - [x] 7. `install.sh` does not install `ffmpeg`, `libnotify`, `hyprsunset`, `kdialog`, `libqalculate`, `xdg-utils`, which the shell runs
 - [x] 8. `Capture.qml` builds shell strings with paths inside quotes; the OCR command is written twice; the fallback scripts use fixed `/tmp` file names — snippets run against a folder with a quote and a space; a drag in the picker is a hands-on check
 - [x] 9. The location lookup for weather and sun times uses plain http
-- [ ] 10. `HYPR_DIR`, `record.sh` and the Appearance page ignore `XDG_CONFIG_HOME`
+- [x] 10. `HYPR_DIR`, `record.sh` and the Appearance page ignore `XDG_CONFIG_HOME` — hypridle.conf and hyprlock.conf still name ~/.config (their format has no variable for it)
 - [ ] 11. To verify first: the first run writes `config.json` and `wallpaper.json` right after a detached `mkdir -p`; game mode forced on followed by `hyprctl reload` may leave the shell showing a stale state
 - [ ] 12. Small: a failed `grim` says nothing; night light shows "on" when `hyprsunset` is missing
 

@@ -90,12 +90,12 @@ Page {
     Process {
         id: checkBuilt
         running: true
-        command: ["sh", "-c", "test -f \"$(" + Quickshell.env("HOME") + "/.config/hypr/scripts/hyprglass.sh --path)\""]
+        command: ["sh", "-c", 'test -f "$("$1" --path)"', "sh", Paths.scripts + "/hyprglass.sh"]
         onExited: code => page.pluginBuilt = code === 0
     }
     Process {
         id: build
-        command: [Quickshell.env("HOME") + "/.config/hypr/scripts/hyprglass.sh"]
+        command: [Paths.scripts + "/hyprglass.sh"]
         stderr: StdioCollector {
             id: buildErr
         }

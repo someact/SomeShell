@@ -1,7 +1,8 @@
 -- Small helpers shared by every other module. Loaded first by hyprland.lua.
 
 HOME = os.getenv("HOME")
-HYPR_DIR = HOME .. "/.config/hypr"
+CONFIG_HOME = os.getenv("XDG_CONFIG_HOME") or HOME .. "/.config"
+HYPR_DIR = CONFIG_HOME .. "/hypr"
 
 function file_exists(path)
     local f = io.open(path, "r")
@@ -51,7 +52,7 @@ function matches_any(s, patterns)
 end
 
 JSON = require("lib.json")
-SOMESHELL_DIR = (os.getenv("XDG_CONFIG_HOME") or HOME .. "/.config") .. "/someshell"
+SOMESHELL_DIR = CONFIG_HOME .. "/someshell"
 
 -- Choices made in the settings app (~/.config/someshell/hypr.json). The file only
 -- holds what was changed there, so the repo defaults apply to everything else.
