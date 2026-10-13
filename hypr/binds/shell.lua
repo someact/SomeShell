@@ -37,7 +37,7 @@ SHELL_ACTIONS = {
 
 -- Shell commands that are not global shortcuts
 SHELL_COMMANDS = {
-    restart  = "killall qs quickshell; qs -c someshell &",
+    restart  = "killall qs quickshell; " .. scripts .. "/shell.sh &",
     settings = "qs -c someshell ipc call settings open",
 }
 

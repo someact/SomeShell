@@ -1,7 +1,6 @@
 //@ pragma UseQApplication
 //@ pragma Env QS_NO_RELOAD_POPUP=1
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
-//@ pragma Env __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
 
 // SomeShell settings app: `qs -p ~/.config/quickshell/someshell/settings.qml`
 // (or `qs -c someshell ipc call settings open`). Its own process, so it costs

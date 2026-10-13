@@ -388,8 +388,8 @@ start_shell() {
     if qs -c someshell ipc call island state >/dev/null 2>&1; then
         ok "SomeShell shell running"
     else
-        hyprctl dispatch exec "qs -c someshell" >/dev/null 2>&1 ||
-            hyprctl eval 'hl.exec_cmd("qs -c someshell")' >/dev/null
+        hyprctl dispatch exec "$REPO/hypr/scripts/shell.sh" >/dev/null 2>&1 ||
+            hyprctl eval "hl.exec_cmd(\"$REPO/hypr/scripts/shell.sh\")" >/dev/null
         local i
         for i in {1..20}; do
             qs -c someshell ipc call island state >/dev/null 2>&1 && break
