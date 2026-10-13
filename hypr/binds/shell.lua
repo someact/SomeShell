@@ -4,9 +4,9 @@
 
 local scripts = HYPR_DIR .. "/scripts"
 
-local ocr = "grim -g \"$(slurp $SLURP_ARGS)\" /tmp/ocr_image.png && "
-    .. "tesseract /tmp/ocr_image.png stdout -l $(tesseract --list-langs | awk 'NR>1{print $1}' | paste -sd+) | wl-copy; "
-    .. "rm -f /tmp/ocr_image.png"
+local ocr = "f=$(mktemp --tmpdir=\"${XDG_RUNTIME_DIR:-/tmp}\" someshell-ocr.XXXXXX.png) && grim -g \"$(slurp $SLURP_ARGS)\" \"$f\" && "
+    .. "tesseract \"$f\" stdout -l $(tesseract --list-langs | awk 'NR>1{print $1}' | paste -sd+) | wl-copy; "
+    .. "rm -f \"$f\""
 
 SHELL_ACTIONS = {
     search           = { name = "searchToggleRelease", fallback = "pkill fuzzel || fuzzel" },

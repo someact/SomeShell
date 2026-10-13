@@ -70,26 +70,23 @@ Singleton {
         selecting = false;
         const s = scale;
         const g = `${Math.round(r.width * s)}x${Math.round(r.height * s)}+${Math.round(r.x * s)}+${Math.round(r.y * s)}`;
-        const crop = `magick '${Paths.freeze}' -crop ${g} +repage`;
         if (r.width < 2 || r.height < 2)
             return;
 
         switch (mode) {
         case "shot":
             if (edit) {
-                run(`${crop} png:- | swappy -f -`);
+                run(crop + ' png:- | swappy -f -', g);
             } else if (Config.capture.saveShots) {
-                const dir = Config.capture.shotDir || Paths.screenshots;
-                run(`mkdir -p '${dir}' && f='${dir}'/Screenshot_$(date '+%Y-%m-%d_%H.%M.%S').png && ${crop} "$f" && wl-copy -t image/png < "$f"`);
+                run('mkdir -p "$3" && f="$3/Screenshot_$(date +%Y-%m-%d_%H.%M.%S).png" && ' + crop + ' "$f" && wl-copy -t image/png < "$f"', g, Config.capture.shotDir || Paths.screenshots);
                 Osd.show("capture", "screenshot_region", -1, "Copied and saved");
             } else {
-                run(`${crop} png:- | wl-copy -t image/png`);
+                run(crop + ' png:- | wl-copy -t image/png', g);
                 Osd.show("capture", "screenshot_region", -1, "Screenshot copied");
             }
             break;
         case "ocr":
-            ocr.command = ["sh", "-c", `${crop} '${Paths.crop}' && tesseract '${Paths.crop}' stdout -l "$(tesseract --list-langs | awk 'NR>1 && $1!="osd"' | paste -sd+)" 2>/dev/null; rm -f '${Paths.crop}'`];
-            ocr.running = true;
+            readText(g);
             break;
         case "translate":
             busy = true;
@@ -97,13 +94,12 @@ Singleton {
             translated = "";
             error = "";
             UiState.open("translate");
-            ocr.command = ["sh", "-c", `${crop} '${Paths.crop}' && tesseract '${Paths.crop}' stdout -l "$(tesseract --list-langs | awk 'NR>1 && $1!="osd"' | paste -sd+)" 2>/dev/null; rm -f '${Paths.crop}'`];
-            ocr.running = true;
+            readText(g);
             break;
         case "lens":
             // Same flow as ii: upload to uguu.se (expires in 3 h), open Google Lens on the URL
             Osd.show("capture", "image_search", -1, "Uploading to Lens…");
-            run(`${crop} '${Paths.crop}' && url=$(curl -sF files[]=@'${Paths.crop}' https://uguu.se/upload | jq -r '.files[0].url') && xdg-open "https://lens.google.com/uploadbyurl?url=$url"; rm -f '${Paths.crop}'`);
+            run(crop + ' "$3" && url=$(curl -sF "files[]=@$3" https://uguu.se/upload | jq -r ".files[0].url") && xdg-open "https://lens.google.com/uploadbyurl?url=$url"; rm -f "$3"', g, Paths.crop);
             break;
         case "liveTranslate":
             {
@@ -138,8 +134,17 @@ Singleton {
         trans.running = true;
     }
 
-    function run(cmd) {
-        Quickshell.execDetached(["sh", "-c", cmd]);
+    // Shell snippets get their paths as arguments, never pasted into the text, so
+    // a folder name with a quote or a space cannot break them: $1 is the frozen
+    // frame, $2 the crop geometry, $3 whatever the snippet needs.
+    readonly property string crop: 'magick "$1" -crop "$2" +repage'
+    function run(script, geometry, extra) {
+        Quickshell.execDetached(["sh", "-c", script, "sh", Paths.freeze, geometry, extra ?? ""]);
+    }
+    // OCR of the cropped region with every installed tesseract language
+    function readText(geometry) {
+        ocr.command = ["sh", "-c", crop + ' "$3" && tesseract "$3" stdout -l "$(tesseract --list-langs | awk \'NR>1 && $1!="osd"\' | paste -sd+)" 2>/dev/null; rm -f "$3"', "sh", Paths.freeze, geometry, Paths.crop];
+        ocr.running = true;
     }
 
     property string recordGeometry: ""
@@ -162,7 +167,7 @@ Singleton {
             if (code === 0)
                 root.selecting = true;
             else
-                console.warn("Capture: grim failed", code);
+                Osd.show("capture", "error", -1, "Could not capture the screen");
         }
     }
 

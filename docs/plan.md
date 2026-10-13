@@ -33,7 +33,7 @@ Most of these only break on a machine that is not the one the code was written o
 - [x] 5. matugen writes Zen colors into one hardcoded profile. Write them into every Zen profile that has a `chrome/` folder — `matugen/hooks/zen-colors.sh`
 - [x] 6. Personal defaults in tracked files (projects folder, dock pins, code editor, translate language, `us,th` layout, tablet output `DP-1`, tracked `hypr/monitors.lua`). Each becomes a setting or is detected; the installer keeps the keyboard layout a machine already uses — projects folder is `search.projectsDir` (Settings → Island → Search), the editor is the first one installed, layout default `us` with `keep_layout` in the installer
 - [x] 7. `install.sh` does not install `ffmpeg`, `libnotify`, `hyprsunset`, `kdialog`, `libqalculate`, `xdg-utils`, which the shell runs
-- [ ] 8. `Capture.qml` builds shell strings with paths inside quotes; the OCR command is written twice; the fallback scripts use fixed `/tmp` file names
+- [x] 8. `Capture.qml` builds shell strings with paths inside quotes; the OCR command is written twice; the fallback scripts use fixed `/tmp` file names — snippets run against a folder with a quote and a space; a drag in the picker is a hands-on check
 - [ ] 9. The location lookup for weather and sun times uses plain http
 - [ ] 10. `HYPR_DIR`, `record.sh` and the Appearance page ignore `XDG_CONFIG_HOME`
 - [ ] 11. To verify first: the first run writes `config.json` and `wallpaper.json` right after a detached `mkdir -p`; game mode forced on followed by `hyprctl reload` may leave the shell showing a stale state
