@@ -155,7 +155,7 @@ Singleton {
                 + 'kill $old 2>/dev/null; i=0; while pidof -q mpvpaper && [ $i -lt 20 ]; do sleep 0.05; i=$((i+1)); done; '
                 + 'kill -9 $old 2>/dev/null; pkill -9 -x mpvpaper; while pidof -q mpvpaper; do sleep 0.05; done; '
                 + '[ -n "$1" ] || exit 0; '
-                + 'setsid mpvpaper -p -a FULL -o "no-audio loop hwdec=nvdec panscan=1.0 input-ipc-server=$2" ALL "$1" >/dev/null 2>&1 & echo $! > "$pf"',
+                + 'setsid mpvpaper -p -a FULL -o "no-audio loop hwdec=auto-safe panscan=1.0 input-ipc-server=$2" ALL "$1" >/dev/null 2>&1 & echo $! > "$pf"',
                 "_", root.isVideo ? root.path : "", Paths.mpvSocket, Paths.mpvPid];
         }
         function finished(code) {

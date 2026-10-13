@@ -28,7 +28,7 @@ Phases 0–11 (Hyprland Lua rewrite, the shell, wallpaper and theming, dock, ove
 Most of these only break on a machine that is not the one the code was written on.
 - [x] 1. The shell forces the NVIDIA EGL vendor file (`shell.qml`, `settings.qml` pragma), so it cannot start on AMD/Intel or a hybrid laptop. Move it to a launcher that sets it only when NVIDIA is the only GPU — done in `hypr/scripts/shell.sh`; AMD/Intel path untested here
 - [x] 2. Recording defaults to `h264_nvenc`. Default `auto`: NVENC with an NVIDIA GPU, else x264 — `services/Gpu.qml`; the x264 path was recorded once here
-- [ ] 3. Video wallpaper uses `hwdec=nvdec`. Use `auto-safe`
+- [x] 3. Video wallpaper uses `hwdec=nvdec`. Use `auto-safe` — no video wallpaper on this machine to play it with
 - [ ] 4. System stats: CPU temperature only from `k10temp`, `nvidia-smi` always started. Add Intel sensors, AMD GPU from sysfs, hide the GPU rows otherwise
 - [ ] 5. matugen writes Zen colors into one hardcoded profile. Write them into every Zen profile that has a `chrome/` folder
 - [ ] 6. Personal defaults in tracked files (projects folder, dock pins, code editor, translate language, `us,th` layout, tablet output `DP-1`, tracked `hypr/monitors.lua`). Each becomes a setting or is detected; the installer keeps the keyboard layout a machine already uses
