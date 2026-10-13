@@ -26,11 +26,15 @@ local function is_game(w)
         or matches_any(w.title, GAME_TITLE_PATTERNS)
 end
 
+-- Tell the shell (socket2 `custom>>someshell_gamemode,1`) so it never has to poll
+local function announce()
+    hl.dispatch(hl.dsp.event("someshell_gamemode," .. (GameMode.active and "1" or "0")))
+end
+
 local function apply(on)
     if on == GameMode.active then return end
     GameMode.active = on
-    -- Tell the shell (socket2 `custom>>someshell_gamemode,1`) so it never has to poll
-    hl.dispatch(hl.dsp.event("someshell_gamemode," .. (on and "1" or "0")))
+    announce()
     if on then
         hl.config({
             decoration = { blur = { enabled = GameMode.overlay_open and look.blur.enabled }, shadow = { enabled = false } },
@@ -85,4 +89,10 @@ end
 for _, event in ipairs({ "window.fullscreen", "window.active", "window.destroy", "workspace.active" }) do
     hl.on(event, evaluate)
 end
-hl.on("config.reloaded", evaluate)
+-- A reload starts this file again with game mode off (a forced mode is
+-- dropped), so the shell is told the state even when nothing changed here;
+-- otherwise it would keep showing the mode from before the reload.
+hl.on("config.reloaded", function()
+    evaluate()
+    announce()
+end)
