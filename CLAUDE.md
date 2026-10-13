@@ -1,8 +1,9 @@
 # SomeShell
 
 Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, one 1920x1080@100 monitor DP-1, US/TH keyboard, UGTablet pen) and a laptop (Lenovo Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Laptop features are detected at runtime, never assumed.
-Goals are in `idea.md`; Phase 9's requests are in `Improvement idea.md` (both move to `docs/ideas/` in Phase 11b). The full plan, with phases and targets, is in `docs/plan.md`.
-Current work: Phase 11 (optimize, then make the repo public with an installer for other PCs). Phase 10 (fixes, wallpaper schedule, quick options) is done.
+The project was called SomeHypr until Phase 12; `install.sh` (`migrate_legacy`) moves the old `somehypr` directories over, and that is the only place the old name may appear.
+Goals and the task tracker are in `docs/plan.md`. Phases 0–11 are finished and live in git history only.
+Current work: Phase 12 (rename, fixes from the code review), then Phase 13 (WARP, tile sizes, two contents in the island) and Phase 14 (public release).
 
 ## Layout
 - `hypr/` is linked to `~/.config/hypr`. `hyprland.lua` loads files in a fixed order, and each setting lives in exactly one file:
@@ -41,7 +42,7 @@ Current work: Phase 11 (optimize, then make the repo public with an installer fo
   - Bindings are stale inside a change handler: in `onBusChanged`, a property bound to `bus` (or a `command` bound to it) still has its old value; read the source property itself. `Timer.restart()`/`start()` replaces a `running:` binding for good; leave a bound timer alone.
   - Animation gotcha: `SpringAnimation` (and `Spring`) only in a `Behavior` or as `SpringAnimation on <prop>`. Inside a `Sequential`/`ParallelAnimation` Qt segfaults when it starts; use `NumberAnimation` there (`components/Reveal.qml`).
   - Font gotcha: every distinct `font.variableAxes` value opens another face (mmap + glyph cache). `components/Icon.qml` snaps FILL to 0/1 and opsz to 20/24/40/48; never animate an axis.
-- `install.sh` is the installer for any Arch PC: missing packages (pacman, paru/yay), Google Sans Flex download, ydotool service, i2c group, links (backup `*.pre-someshell`), screens (`generated/monitors.lua` from `hyprctl monitors all -j`, kept if present), reload with automatic rollback on config errors, then it starts the shell (stopping other Quickshell configs). `--update` pulls first, `--detect` rewrites screens, `--check` only verifies, `--rollback` restores. Questions default to no without a terminal, so test it with `./install.sh </dev/null` (changes nothing that needs an answer) or into a throwaway `XDG_CONFIG_HOME` with `env -u HYPRLAND_INSTANCE_SIGNATURE`.
+- `install.sh` is the installer for any Arch PC: missing packages (pacman, paru/yay), Google Sans Flex download, ydotool service, i2c group, links (backup `*.pre-someshell`; a dead link is replaced), migration from the old name, screens (`generated/monitors.lua` from `hyprctl monitors all -j`, kept if present), reload with automatic rollback on config errors, then it starts the shell (stopping other Quickshell configs). `--update` pulls first, `--detect` rewrites screens, `--check` only verifies, `--rollback` restores. Questions default to no without a terminal, so test it with `./install.sh </dev/null` (changes nothing that needs an answer) or into a throwaway `XDG_CONFIG_HOME` with `env -u HYPRLAND_INSTANCE_SIGNATURE`.
 - `core/env.lua` reads GPU vendors from `/sys/class/drm/card*/device/vendor` (`GPU_VENDORS`); the NVIDIA env applies only when NVIDIA is the only GPU.
 
 ## Hyprland Lua API
@@ -69,15 +70,15 @@ qs -c someshell ipc call schedule state · schedule at <HH:MM|now> · wallpaper 
 timeout 8 qs -p shell/settings.qml 2>&1 | grep -E "WARN|ERROR"   # settings app
 ```
 - IPC function names must not clash with `qs ipc` subcommands (`show`, `call`, `prop`): `qs ipc call x show` is parsed as `qs ipc show`.
-Never edit `~/.config/hypr.pre-someshell` or `~/.config/quickshell/ii`. They are the rollback (`install.sh --rollback`).
+Never edit `~/.config/hypr.pre-somehypr` (the backup keeps its old name), `~/.config/*.pre-someshell` or `~/.config/quickshell/ii`. They are the rollback (`install.sh --rollback`).
 - Memory: compare against a fresh start and read `Anonymous`/`Pss` in `/proc/<pid>/smaps_rollup`, not only RSS. An empty one-window Quickshell already shows ~250 MB RSS / ~55 MB anon on this NVIDIA stack. Measure with `pgrep -x qs`; `pkill -f "qs -c someshell"` also matches the shell running the command.
 
 ## Phase workflow
 - Work through `docs/plan.md` one phase at a time and tick its checkboxes (`[x]` done, `[~]` done differently, with a note) as tasks land.
-- Commit and push after **each task** (one checklist item, or one small sub-phase), once it is verified: tick it in `docs/plan.md` in the same commit, then `git push origin main` (remote `someact/SomeShell`, private). Message: `Phase <n><sub>: <task>` (e.g. `Phase 9c: show only occupied workspaces`). Unrelated changes go in their own commit.
+- Commit and push after **each task** (one checklist item, or one small sub-phase), once it is verified: tick it in `docs/plan.md` in the same commit, then `git push origin main` (remote `someact/SomeShell`, public). Message: `Phase <n><sub>: <task>` (e.g. `Phase 12b: recorder encoder auto`). Unrelated changes go in their own commit.
 - When the last task of a phase is done and the phase-level checks pass, mark the phase ✅ in the plan in that final commit.
-- New tasks the user asks for mid-phase go into the plan first (as a `9a+`-style section, dated), so every change is tracked.
-- `README.md` explains how the setup works, installs and updates. Update it in the same commit when a change affects any of those (new dependency, script, option, or install step).
+- New tasks the user asks for mid-phase go into the plan first (as a `12a+`-style section, dated), so every change is tracked.
+- `README.md` holds only the feature list and how to install. Update it in the same commit when a change adds a feature, a dependency or an install step; how things work goes here instead.
 
 ## Rules for the shell (Phase 2 onward)
 - Lazy-load every panel.
