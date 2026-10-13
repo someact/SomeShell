@@ -44,10 +44,12 @@ CORE=(
     "grim:grim" "slurp:slurp" "wl-clipboard:wl-copy" "cliphist:cliphist" "imagemagick:magick"
     "jq:jq" "curl:curl" "playerctl:playerctl" "wireplumber:wpctl" "brightnessctl:brightnessctl"
     "gnome-keyring:gnome-keyring-daemon" "fuzzel:fuzzel" "ydotool:ydotool"
+    "libnotify:notify-send" "xdg-utils:xdg-open" "hyprsunset:hyprsunset" "ffmpeg:ffmpeg"
 )
 EXTRAS=(
     "wf-recorder:wf-recorder" "tesseract:tesseract" "tesseract-data-eng:/usr/share/tessdata/eng.traineddata"
     "translate-shell:trans" "mpvpaper:mpvpaper" "swappy:swappy" "ddcutil:ddcutil"
+    "libqalculate:qalc" "kdialog:kdialog"
 )
 LAPTOP=("upower:upower" "power-profiles-daemon:powerprofilesctl")
 FONTS=(
@@ -130,7 +132,7 @@ install_packages() {
     command -v pacman >/dev/null || { warn "Not an Arch-based system: install the packages in README.md by hand"; return; }
     say "Packages"
     install_missing "core" "${CORE[@]}"
-    install_missing "capture, OCR, video wallpaper, DDC" "${EXTRAS[@]}"
+    install_missing "capture, OCR, video wallpaper, DDC, calculator, file dialog" "${EXTRAS[@]}"
     if has_battery; then
         install_missing "laptop (battery, power profiles)" "${LAPTOP[@]}"
     fi
