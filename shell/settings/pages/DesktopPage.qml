@@ -55,7 +55,7 @@ Page {
             visible: Config.widgets.enabled.includes("weather")
             icon: "location_on"
             title: "Weather place"
-            subtitle: "A city name; empty uses a rough location from your IP (ip-api.com)"
+            subtitle: "A city name; empty uses a rough location from your IP (ipwho.is)"
             Row {
                 spacing: 8
                 Field {

@@ -7,7 +7,7 @@ import qs.core
 
 // Weather for the desktop widget from Open-Meteo (no key). The place is
 // Config.widgets.weatherCity (geocoded by Open-Meteo), or, when empty, a rough
-// location from the IP (ip-api.com). One curl chain on start and every 30 min,
+// location from the IP (ipwho.is, over https). One curl chain on start and every 30 min,
 // only while a widget raises `watchers`.
 Singleton {
     id: root
@@ -43,8 +43,8 @@ if [ -n "$1" ]; then
   lat=$(printf %s "$g" | jq -r ".results[0].latitude // empty"); lon=$(printf %s "$g" | jq -r ".results[0].longitude // empty")
   name=$(printf %s "$g" | jq -r ".results[0].name // empty")
 else
-  g=$(curl -sf -m 10 -A "$ua" "http://ip-api.com/json/?fields=lat,lon,city") || exit 1
-  lat=$(printf %s "$g" | jq -r ".lat // empty"); lon=$(printf %s "$g" | jq -r ".lon // empty"); name=$(printf %s "$g" | jq -r ".city // empty")
+  g=$(curl -sf -m 10 -A "$ua" "https://ipwho.is/?fields=latitude,longitude,city") || exit 1
+  lat=$(printf %s "$g" | jq -r ".latitude // empty"); lon=$(printf %s "$g" | jq -r ".longitude // empty"); name=$(printf %s "$g" | jq -r ".city // empty")
 fi
 [ -n "$lat" ] || exit 2
 '
