@@ -57,7 +57,8 @@ output_path = '~/.config/fuzzel/fuzzel_theme.ini'
 
 [templates.zen]
 input_path = '~/.config/matugen/templates/zen/someshell-colors.css'
-output_path = '~/.config/zen/bbrxh38h.Default (release)/chrome/someshell-colors.css'
+output_path = '~/.local/state/someshell/zen-colors.css'
+post_hook = '~/.config/matugen/hooks/zen-colors.sh &'
 
 [templates.vesktop]
 input_path = '~/.config/matugen/templates/vesktop/someshell.theme.css'
