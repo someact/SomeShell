@@ -7,6 +7,7 @@ A Hyprland desktop with a dynamic island instead of a bar, glass surfaces, sprin
 - **Dynamic island.** Collapsed, it shows the clock, the playing track, notifications, volume and brightness changes, recording, and microphone or screen-share use. It can show two things at once: the recording timer or the microphone dot stays at the side while a track or a notification is showing. Tap Super or click it to open search, quick options, media, notifications, system stats and power. Hover it for a peek.
 - **Search and commands.** Type right after Super to launch apps, calculate, or run a `/command` (`/wallpaper`, `/settings`, `/translate` and more). Clipboard history and an emoji picker are built in.
 - **Quick options.** Wi-Fi, Bluetooth, Cloudflare WARP (when `warp-cli` is installed: on/off and mode), do not disturb, game mode, night light, keep awake, microphone, dark mode, streamer mode, record, screenshot and battery bypass, plus volume, microphone and brightness sliders. Show, hide and reorder them with the pencil, and give each one of three sizes (icon, icon and title, or with its state); right-click one for its details.
+- **Quick Share with Android** (optional). Send files to your phone and receive from it: the island asks before anything is accepted and shows the progress. Send with `/share`, by dropping a file on the island, or from the file manager's menu.
 - **Media.** Player controls, the player's own volume, a per-app mixer and synced lyrics.
 - **Pills.** Workspaces, window title, tray, status icons and clock, in the top corners or beside the island, as glass or floating.
 - **Dock and overview.** A bottom dock with pinned and running apps, and a workspace overview on Super+Tab.
@@ -47,4 +48,5 @@ Optional parts:
 ```sh
 ./scripts/sddm-theme.sh --install        # the SDDM login theme (--preview to try it, --rollback to undo)
 ~/.config/hypr/scripts/hyprglass.sh      # build liquid glass, then turn it on in Settings → Appearance
+./scripts/quickshare.sh                  # build Quick Share (needs rust and protobuf), then turn on its quick tile
 ```

@@ -30,7 +30,8 @@ PanelWindow {
     readonly property bool peek: UiState.peeking && !UiState.expanded && UiState.peekScreen === modelData.name
     readonly property bool shown: open || peek
 
-    // Ambient priority: polkit → notification → OSD → recording → privacy → game dot → media → clock
+    // Ambient priority: polkit → Quick Share asking → notification → OSD → Quick Share
+    // progress → recording → privacy → game dot → media → clock
     // (in streamer mode notification peeks go to the private layer, see PrivatePeek.qml).
     // With the side slot on, recording and privacy let media keep the main place
     // and show in the slot instead (never in game mode, where the island is a nub).
@@ -39,10 +40,14 @@ PanelWindow {
     readonly property string ambient: {
         if (Polkit.active)
             return "polkit";
+        if (QuickShare.pending)
+            return "share";
         if (Notifs.peeked && !Streamer.active)
             return "notif";
         if (Osd.visible)
             return "osd";
+        if (QuickShare.current && !GameMode.active)
+            return "share";
         if (persistent !== "" && (!Config.island.dual || !mediaShown || GameMode.active))
             return persistent;
         if (GameMode.active)
@@ -52,7 +57,7 @@ PanelWindow {
         return "clock";
     }
     // The side slot: only beside content that would otherwise hide the state
-    readonly property bool side: Config.island.dual && persistent !== "" && (ambient === "notif" || ambient === "osd" || ambient === "media")
+    readonly property bool side: Config.island.dual && persistent !== "" && (ambient === "notif" || ambient === "osd" || ambient === "media" || ambient === "share")
     readonly property real sideGap: 10
     readonly property real sideWidth: sideLoader.item ? sideLoader.item.implicitWidth + sideGap : 0
 
@@ -182,7 +187,8 @@ PanelWindow {
     // Hover peek: resting on the island (or the top-edge strip above and beside
     // it) for a moment shows the view a click would open, without keyboard
     // focus; leaving closes it after a short grace. Off in game mode, over a
-    // fullscreen window, and while polkit waits (that needs the keyboard).
+    // fullscreen window, while polkit waits (that needs the keyboard) and while
+    // Quick Share shows its buttons or progress.
     // Real fullscreen only: Hyprland's hasFullscreen is also true for a
     // maximized window (fullscreen mode 1), which must not block the peek
     readonly property var activeWorkspace: Hyprland.monitorFor(modelData)?.activeWorkspace ?? null
@@ -190,7 +196,7 @@ PanelWindow {
     // Collapsed under a fullscreen window nobody sees the island: ambient items
     // pause their animations and live updates (`live` on the loaded item)
     readonly property bool covered: fullscreen && !shown
-    readonly property bool peekAllowed: Config.island.hoverPeek && !GameMode.active && !fullscreen && !UiState.hidden && !UiState.overview && ambient !== "polkit"
+    readonly property bool peekAllowed: Config.island.hoverPeek && !GameMode.active && !fullscreen && !UiState.hidden && !UiState.overview && ambient !== "polkit" && ambient !== "share"
     // Not over the side slot: it is a button of its own (stop recording), and a
     // peek opening under the pointer would take the click
     readonly property bool hovered: (bodyHover.hovered || stripHover.hovered) && !(sideLoader.item?.hovered ?? false)
@@ -314,6 +320,9 @@ PanelWindow {
                 case "media":
                     UiState.open("media");
                     break;
+                case "share":
+                    UiState.openControl("quickshare");
+                    break;
                 case "record":
                     Recorder.stop();
                     break;
@@ -326,6 +335,19 @@ PanelWindow {
                 }
             }
             onWheel: event => Audio.setVolume(Audio.volume + (event.angleDelta.y > 0 ? 0.05 : -0.05))
+        }
+
+        // Files dropped on the island go to Quick Share (its page then lists the devices)
+        DropArea {
+            anchors.fill: parent
+            enabled: QuickShare.available
+            keys: ["text/uri-list"]
+            onDropped: drop => {
+                if (drop.hasUrls) {
+                    QuickShare.offer(drop.urls.map(u => u.toString()));
+                    drop.accept();
+                }
+            }
         }
 
         // Collapsed content
@@ -345,6 +367,8 @@ PanelWindow {
                     return notifAmbient;
                 case "osd":
                     return osdAmbient;
+                case "share":
+                    return shareAmbient;
                 case "privacy":
                     return privacyAmbient;
                 case "record":
@@ -524,6 +548,10 @@ PanelWindow {
     Component {
         id: recordAmbient
         AmbientRecord {}
+    }
+    Component {
+        id: shareAmbient
+        AmbientShare {}
     }
     Component {
         id: sideAmbient

@@ -8,7 +8,7 @@ Singleton {
     readonly property list<QtObject> all: [
         WallpaperCommand {}, SettingsCommand {}, PowerCommand {}, LockCommand {}, ClipCommand {}, EmojiCommand {}, ProjectCommand {},
         GameCommand {}, OverlayCommand {}, DndCommand {}, StreamCommand {}, ShotCommand {}, OcrCommand {}, LensCommand {}, TranslateCommand {},
-        RecordCommand {}, KeysCommand {}, WidgetsCommand {}, OskCommand {}
+        RecordCommand {}, KeysCommand {}, WidgetsCommand {}, OskCommand {}, ShareCommand {}
     ]
 
     // Changes when any command's suggestions change (search rebuilds on it)

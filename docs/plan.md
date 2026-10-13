@@ -69,13 +69,19 @@ Checked with the pointer: the chooser, the badge through all three sizes, the gr
 Checked live with a test track, a microphone stream, a notification and a recording, switch on and off, and a click on the slot. Not checked: the OSD as the main content (same code path as the notification), and a screen share.
 
 ### 13d Quick Share with Android (added 2026-10-14)
-Send files to and receive files from an Android phone over Quick Share (Nearby Share).
-- [ ] Choose the backend. It has to run without a window, report events (no polling) and not be Python: `rquickshare`'s core as a small headless helper is the first candidate; a GUI-only tool does not fit. Note what it needs (Bluetooth for discovery, mDNS, an open port) and add it to the installer as optional
-- [ ] `services/QuickShare.qml`: available only with the backend installed; visibility (off, contacts, everyone), nearby devices, transfers with progress
-- [ ] Quick tile: visibility on/off; right-click page lists nearby devices and recent transfers
-- [ ] Receiving: the island asks to accept or decline (sender and file names), shows progress, then a notification that opens the file or its folder (`~/Downloads` by default, a setting)
-- [ ] Sending: `/share <file>` in search, a file dropped on the island, and a "Send to phone" entry for the file manager; pick the device in the island
-- [ ] Streamer mode hides sender and file names; nothing is accepted without a click
+Send files to and receive files from an Android phone over Quick Share (Nearby Share). Built and checked against a scripted stand-in for the helper; **a real transfer with a phone has not been tried yet**, so the phase stays open until it has.
+- [x] Backend: an own helper, `tools/quickshare` (Rust, ~300 lines) on `rqs_lib`, the library of rquickshare, pinned to a commit. JSON lines over a pipe (its README has the protocol). It is GPL-3.0-or-later because the library is. Ruled out: rquickshare itself (window only), QNearbyShare (no longer works with Quick Share phones), the `qs` CLI (new, one author, and it can only auto-accept without a terminal)
+- [x] `scripts/quickshare.sh` builds it (needs `cargo` and `protoc`) into `~/.local/share/someshell/bin` and adds "Send with Quick Share" to Dolphin. Two binaries: the library switches Bluetooth on whenever its Bluetooth side runs, so the one with Bluetooth is used only while Bluetooth is on already, and `-net` otherwise; the shell swaps them when Bluetooth changes
+- [x] `services/QuickShare.qml`: available only with the helper built; the helper runs only while receiving is on, files wait to be sent, or a transfer is going
+- [x] Quick tile: receiving on/off; the right-click page has the switch, a Bluetooth hint with a "Turn on" button, the files to send with the devices found, and this session's transfers with progress and cancel
+- [x] Receiving: the island asks with Decline and Accept (sender, what, PIN, size), then shows progress, then a notification. Text is copied; a link is never opened on its own. Nothing is accepted without a click
+- [x] Sending: `/share [file]`, a file dropped on the island, Dolphin's menu (`hypr/scripts/quickshare-send.sh`), IPC `quickshare offer`; pick the device on the page
+- [x] Streamer mode hides the sender and file names in the island prompt
+- [x] Settings → Island → Search → "Quick Share folder" (`quickshare.downloadDir`, empty: Downloads)
+- [ ] With a phone: receive a file, a link and several files; send to the phone; with Bluetooth off and on; decline; cancel half way
+- [ ] Drop a file on the island by hand (the drop target is written but could not be driven from a script)
+- [ ] The page in streamer mode still shows names (it is opened on purpose); decide whether to mask it too
+- [ ] Offer the build in `install.sh` when `cargo` is installed
 
 ### 13e Emoji picker (added 2026-10-14)
 `/emoji` reads its list from the data inside `hypr/scripts/fuzzel-emoji.sh` and shows a plain filtered list.
@@ -99,7 +105,7 @@ The clipboard view shows text only; an image entry is just a "[[ binary data …
 ## Phase 14: Public release
 
 Carried over from Phase 11. The repo is already public.
-- [ ] LICENSE at the repo root (the vendored shapes are Apache-2.0, the SDDM theme has its own)
+- [ ] LICENSE at the repo root (the vendored shapes are Apache-2.0, the SDDM theme has its own; `tools/quickshare` is GPL-3.0-or-later and needs the license text beside it)
 - [ ] Screenshots in the README
 - [ ] Install test on a clean user or a VM, and a rollback test
 - [ ] Hands-on checks still open: lock and unlock after suspend, idle lock, dock peek over a window, region tools by mouse, the game overlay over a real game, streamer mode during a share, a day with the time-of-day schedule

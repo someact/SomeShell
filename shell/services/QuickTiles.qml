@@ -18,7 +18,7 @@ Singleton {
     id: root
 
     // Every tile and slider, in the order hidden ones are offered
-    readonly property list<string> ids: ["wifi", "bluetooth", "warp", "dnd", "game", "nightlight", "caffeine", "mic", "dark", "streamer", "record", "screenshot", "keyboard", "battery", "slider:volume", "slider:mic", "slider:brightness"]
+    readonly property list<string> ids: ["wifi", "bluetooth", "warp", "quickshare", "dnd", "game", "nightlight", "caffeine", "mic", "dark", "streamer", "record", "screenshot", "keyboard", "battery", "slider:volume", "slider:mic", "slider:brightness"]
     readonly property list<string> layout: Config.control.layout.length > 0 ? Array.from(Config.control.layout) : Array.from(Config.control.tiles).concat(["slider:volume", "slider:mic", "slider:brightness"])
     // Items without hardware (no Bluetooth adapter, no DDC monitor) are left out of both lists
     readonly property list<string> shown: layout.filter(id => ids.includes(id) && byId[id].available)
@@ -95,7 +95,7 @@ Singleton {
         property var rightClick: () => {}
     }
 
-    readonly property var byId: ({ wifi: wifi, bluetooth: bluetooth, warp: warp, dnd: dnd, game: game, nightlight: nightlight, caffeine: caffeine, mic: mic, dark: dark, streamer: streamer, record: record, screenshot: screenshot, keyboard: keyboard, battery: battery, "slider:volume": volumeSlider, "slider:mic": micSlider, "slider:brightness": brightnessSlider })
+    readonly property var byId: ({ wifi: wifi, bluetooth: bluetooth, warp: warp, quickshare: quickshare, dnd: dnd, game: game, nightlight: nightlight, caffeine: caffeine, mic: mic, dark: dark, streamer: streamer, record: record, screenshot: screenshot, keyboard: keyboard, battery: battery, "slider:volume": volumeSlider, "slider:mic": micSlider, "slider:brightness": brightnessSlider })
 
     property Tile wifi: Tile {
         icon: Network.icon
@@ -123,6 +123,16 @@ Singleton {
         available: Warp.available
         detail: "warp"
         run: () => Warp.registered ? Warp.toggle() : UiState.controlDetail = "warp"
+    }
+    // Only with the helper built (scripts/quickshare.sh)
+    property Tile quickshare: Tile {
+        icon: QuickShare.icon
+        title: "Quick Share"
+        subtitle: QuickShare.summary
+        active: QuickShare.enabled
+        available: QuickShare.available
+        detail: "quickshare"
+        run: () => QuickShare.toggle()
     }
     property Tile dnd: Tile {
         icon: "do_not_disturb_on"

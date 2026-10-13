@@ -42,6 +42,10 @@ Singleton {
     readonly property string mpvSocket: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/someshell-mpvpaper.sock"
     readonly property string mpvPid: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/someshell-mpvpaper.pid"
 
+    // Built by scripts/quickshare.sh; SOMESHELL_QUICKSHARE points tests at a stand-in
+    readonly property string dataHome: Quickshell.env("XDG_DATA_HOME") || home + "/.local/share"
+    readonly property string quickshare: Quickshell.env("SOMESHELL_QUICKSHARE") || dataHome + "/someshell/bin/someshell-quickshare"
+
     readonly property string hyprDir: configHome + "/hypr"
     readonly property string monitors: hyprDir + "/generated/monitors.lua"   // written by the Displays page (per machine, gitignored)
     readonly property string scripts: hyprDir + "/scripts"

@@ -14,7 +14,7 @@ Scope {
         function toggle(view: string): void {
             UiState.toggle(view);
         }
-        // The Control view on a detail page: wifi bluetooth warp nightlight audio
+        // The Control view on a detail page: wifi bluetooth warp quickshare nightlight audio
         function control(detail: string): void {
             UiState.openControl(detail);
         }
@@ -43,6 +43,31 @@ Scope {
         }
         function state(): string {
             return JSON.stringify({ available: Warp.available, service: Warp.service, registered: Warp.registered, status: Warp.status, reason: Warp.reason, mode: Warp.mode });
+        }
+    }
+
+    // Quick Share (services/QuickShare.qml). `offer` takes paths separated by newlines
+    IpcHandler {
+        target: "quickshare"
+        function toggle(): void {
+            QuickShare.toggle();
+        }
+        function refresh(): void {
+            QuickShare.refresh();
+        }
+        function offer(paths: string): void {
+            QuickShare.offer(paths.split("\n").filter(p => p !== ""));
+        }
+        function accept(): void {
+            if (QuickShare.pending)
+                QuickShare.accept(QuickShare.pending.id);
+        }
+        function reject(): void {
+            if (QuickShare.pending)
+                QuickShare.reject(QuickShare.pending.id);
+        }
+        function state(): string {
+            return JSON.stringify({ available: QuickShare.available, enabled: QuickShare.enabled, running: QuickShare.running, ready: QuickShare.ready, bluetooth: QuickShare.ble, discovering: QuickShare.discovering, devices: QuickShare.devices, outbox: QuickShare.outbox, transfers: QuickShare.transfers });
         }
     }
 

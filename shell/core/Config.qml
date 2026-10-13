@@ -28,6 +28,7 @@ Singleton {
     readonly property alias widgets: adapter.widgets
     readonly property alias osk: adapter.osk
     readonly property alias media: adapter.media
+    readonly property alias quickshare: adapter.quickshare
     property bool ready: false
 
     FileView {
@@ -99,7 +100,7 @@ Singleton {
             property JsonObject control: JsonObject {
                 // Quick tiles shown in the Control view, in order (services/QuickTiles.qml ids);
                 // the rest are hidden and can be added back in its edit mode
-                property list<string> tiles: ["wifi", "bluetooth", "warp", "dnd", "game", "nightlight", "caffeine", "mic", "dark", "streamer", "record", "battery"]
+                property list<string> tiles: ["wifi", "bluetooth", "warp", "quickshare", "dnd", "game", "nightlight", "caffeine", "mic", "dark", "streamer", "record", "battery"]
                 // Tiles and sliders (slider:volume, slider:mic, slider:brightness) in order;
                 // empty: `tiles` followed by the three sliders (layouts saved before the sliders moved)
                 property list<string> layout: []
@@ -183,6 +184,10 @@ Singleton {
             property JsonObject osk: JsonObject {
                 property bool pinned: false           // reserve space so windows sit above it
                 property real scale: 1.0              // key size
+            }
+            property JsonObject quickshare: JsonObject {
+                property bool enabled: false          // visible to nearby devices, so a phone can send here
+                property string downloadDir: ""       // empty: the Downloads folder
             }
             property JsonObject media: JsonObject {
                 property bool lyrics: true            // fetch lyrics from LRCLIB (services/Lyrics.qml)

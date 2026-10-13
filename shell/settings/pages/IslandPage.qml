@@ -307,6 +307,19 @@ Page {
             }
         }
         SettingRow {
+            icon: "nearby"
+            title: "Quick Share folder"
+            subtitle: "Where files received from a phone go (the helper is built with scripts/quickshare.sh)"
+            changed: Config.quickshare.downloadDir !== ""
+            onReset: Config.quickshare.downloadDir = ""
+            Field {
+                implicitWidth: 260
+                placeholder: "~/Downloads"
+                text: Config.quickshare.downloadDir
+                onCommitted: t => Config.quickshare.downloadDir = t.trim()
+            }
+        }
+        SettingRow {
             icon: "folder_code"
             title: "Projects folder"
             subtitle: "/project opens one of its folders in the code editor"

@@ -19,7 +19,7 @@ Singleton {
     property string peekScreen: ""
     property string view: "search"
     property string searchText: ""       // seed text for the search view, e.g. "/"
-    property string controlDetail: ""    // Control view page (wifi bluetooth warp nightlight audio), "" = tiles
+    property string controlDetail: ""    // Control view page (wifi bluetooth warp quickshare nightlight audio), "" = tiles
     property bool hidden: false          // Super+J hides the island and pills
     property bool caffeine: false        // block idle (screen off / lock)
     property string ambient: "clock"     // what the collapsed island shows (set by Island)
