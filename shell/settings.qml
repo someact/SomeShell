@@ -3,8 +3,8 @@
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
 //@ pragma Env __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
 
-// SomeHypr settings app: `qs -p ~/.config/quickshell/somehypr/settings.qml`
-// (or `qs -c somehypr ipc call settings open`). Its own process, so it costs
+// SomeShell settings app: `qs -p ~/.config/quickshell/someshell/settings.qml`
+// (or `qs -c someshell ipc call settings open`). Its own process, so it costs
 // nothing while closed. Pages load one at a time.
 
 import QtQuick
@@ -34,7 +34,7 @@ ShellRoot {
         { id: "capture", name: "Capture", icon: "screenshot_region" },
         { id: "modes", name: "Modes", icon: "sports_esports" }
     ]
-    property string page: pageOrDefault(Quickshell.env("SOMEHYPR_SETTINGS_PAGE"))
+    property string page: pageOrDefault(Quickshell.env("SOMESHELL_SETTINGS_PAGE"))
 
     function pageOrDefault(id) {
         return pages.some(p => p.id === id) ? id : "appearance";
@@ -48,13 +48,13 @@ ShellRoot {
         function focus(page: string): void {
             if (page !== "")
                 app.page = app.pageOrDefault(page);
-            Hyprland.dispatch(`hl.dsp.focus({ window = "title:^(SomeHypr Settings)$" })`);
+            Hyprland.dispatch(`hl.dsp.focus({ window = "title:^(SomeShell Settings)$" })`);
         }
     }
 
     FloatingWindow {
         id: win
-        title: "SomeHypr Settings"
+        title: "SomeShell Settings"
         implicitWidth: 1080
         implicitHeight: 740
         minimumSize: Qt.size(760, 480)

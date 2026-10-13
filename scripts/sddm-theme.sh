@@ -10,13 +10,13 @@ esac
 
 if [[ "$mode" == --rollback ]]; then
     sudo sh -eu -c '
-        conf=/etc/sddm.conf.d/zz-somehypr.conf
-        [ -f "$conf.pre-somehypr" ] || exit 0
-        if [ -s "$conf.pre-somehypr" ]; then
-            mv -- "$conf.pre-somehypr" "$conf"
+        conf=/etc/sddm.conf.d/zz-someshell.conf
+        [ -f "$conf.pre-someshell" ] || exit 0
+        if [ -s "$conf.pre-someshell" ]; then
+            mv -- "$conf.pre-someshell" "$conf"
         else
             rm -f -- "$conf"
-            rm -f -- "$conf.pre-somehypr"
+            rm -f -- "$conf.pre-someshell"
         fi
     '
     printf 'Restored the previous SDDM selection. It applies at the next login.\n'
@@ -29,9 +29,9 @@ fi
 for tool in jq magick fc-match; do
     command -v "$tool" >/dev/null || { printf 'Missing dependency: %s\n' "$tool" >&2; exit 1; }
 done
-cache_dir=${XDG_CACHE_HOME:-$HOME/.cache}/somehypr/sddm
-config_dir=${XDG_CONFIG_HOME:-$HOME/.config}/somehypr
-state_dir=${XDG_STATE_HOME:-$HOME/.local/state}/somehypr
+cache_dir=${XDG_CACHE_HOME:-$HOME/.cache}/someshell/sddm
+config_dir=${XDG_CONFIG_HOME:-$HOME/.config}/someshell
+state_dir=${XDG_STATE_HOME:-$HOME/.local/state}/someshell
 mkdir -p -- "$cache_dir"
 stage_dir=$(mktemp -d "$cache_dir/theme.XXXXXXXX")
 trap 'rm -rf -- "$stage_dir"' EXIT
@@ -87,26 +87,34 @@ CONFIG
 if [[ "$mode" == --install ]]; then
     sudo sh -eu -c '
         source_dir=$1
-        destination=/usr/share/sddm/themes/somehypr
-        conf=/etc/sddm.conf.d/zz-somehypr.conf
+        destination=/usr/share/sddm/themes/someshell
+        conf=/etc/sddm.conf.d/zz-someshell.conf
         mkdir -p -- "$destination" /etc/sddm.conf.d
-        if [ ! -f "$conf.pre-somehypr" ]; then
+        # Installed under the old name (SomeHypr): its backup of the earlier
+        # selection carries over, the old theme and selection go
+        old=/etc/sddm.conf.d/zz-somehypr.conf
+        if [ -f "$old.pre-somehypr" ] && [ ! -f "$conf.pre-someshell" ]; then
+            mv -- "$old.pre-somehypr" "$conf.pre-someshell"
+        fi
+        rm -f -- "$old" "$old.pre-somehypr"
+        rm -rf -- /usr/share/sddm/themes/somehypr
+        if [ ! -f "$conf.pre-someshell" ]; then
             if [ -f "$conf" ]; then
-                cp -p -- "$conf" "$conf.pre-somehypr"
+                cp -p -- "$conf" "$conf.pre-someshell"
             else
-                touch "$conf.pre-somehypr"
+                touch "$conf.pre-someshell"
             fi
         fi
         cp -R -- "$source_dir/." "$destination/"
         chown -R root:root "$destination"
         find "$destination" -type d -exec chmod 755 {} +
         find "$destination" -type f -exec chmod 644 {} +
-        tmp_conf=$(mktemp /etc/sddm.conf.d/.somehypr.XXXXXXXX)
-        printf "[General]\nInputMethod=\nGreeterEnvironment=QT_IM_MODULE=compose\n\n[Theme]\nCurrent=somehypr\n" > "$tmp_conf"
+        tmp_conf=$(mktemp /etc/sddm.conf.d/.someshell.XXXXXXXX)
+        printf "[General]\nInputMethod=\nGreeterEnvironment=QT_IM_MODULE=compose\n\n[Theme]\nCurrent=someshell\n" > "$tmp_conf"
         chmod 644 "$tmp_conf"
         mv -- "$tmp_conf" "$conf"
     ' sh "$stage_dir"
-    printf 'SomeHypr SDDM theme installed. It applies at the next login.\n'
+    printf 'SomeShell SDDM theme installed. It applies at the next login.\n'
     printf 'Rollback: %s --rollback\n' "$0"
 else
     # --prepare keeps a stable preview directory for inspection/tests.

@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import "password-shapes.js" as Shapes
 
-// The same Material outlines as SomeHypr's lock screen, normalized to 0..1.
+// The same Material outlines as SomeShell's lock screen, normalized to 0..1.
 Item {
     id: root
     property string shape: "circle"

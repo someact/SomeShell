@@ -24,7 +24,7 @@ for _, class in ipairs({ "^(blueberry\\.py)$", ".*plasmawindowed.*", "kcm_.*", "
 end
 
 -- Shell settings window
-hl.window_rule({ match = { title = "^(SomeHypr Settings)$" }, float = true, center = true, size = { 1080, 740 } })
+hl.window_rule({ match = { title = "^(SomeShell Settings)$" }, float = true, center = true, size = { 1080, 740 } })
 
 -- Dolphin's copy progress window
 hl.window_rule({ match = { title = "^(Copying — Dolphin)$" }, move = { 40, 80 } })

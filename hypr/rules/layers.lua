@@ -16,8 +16,8 @@ hl.layer_rule({ match = { namespace = "logout_dialog" }, blur = true })
 -- notch/pill shapes itself through ext-background-effect, so no layer blur here.
 -- No xray either: the glass frosts the real windows behind it, not just the
 -- wallpaper (with xray a window behind the island showed wallpaper through it).
-for _, ns in ipairs({ "somehypr:island", "somehypr:pill", "somehypr:wallpaper", "somehypr:dock", "somehypr:overview", "somehypr:capture", "somehypr:overlay", "somehypr:widgets", "somehypr:osk", "somehypr:lockpreview" }) do
+for _, ns in ipairs({ "someshell:island", "someshell:pill", "someshell:wallpaper", "someshell:dock", "someshell:overview", "someshell:capture", "someshell:overlay", "someshell:widgets", "someshell:osk", "someshell:lockpreview" }) do
     hl.layer_rule({ match = { namespace = ns }, no_anim = true, xray = false })
 end
 -- Streamer mode: notification peeks live here and never reach a screen share or recording
-hl.layer_rule({ match = { namespace = "somehypr:private" }, no_anim = true, no_screen_share = true })
+hl.layer_rule({ match = { namespace = "someshell:private" }, no_anim = true, no_screen_share = true })

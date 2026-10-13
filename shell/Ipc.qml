@@ -4,7 +4,7 @@ import Quickshell.Io
 import qs.core
 import qs.services
 
-// `qs -c somehypr ipc call <target> <function> [args]`
+// `qs -c someshell ipc call <target> <function> [args]`
 Scope {
     IpcHandler {
         target: "island"

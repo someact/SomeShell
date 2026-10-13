@@ -2,7 +2,7 @@
 
 hl.on("hyprland.start", function()
     -- Desktop shell (island, pills, dock, wallpaper, notifications, polkit agent)
-    hl.exec_cmd("qs -c somehypr")
+    hl.exec_cmd("qs -c someshell")
 
     -- Session plumbing
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")

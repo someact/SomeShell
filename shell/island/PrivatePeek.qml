@@ -7,7 +7,7 @@ import qs.components
 import qs.services
 
 // Streamer mode notification peek. It sits just under the island on a layer
-// Hyprland leaves out of screen shares (`somehypr:private`, no_screen_share in
+// Hyprland leaves out of screen shares (`someshell:private`, no_screen_share in
 // hypr/rules/layers.lua), so only you see the text. Exists only while peeking.
 Scope {
     LazyLoader {
@@ -19,7 +19,7 @@ Scope {
             readonly property var n: Notifs.peeked
 
             screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
-            WlrLayershell.namespace: "somehypr:private"
+            WlrLayershell.namespace: "someshell:private"
             WlrLayershell.layer: WlrLayer.Overlay
             exclusionMode: ExclusionMode.Ignore
             anchors.top: true

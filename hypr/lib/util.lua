@@ -40,12 +40,12 @@ function matches_any(s, patterns)
 end
 
 JSON = require("lib.json")
-SOMEHYPR_DIR = (os.getenv("XDG_CONFIG_HOME") or HOME .. "/.config") .. "/somehypr"
+SOMESHELL_DIR = (os.getenv("XDG_CONFIG_HOME") or HOME .. "/.config") .. "/someshell"
 
--- Choices made in the settings app (~/.config/somehypr/hypr.json). The file only
+-- Choices made in the settings app (~/.config/someshell/hypr.json). The file only
 -- holds what was changed there, so the repo defaults apply to everything else.
 -- A broken file is ignored (SETTINGS_ERROR says why) rather than breaking the config.
-SETTINGS, SETTINGS_ERROR = JSON.read(SOMEHYPR_DIR .. "/hypr.json")
+SETTINGS, SETTINGS_ERROR = JSON.read(SOMESHELL_DIR .. "/hypr.json")
 if SETTINGS_ERROR == "missing" then SETTINGS_ERROR = nil end
 SETTINGS = type(SETTINGS) == "table" and SETTINGS or {}
 

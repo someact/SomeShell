@@ -4,7 +4,7 @@
 // NVIDIA only: without this glvnd also loads Mesa + LLVM (~100 MB RSS for nothing)
 //@ pragma Env __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
 
-// SomeHypr shell. Run with `qs -c somehypr`.
+// SomeShell shell. Run with `qs -c someshell`.
 // One island, two corner pills and a dock per monitor, a wallpaper layer,
 // global shortcuts and IPC. Every panel inside the island, the overview, the
 // region selector, the game overlay, the private peek, desktop widgets, the

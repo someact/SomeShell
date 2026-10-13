@@ -29,7 +29,7 @@ Scope {
 
         PanelWindow {
             screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
-            WlrLayershell.namespace: "somehypr:lockpreview"
+            WlrLayershell.namespace: "someshell:lockpreview"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
             exclusionMode: ExclusionMode.Ignore

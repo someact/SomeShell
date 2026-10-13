@@ -42,7 +42,7 @@ Scope {
             readonly property real unit: Math.round(46 * Config.osk.scale)
             readonly property bool thai: KbLayout.code === "TH"
 
-            WlrLayershell.namespace: "somehypr:osk"
+            WlrLayershell.namespace: "someshell:osk"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
             anchors.bottom: true

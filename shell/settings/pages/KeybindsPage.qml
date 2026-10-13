@@ -7,7 +7,7 @@ import qs.settings.ui
 Page {
     id: page
     title: "Keybinds"
-    subtitle: "Click a shortcut and press new keys. Changes go to ~/.config/somehypr/keybinds.json and Hyprland reloads; keybinds.lua itself is never edited."
+    subtitle: "Click a shortcut and press new keys. Changes go to ~/.config/someshell/keybinds.json and Hyprland reloads; keybinds.lua itself is never edited."
 
     property string query: ""
     property int editing: -2      // custom entry being edited: -1 new, >= 0 index, -2 none

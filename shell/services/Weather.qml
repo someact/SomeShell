@@ -37,7 +37,7 @@ Singleton {
     // the IP's rough location); exits 1 without a connection, 2 if not found.
     // Also used by services/Schedule.qml for sun times.
     readonly property string locate: '
-ua="SomeHypr (https://github.com/someact/SomeHypr)"
+ua="SomeShell (https://github.com/someact/SomeShell)"
 if [ -n "$1" ]; then
   g=$(curl -sfG -m 10 -A "$ua" --data-urlencode "name=$1" -d count=1 https://geocoding-api.open-meteo.com/v1/search) || exit 1
   lat=$(printf %s "$g" | jq -r ".results[0].latitude // empty"); lon=$(printf %s "$g" | jq -r ".results[0].longitude // empty")

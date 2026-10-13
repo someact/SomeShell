@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// User settings, stored in ~/.config/somehypr/config.json. Missing keys take the
+// User settings, stored in ~/.config/someshell/config.json. Missing keys take the
 // defaults below; edits from the shell write back to the file, and edits to the
 // file reload live.
 Singleton {

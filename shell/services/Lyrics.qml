@@ -6,7 +6,7 @@ import Quickshell.Io
 import qs.core
 
 // Lyrics for the current track from LRCLIB (lrclib.net), one curl per new track,
-// cached in ~/.cache/somehypr/lyrics/ (misses too, so a track is asked once).
+// cached in ~/.cache/someshell/lyrics/ (misses too, so a track is asked once).
 // Synced LRC gives `lines` + `index`; the index follows the playhead with one
 // single-shot timer aimed at the next line, and only while someone shows it.
 Singleton {
@@ -79,7 +79,7 @@ Singleton {
     readonly property string script: '
 f=$1; [ -s "$f" ] && exec cat "$f"
 mkdir -p "$(dirname "$f")"
-ua="SomeHypr (https://github.com/someact/SomeHypr)"
+ua="SomeShell (https://github.com/someact/SomeShell)"
 q() { curl -s -m 10 -A "$ua" -o "$f.tmp" -w "%{http_code}" -G "$@"; }
 set -- "$2" "$3" "$4"
 if [ -n "$2" ]; then

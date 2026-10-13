@@ -30,7 +30,7 @@ shell_bind("CTRL + SUPER + SHIFT + D", "lightDark", { description = "Shell: Togg
 hl.bind("CTRL + SUPER + R", hl.dsp.exec_cmd(shell_command("restart")), { description = "Shell: Restart widgets" })
 hl.bind("CTRL + SUPER + ALT + Slash", hl.dsp.exec_cmd("xdg-open " .. HYPR_DIR .. "/binds/keybinds.lua"), { description = "Shell: Edit keybinds" })
 
-local qsIpcCall = "qs -c somehypr ipc call"
+local qsIpcCall = "qs -c someshell ipc call"
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(qsIpcCall .. " brightness increment || brightnessctl s 5%+"), { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(qsIpcCall .. " brightness decrement || brightnessctl s 5%-"), { locked = true, repeating = true })
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+ -l 1.5"), { locked = true, repeating = true })

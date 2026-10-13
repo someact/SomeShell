@@ -7,6 +7,6 @@ import Quickshell
 // go over IPC, so the settings process never runs a second copy of a service.
 Singleton {
     function call(target, fn, ...args) {
-        Quickshell.execDetached(["qs", "-c", "somehypr", "ipc", "call", target, fn].concat(args.map(String)));
+        Quickshell.execDetached(["qs", "-c", "someshell", "ipc", "call", target, fn].concat(args.map(String)));
     }
 }

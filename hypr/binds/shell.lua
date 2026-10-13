@@ -1,5 +1,5 @@
 -- Shell actions: the global shortcut the shell registers under appid
--- "somehypr", plus an optional CLI fallback that runs only while the shell is
+-- "someshell", plus an optional CLI fallback that runs only while the shell is
 -- not running (crashed, restarting, or killed by hand).
 
 local scripts = HYPR_DIR .. "/scripts"
@@ -37,14 +37,14 @@ SHELL_ACTIONS = {
 
 -- Shell commands that are not global shortcuts
 SHELL_COMMANDS = {
-    restart  = "killall qs quickshell; qs -c somehypr &",
-    settings = "qs -c somehypr ipc call settings open",
+    restart  = "killall qs quickshell; qs -c someshell &",
+    settings = "qs -c someshell ipc call settings open",
 }
 
 -- The shell is up while its island layer exists (one per screen, also in game
 -- mode). Checked in Lua, so a key press starts no process unless the shell is down.
 local function shell_alive()
-    return #hl.get_layers({ namespace = "somehypr:island" }) > 0
+    return #hl.get_layers({ namespace = "someshell:island" }) > 0
 end
 
 -- Bind `keys` to a shell action. `opts` are normal hl.bind options; the
@@ -54,7 +54,7 @@ function shell_bind(keys, action, opts)
     assert(a, "unknown shell action: " .. action)
     opts = opts or {}
     if a.name then
-        hl.bind(keys, hl.dsp.global("somehypr:" .. a.name), opts)
+        hl.bind(keys, hl.dsp.global("someshell:" .. a.name), opts)
         if a.fallback then
             local quiet = {}
             for k, v in pairs(opts) do

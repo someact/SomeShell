@@ -29,8 +29,8 @@ end
 local function apply(on)
     if on == GameMode.active then return end
     GameMode.active = on
-    -- Tell the shell (socket2 `custom>>somehypr_gamemode,1`) so it never has to poll
-    hl.dispatch(hl.dsp.event("somehypr_gamemode," .. (on and "1" or "0")))
+    -- Tell the shell (socket2 `custom>>someshell_gamemode,1`) so it never has to poll
+    hl.dispatch(hl.dsp.event("someshell_gamemode," .. (on and "1" or "0")))
     if on then
         hl.config({
             decoration = { blur = { enabled = GameMode.overlay_open and look.blur.enabled }, shadow = { enabled = false } },

@@ -4,7 +4,7 @@ import qs.core
 import qs.components
 
 // Quick notes on the desktop: the same file as the game overlay's notes
-// (~/.local/state/somehypr/notes.md), saved a moment after typing stops.
+// (~/.local/state/someshell/notes.md), saved a moment after typing stops.
 DesktopWidget {
     id: root
 

@@ -5,7 +5,7 @@ import Quickshell
 import qs.core
 
 // Streamer mode: notification text is masked in the island, peeks move to a
-// layer that Hyprland leaves out of screen shares (`somehypr:private`,
+// layer that Hyprland leaves out of screen shares (`someshell:private`,
 // no_screen_share), and do not disturb is on (Config.streamer.silence).
 // Turns on by itself while the screen is shared over Pipewire (OBS, Discord,
 // browsers) when Config.streamer.auto is set.

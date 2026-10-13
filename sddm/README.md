@@ -1,4 +1,4 @@
-# SomeHypr SDDM theme
+# SomeShell SDDM theme
 
 A standalone Qt 6 port of `shell/lock/LockSurface.qml`: the large clock and date,
 blurred wallpaper, glass password pill, shuffled Material password shapes,
@@ -28,18 +28,18 @@ ImageMagick and fontconfig. On Arch/CachyOS, the relevant packages are `sddm`,
 
 The script snapshots your current wallpaper (or a video wallpaper's saved
 frame) into a blurred image and copies Google Sans Flex and Material Symbols
-when available. Those files live under `/usr/share/sddm/themes/somehypr`, so the
+when available. Those files live under `/usr/share/sddm/themes/someshell`, so the
 greeter does not depend on a readable home directory. Running `--install`
 again refreshes the wallpaper and fonts. Personal images and fonts are not
 committed to the repository. Without a wallpaper, the bundled background is
 used.
 
-The script stages previews at `~/.cache/somehypr/sddm/preview` and writes the
-installed theme selection to `/etc/sddm.conf.d/zz-somehypr.conf`. It saves any
+The script stages previews at `~/.cache/someshell/sddm/preview` and writes the
+installed theme selection to `/etc/sddm.conf.d/zz-someshell.conf`. It saves any
 previous contents of that drop-in, and rollback restores them (or removes the
 drop-in when none existed). Existing themes are kept.
 
-Customize `/usr/share/sddm/themes/somehypr/theme.conf.user` after installation:
+Customize `/usr/share/sddm/themes/someshell/theme.conf.user` after installation:
 
 ```ini
 [General]

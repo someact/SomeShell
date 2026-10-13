@@ -5,7 +5,7 @@ import qs.core
 import qs.services
 import qs.commands
 
-// Global shortcuts under appid "somehypr". hypr/binds/shell.lua maps keys to
+// Global shortcuts under appid "someshell". hypr/binds/shell.lua maps keys to
 // these names, so the keybinds stay identical when switching shells.
 Scope {
     id: root
@@ -13,7 +13,7 @@ Scope {
     // Any other shell shortcut (Super+V, ...) cancels a pending Super tap.
     // Instances add their own onPressed; both handlers run.
     component Shortcut: GlobalShortcut {
-        appid: "somehypr"
+        appid: "someshell"
         onPressed: if (name !== "superKey") UiState.superMightTrigger = false
     }
 

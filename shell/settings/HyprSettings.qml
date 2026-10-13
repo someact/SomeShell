@@ -5,7 +5,7 @@ import Quickshell
 import Quickshell.Io
 import qs.core
 
-// Hyprland-side choices (~/.config/somehypr/hypr.json), read by hypr/lib/util.lua.
+// Hyprland-side choices (~/.config/someshell/hypr.json), read by hypr/lib/util.lua.
 // The file holds only what was changed here; everything else shows Hyprland's
 // live value (read once at start). Each change is written after a short pause,
 // then Hyprland reloads and any config errors are shown.

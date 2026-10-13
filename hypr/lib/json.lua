@@ -1,5 +1,5 @@
 -- Minimal JSON decoder for the settings files the shell writes
--- (~/.config/somehypr/{hypr,keybinds}.json). Decode only; null becomes nil.
+-- (~/.config/someshell/{hypr,keybinds}.json). Decode only; null becomes nil.
 
 local json = {}
 

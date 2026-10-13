@@ -75,7 +75,7 @@ PanelWindow {
         return win.floating ? h - 6 : h;
     }
 
-    WlrLayershell.namespace: "somehypr:island"
+    WlrLayershell.namespace: "someshell:island"
     WlrLayershell.layer: WlrLayer.Top
     // Exclusive at first so typing straight after Super lands in search; OnDemand
     // once the focus grab holds, because an exclusive layer keeps the keyboard

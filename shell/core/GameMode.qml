@@ -5,7 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 
-// Bridge to hypr/modes/gamemode.lua. Hyprland emits `custom>>somehypr_gamemode,<0|1>`
+// Bridge to hypr/modes/gamemode.lua. Hyprland emits `custom>>someshell_gamemode,<0|1>`
 // whenever game mode flips, so this never polls; the state is read once at start.
 // gamemoded clients reach Hyprland through services/GameClients.qml.
 Singleton {
@@ -28,7 +28,7 @@ Singleton {
     Connections {
         target: Hyprland
         function onRawEvent(event) {
-            if (event.name === "custom" && event.data.startsWith("somehypr_gamemode,"))
+            if (event.name === "custom" && event.data.startsWith("someshell_gamemode,"))
                 root.active = event.data.endsWith(",1");
         }
     }

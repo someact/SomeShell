@@ -42,7 +42,7 @@ Scope {
             readonly property bool shown: UiState.overview
 
             screen: root.screen
-            WlrLayershell.namespace: "somehypr:overview"
+            WlrLayershell.namespace: "someshell:overview"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
             exclusionMode: ExclusionMode.Ignore

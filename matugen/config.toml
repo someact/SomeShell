@@ -11,10 +11,10 @@ term_blue = { color = "#458588", blend = true }
 term_magenta = { color = "#B16286", blend = true }
 term_cyan = { color = "#689D6A", blend = true }
 
-# --- SomeHypr shell -----------------------------------------------------------
+# --- SomeShell shell -----------------------------------------------------------
 [templates.shell]
 input_path = '~/.config/matugen/templates/shell-colors.json'
-output_path = '~/.local/state/somehypr/colors.json'
+output_path = '~/.local/state/someshell/colors.json'
 
 # --- Hyprland -----------------------------------------------------------------
 [templates.hyprland]
@@ -28,11 +28,11 @@ output_path = '~/.config/hypr/generated/hyprlock-colors.conf'
 # --- Terminals (kitty includes the theme; other terminals get OSC sequences) ---
 [templates.kitty]
 input_path = '~/.config/matugen/templates/terminal/kitty-theme.conf'
-output_path = '~/.local/state/somehypr/kitty-theme.conf'
+output_path = '~/.local/state/someshell/kitty-theme.conf'
 
 [templates.term_sequences]
 input_path = '~/.config/matugen/templates/terminal/sequences.txt'
-output_path = '~/.local/state/somehypr/sequences.txt'
+output_path = '~/.local/state/someshell/sequences.txt'
 post_hook = '~/.config/matugen/hooks/term-sequences.sh &'
 
 # --- GTK / Qt / KDE -----------------------------------------------------------
@@ -46,8 +46,8 @@ output_path = '~/.config/gtk-4.0/gtk.css'
 post_hook = 'gsettings set org.gnome.desktop.interface color-scheme prefer-{{mode}}'
 
 [templates.kde]
-input_path = '~/.config/matugen/templates/kde/SomeHypr.colors'
-output_path = '~/.local/share/color-schemes/SomeHypr.colors'
+input_path = '~/.config/matugen/templates/kde/SomeShell.colors'
+output_path = '~/.local/share/color-schemes/SomeShell.colors'
 post_hook = '~/.config/matugen/hooks/kde-colors.sh &'
 
 # --- Apps ---------------------------------------------------------------------
@@ -56,9 +56,9 @@ input_path = '~/.config/matugen/templates/fuzzel/fuzzel_theme.ini'
 output_path = '~/.config/fuzzel/fuzzel_theme.ini'
 
 [templates.zen]
-input_path = '~/.config/matugen/templates/zen/somehypr-colors.css'
-output_path = '~/.config/zen/bbrxh38h.Default (release)/chrome/somehypr-colors.css'
+input_path = '~/.config/matugen/templates/zen/someshell-colors.css'
+output_path = '~/.config/zen/bbrxh38h.Default (release)/chrome/someshell-colors.css'
 
 [templates.vesktop]
-input_path = '~/.config/matugen/templates/vesktop/somehypr.theme.css'
-output_path = '~/.config/vesktop/themes/somehypr.theme.css'
+input_path = '~/.config/matugen/templates/vesktop/someshell.theme.css'
+output_path = '~/.config/vesktop/themes/someshell.theme.css'

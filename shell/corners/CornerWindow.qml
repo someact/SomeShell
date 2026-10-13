@@ -20,7 +20,7 @@ PanelWindow {
     property alias bar: bar
 
     screen: modelData
-    WlrLayershell.namespace: "somehypr:pill"
+    WlrLayershell.namespace: "someshell:pill"
     WlrLayershell.layer: WlrLayer.Top
     exclusionMode: ExclusionMode.Ignore
     anchors.top: true

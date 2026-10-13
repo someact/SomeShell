@@ -10,13 +10,13 @@ Singleton {
     readonly property string stateHome: Quickshell.env("XDG_STATE_HOME") || home + "/.local/state"
 
     // User choices (settings app owns this from Phase 5)
-    readonly property string configDir: configHome + "/somehypr"
+    readonly property string configDir: configHome + "/someshell"
     readonly property string config: configDir + "/config.json"
     readonly property string hyprSettings: configDir + "/hypr.json"   // read by hypr/lib/util.lua (SETTINGS)
     readonly property string keybinds: configDir + "/keybinds.json"   // read by hypr/binds/user.lua
 
     // Machine state: frecency, notification history
-    readonly property string stateDir: stateHome + "/somehypr"
+    readonly property string stateDir: stateHome + "/someshell"
     readonly property string frecency: stateDir + "/frecency.json"
     readonly property string notifications: stateDir + "/notifications.json"
     readonly property string wallpaperState: stateDir + "/wallpaper.json"   // { path, phase }
@@ -26,8 +26,8 @@ Singleton {
 
     // Capture scratch files (tmpfs)
     readonly property string runtime: Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"
-    readonly property string freeze: runtime + "/somehypr-freeze.png"       // frozen screen while selecting
-    readonly property string crop: runtime + "/somehypr-crop.png"
+    readonly property string freeze: runtime + "/someshell-freeze.png"       // frozen screen while selecting
+    readonly property string crop: runtime + "/someshell-crop.png"
     readonly property string screenshots: home + "/Pictures/Screenshots"
     readonly property string videos: home + "/Videos"
     readonly property string mangohud: configHome + "/MangoHud/MangoHud.conf"
@@ -36,11 +36,11 @@ Singleton {
     readonly property string colors: stateDir + "/colors.json"
 
     readonly property string cacheHome: Quickshell.env("XDG_CACHE_HOME") || home + "/.cache"
-    readonly property string thumbs: cacheHome + "/somehypr/thumbs"
-    readonly property string lyrics: cacheHome + "/somehypr/lyrics"         // LRCLIB answers, one file per track
-    readonly property string lockBlur: cacheHome + "/somehypr/lock-blur.jpg"   // blurred wallpaper for the lock screen
-    readonly property string mpvSocket: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/somehypr-mpvpaper.sock"
-    readonly property string mpvPid: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/somehypr-mpvpaper.pid"
+    readonly property string thumbs: cacheHome + "/someshell/thumbs"
+    readonly property string lyrics: cacheHome + "/someshell/lyrics"         // LRCLIB answers, one file per track
+    readonly property string lockBlur: cacheHome + "/someshell/lock-blur.jpg"   // blurred wallpaper for the lock screen
+    readonly property string mpvSocket: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/someshell-mpvpaper.sock"
+    readonly property string mpvPid: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/someshell-mpvpaper.pid"
 
     readonly property string hyprDir: configHome + "/hypr"
     readonly property string monitors: hyprDir + "/generated/monitors.lua"   // written by the Displays page (per machine, gitignored)

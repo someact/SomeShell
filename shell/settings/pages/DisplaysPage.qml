@@ -54,7 +54,7 @@ Page {
         });
     }
     function lua() {
-        const lines = ["-- Written by SomeHypr Settings (Displays page)"];
+        const lines = ["-- Written by SomeShell Settings (Displays page)"];
         for (const m of monitors) {
             const d = drafts[m.name];
             if (!d.enabled) {

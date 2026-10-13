@@ -14,7 +14,7 @@ PanelWindow {
     screen: modelData
 
     visible: !Wallpaper.isVideo
-    WlrLayershell.namespace: "somehypr:wallpaper"
+    WlrLayershell.namespace: "someshell:wallpaper"
     WlrLayershell.layer: WlrLayer.Background
     exclusionMode: ExclusionMode.Ignore
     anchors {
@@ -57,7 +57,7 @@ PanelWindow {
                 return;
             }
             const size = w + "x" + h;
-            out = Paths.cacheHome + "/somehypr/wall-" + size + "-" + Qt.md5(src) + ".jpg";
+            out = Paths.cacheHome + "/someshell/wall-" + size + "-" + Qt.md5(src) + ".jpg";
             command = ["sh", "-c", 'src="$1" out="$2" size="$3"; dir="${out%/*}"; '
                 + '[ -s "$out" ] && [ "$out" -nt "$src" ] && exit 0; mkdir -p "$dir"; '
                 + 'find "$dir" -maxdepth 1 -name "wall-$size-*.jpg" ! -name "${out##*/}" -delete; '

@@ -1,4 +1,4 @@
-# SomeHypr
+# SomeShell
 
 Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, one 1920x1080@100 monitor DP-1, US/TH keyboard, UGTablet pen) and a laptop (Lenovo Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Laptop features are detected at runtime, never assumed.
 Goals are in `idea.md`; Phase 9's requests are in `Improvement idea.md` (both move to `docs/ideas/` in Phase 11b). The full plan, with phases and targets, is in `docs/plan.md`.
@@ -6,27 +6,27 @@ Current work: Phase 11 (optimize, then make the repo public with an installer fo
 
 ## Layout
 - `hypr/` is linked to `~/.config/hypr`. `hyprland.lua` loads files in a fixed order, and each setting lives in exactly one file:
-  - `user.lua` holds user choices: apps, `glass`, `fastGlass`, `liquidGlass*`, `gameModeAuto`. The settings app overrides them through `~/.config/somehypr/hypr.json` (`SETTINGS`, loaded by `lib/util.lua` with `lib/json.lua`); `core/settings.lua` loads last and applies its `hyprland` table (a partial `hl.config`). The file only holds changed values.
+  - `user.lua` holds user choices: apps, `glass`, `fastGlass`, `liquidGlass*`, `gameModeAuto`. The settings app overrides them through `~/.config/someshell/hypr.json` (`SETTINGS`, loaded by `lib/util.lua` with `lib/json.lua`); `core/settings.lua` loads last and applies its `hyprland` table (a partial `hl.config`). The file only holds changed values.
   - `core/` covers env (GPU detected), input (touchpad, tablet), look, motion, misc, and execs.
   - `rules/` holds window rules (windows, media, art, gaming) and layer rules.
-  - `binds/keybinds.lua` holds every bind. Shell binds go through `shell_bind()` / `SHELL_ACTIONS` in `binds/shell.lua`: a `somehypr:` global shortcut plus an optional CLI fallback that runs only while the shell is not answering.
-  - `binds/user.lua` applies `~/.config/somehypr/keybinds.json` (settings app): it wraps `hl.bind` while keybinds.lua runs (remap/disable by normalized combo), then `UserBinds.finish()` adds custom binds and the `somehypr-record` submap. User changes never go into keybinds.lua.
-  - `core/liquidglass.lua` is the optional hyprglass plugin (`liquidGlass`). Build with `scripts/hyprglass.sh` (upstream branch + `plugins/hyprglass-fit-shape.patch`, one `.so` per Hyprland version in `~/.local/share/somehypr/plugins/`). `hl.plugin.load()` is declarative: call it on every config load while the plugin is wanted, never only "if not loaded" (that loops unload/load/reload until Hyprland segfaults). Test plugin changes in a nested `Hyprland -c <test.lua>` first.
+  - `binds/keybinds.lua` holds every bind. Shell binds go through `shell_bind()` / `SHELL_ACTIONS` in `binds/shell.lua`: a `someshell:` global shortcut plus an optional CLI fallback that runs only while the shell is not answering.
+  - `binds/user.lua` applies `~/.config/someshell/keybinds.json` (settings app): it wraps `hl.bind` while keybinds.lua runs (remap/disable by normalized combo), then `UserBinds.finish()` adds custom binds and the `someshell-record` submap. User changes never go into keybinds.lua.
+  - `core/liquidglass.lua` is the optional hyprglass plugin (`liquidGlass`). Build with `scripts/hyprglass.sh` (upstream branch + `plugins/hyprglass-fit-shape.patch`, one `.so` per Hyprland version in `~/.local/share/someshell/plugins/`). `hl.plugin.load()` is declarative: call it on every config load while the plugin is wanted, never only "if not loaded" (that loops unload/load/reload until Hyprland segfaults). Test plugin changes in a nested `Hyprland -c <test.lua>` first.
   - `modes/gamemode.lua` turns blur, shadows and animations off while a game is the focused fullscreen window. Control it with `hyprctl eval 'GameMode.toggle()'` and `'GameMode.auto()'`.
   - `generated/` is machine-written (matugen, and `generated/monitors.lua` from the Displays page, per machine) and gitignored. The tracked `monitors.lua` is the desktop's older copy, loaded only when `generated/monitors.lua` is missing; a catch-all `hl.monitor` (`highrr`) covers unnamed outputs.
   - Touchpad options and gestures live in `core/input.lua` (`touchpad.gestures` in hypr.json turns gestures off).
 - `matugen/` is linked to `~/.config/matugen` and is the only color engine. `config.toml` lists every output (shell, Hyprland, terminals, GTK, KDE, fuzzel, Zen, Vesktop); `hooks/` reload apps. Run it without a terminal only with `--source-color-index 0`.
-- Wallpaper state is `~/.local/state/somehypr/wallpaper.json`; set it through the shell (`qs -c somehypr ipc call wallpaper set <path>`) so videos start mpvpaper and get a matugen frame. Images are shown from a screen-sized copy (`~/.cache/somehypr/wall-<WxH>-<md5>.jpg`, ImageMagick), because Qt keeps a large original's full decode in memory. The time-of-day schedule is `shell/services/Schedule.qml` (slot model in `shell/lib/schedule.js`, shared with the settings page so it never runs a second scheduler); `Wallpaper.save()` does nothing until the saved state is `loaded`, so a check at start cannot write an empty path over it.
-- `shell/` is linked to `~/.config/quickshell/somehypr` and runs with `qs -c somehypr`:
+- Wallpaper state is `~/.local/state/someshell/wallpaper.json`; set it through the shell (`qs -c someshell ipc call wallpaper set <path>`) so videos start mpvpaper and get a matugen frame. Images are shown from a screen-sized copy (`~/.cache/someshell/wall-<WxH>-<md5>.jpg`, ImageMagick), because Qt keeps a large original's full decode in memory. The time-of-day schedule is `shell/services/Schedule.qml` (slot model in `shell/lib/schedule.js`, shared with the settings page so it never runs a second scheduler); `Wallpaper.save()` does nothing until the saved state is `loaded`, so a check at start cannot write an empty path over it.
+- `shell/` is linked to `~/.config/quickshell/someshell` and runs with `qs -c someshell`:
   - `core/` singletons (Config, Theme, Motion, Paths, UiState, GameMode), `components/`, `services/` (one singleton per system source).
   - `island/Island.qml` is the notch window; `island/views/*View.qml` are loaded only while open; `island/ambient/` holds the collapsed states.
   - `commands/` holds one file per `/command`, registered in `commands/Commands.qml`.
   - `Shortcuts.qml` (global shortcuts) and `Ipc.qml` (IPC targets) sit at the root; `corners/` holds the pills: `PillParts.qml` defines each part (a `PillPart`, glass or floating per `config.json` `pills`), `Pills.qml` creates a `CornerWindow` per zone (corners or beside the island, `pills.layout`), which joins neighboring glass parts into one pill and `wallpaper/` the background layer.
-  - `settings.qml` + `settings/` is the settings app, a separate process (`qs -c somehypr ipc call settings open` or `settings page <id>`; a second call focuses the running one). `settings/` holds its stores (HyprSettings, KeybindStore, ShellIpc), `ui/` and one file per page in `pages/`. It changes shell state over IPC, never by running a second copy of a service.
+  - `settings.qml` + `settings/` is the settings app, a separate process (`qs -c someshell ipc call settings open` or `settings page <id>`; a second call focuses the running one). `settings/` holds its stores (HyprSettings, KeybindStore, ShellIpc), `ui/` and one file per page in `pages/`. It changes shell state over IPC, never by running a second copy of a service.
   - `capture/RegionSelector.qml` is the region picker over a grim-frozen frame; `services/Capture.qml` runs the tools and `services/Recorder.qml` owns wf-recorder (the island shows the timer).
   - `overlay/` is the Super+G game overlay (one card file per widget). Its cards are frosted over the game itself (shell layers have no `xray`); game mode turns compositor blur back on only while it is open, or while frosted cards are pinned (`overlay.blur` / `overlay.pinnedBlur`, `GameMode.overlay()` in `modes/gamemode.lua`). Card blur regions are built from the card's window x/y, because an `item:` region does not follow a dragged parent.
   - Laptop: `services/Battery.qml` (UPower; `available` false on a desktop) feeds the status pill, the `battery` quick tile and Settings → Power (listed only with a battery). Battery bypass is UPower `EnableChargeThreshold` on the real battery (`UPower.devices`; the display device has no path), with no password for the active session. UPower devices populate only once something binds to them. `services/Brightness.qml` uses the backlight (brightnessctl) for eDP/LVDS/DSI, DDC otherwise.
-  - `services/Streamer.qml` is streamer mode; peeks then go to `island/PrivatePeek.qml` on the `somehypr:private` layer (`no_screen_share`). `services/GameClients.qml` feeds gamemoded PIDs to `GameMode.set_clients()`.
+  - `services/Streamer.qml` is streamer mode; peeks then go to `island/PrivatePeek.qml` on the `someshell:private` layer (`no_screen_share`). `services/GameClients.qml` feeds gamemoded PIDs to `GameMode.set_clients()`.
   - `lock/` is the lock screen (`WlSessionLock`, surfaces only while locked); state and PAM live in `services/Lock.qml`. `hypr/scripts/lock.sh` calls `ipc call lock lock` and runs hyprlock when the shell does not answer. There is no unlock IPC; test with `ipc call lock preview` (no PAM, Esc closes).
   - `widgets/` holds the desktop widgets (bottom layer, one window per screen, hidden in game mode); `services/Widgets.qml` lists them, `config.json` `widgets` stores which are on and where. Edit mode: `ipc call widgets edit`.
   - `osk/` is the Super+K keyboard; `services/VirtualKeys.qml` types through ydotoold (`YDOTOOL_SOCKET` is passed per call, the shell's env lacks it).
@@ -41,7 +41,7 @@ Current work: Phase 11 (optimize, then make the repo public with an installer fo
   - Bindings are stale inside a change handler: in `onBusChanged`, a property bound to `bus` (or a `command` bound to it) still has its old value; read the source property itself. `Timer.restart()`/`start()` replaces a `running:` binding for good; leave a bound timer alone.
   - Animation gotcha: `SpringAnimation` (and `Spring`) only in a `Behavior` or as `SpringAnimation on <prop>`. Inside a `Sequential`/`ParallelAnimation` Qt segfaults when it starts; use `NumberAnimation` there (`components/Reveal.qml`).
   - Font gotcha: every distinct `font.variableAxes` value opens another face (mmap + glyph cache). `components/Icon.qml` snaps FILL to 0/1 and opsz to 20/24/40/48; never animate an axis.
-- `install.sh` is the installer for any Arch PC: missing packages (pacman, paru/yay), Google Sans Flex download, ydotool service, i2c group, links (backup `*.pre-somehypr`), screens (`generated/monitors.lua` from `hyprctl monitors all -j`, kept if present), reload with automatic rollback on config errors, then it starts the shell (stopping other Quickshell configs). `--update` pulls first, `--detect` rewrites screens, `--check` only verifies, `--rollback` restores. Questions default to no without a terminal, so test it with `./install.sh </dev/null` (changes nothing that needs an answer) or into a throwaway `XDG_CONFIG_HOME` with `env -u HYPRLAND_INSTANCE_SIGNATURE`.
+- `install.sh` is the installer for any Arch PC: missing packages (pacman, paru/yay), Google Sans Flex download, ydotool service, i2c group, links (backup `*.pre-someshell`), screens (`generated/monitors.lua` from `hyprctl monitors all -j`, kept if present), reload with automatic rollback on config errors, then it starts the shell (stopping other Quickshell configs). `--update` pulls first, `--detect` rewrites screens, `--check` only verifies, `--rollback` restores. Questions default to no without a terminal, so test it with `./install.sh </dev/null` (changes nothing that needs an answer) or into a throwaway `XDG_CONFIG_HOME` with `env -u HYPRLAND_INSTANCE_SIGNATURE`.
 - `core/env.lua` reads GPU vendors from `/sys/class/drm/card*/device/vendor` (`GPU_VENDORS`); the NVIDIA env applies only when NVIDIA is the only GPU.
 
 ## Hyprland Lua API
@@ -59,22 +59,22 @@ hyprctl binds -j | jq length         # 201 (with no keybinds.json)
 Shell changes:
 ```sh
 timeout 10 qs -p shell/shell.qml 2>&1 | grep -E "WARN|ERROR"   # dev copy; only notification/polkit clashes with the live shell may appear
-qs -c somehypr ipc call island open <view>                     # search control media notifications system power clipboard emoji keys
-qs -c somehypr ipc call island state
-qs -c somehypr ipc call overview toggle
-qs -c somehypr ipc call capture region <mode>                   # shot ocr lens translate record recordSound
-qs -c somehypr ipc call overlay toggle · streamer toggle
-qs -c somehypr ipc call lock preview · widgets edit · osk toggle
-qs -c somehypr ipc call schedule state · schedule at <HH:MM|now> · wallpaper slot <name>   # time-of-day schedule (at/slot change the wallpaper)
+qs -c someshell ipc call island open <view>                     # search control media notifications system power clipboard emoji keys
+qs -c someshell ipc call island state
+qs -c someshell ipc call overview toggle
+qs -c someshell ipc call capture region <mode>                   # shot ocr lens translate record recordSound
+qs -c someshell ipc call overlay toggle · streamer toggle
+qs -c someshell ipc call lock preview · widgets edit · osk toggle
+qs -c someshell ipc call schedule state · schedule at <HH:MM|now> · wallpaper slot <name>   # time-of-day schedule (at/slot change the wallpaper)
 timeout 8 qs -p shell/settings.qml 2>&1 | grep -E "WARN|ERROR"   # settings app
 ```
 - IPC function names must not clash with `qs ipc` subcommands (`show`, `call`, `prop`): `qs ipc call x show` is parsed as `qs ipc show`.
-Never edit `~/.config/hypr.pre-somehypr` or `~/.config/quickshell/ii`. They are the rollback (`install.sh --rollback`).
-- Memory: compare against a fresh start and read `Anonymous`/`Pss` in `/proc/<pid>/smaps_rollup`, not only RSS. An empty one-window Quickshell already shows ~250 MB RSS / ~55 MB anon on this NVIDIA stack. Measure with `pgrep -x qs`; `pkill -f "qs -c somehypr"` also matches the shell running the command.
+Never edit `~/.config/hypr.pre-someshell` or `~/.config/quickshell/ii`. They are the rollback (`install.sh --rollback`).
+- Memory: compare against a fresh start and read `Anonymous`/`Pss` in `/proc/<pid>/smaps_rollup`, not only RSS. An empty one-window Quickshell already shows ~250 MB RSS / ~55 MB anon on this NVIDIA stack. Measure with `pgrep -x qs`; `pkill -f "qs -c someshell"` also matches the shell running the command.
 
 ## Phase workflow
 - Work through `docs/plan.md` one phase at a time and tick its checkboxes (`[x]` done, `[~]` done differently, with a note) as tasks land.
-- Commit and push after **each task** (one checklist item, or one small sub-phase), once it is verified: tick it in `docs/plan.md` in the same commit, then `git push origin main` (remote `someact/SomeHypr`, private). Message: `Phase <n><sub>: <task>` (e.g. `Phase 9c: show only occupied workspaces`). Unrelated changes go in their own commit.
+- Commit and push after **each task** (one checklist item, or one small sub-phase), once it is verified: tick it in `docs/plan.md` in the same commit, then `git push origin main` (remote `someact/SomeShell`, private). Message: `Phase <n><sub>: <task>` (e.g. `Phase 9c: show only occupied workspaces`). Unrelated changes go in their own commit.
 - When the last task of a phase is done and the phase-level checks pass, mark the phase ✅ in the plan in that final commit.
 - New tasks the user asks for mid-phase go into the plan first (as a `9a+`-style section, dated), so every change is tracked.
 - `README.md` explains how the setup works, installs and updates. Update it in the same commit when a change affects any of those (new dependency, script, option, or install step).
@@ -84,5 +84,5 @@ Never edit `~/.config/hypr.pre-somehypr` or `~/.config/quickshell/ii`. They are 
 - Use events instead of polling.
 - Use matugen only: no Python and no cava.
 - Use compositor blur (`BackgroundEffect`) instead of QML blur.
-- Use global shortcuts under appid `somehypr`.
+- Use global shortcuts under appid `someshell`.
 - Don't hardcode this machine in new code (monitor name or size, GPU, tablet, keyboard layouts, absolute paths, user or place names). The repo goes public in Phase 11, so detect these values or read them from settings.

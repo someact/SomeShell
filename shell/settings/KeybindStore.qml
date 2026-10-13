@@ -5,7 +5,7 @@ import Quickshell
 import Quickshell.Io
 import qs.core
 
-// Keybind changes (~/.config/somehypr/keybinds.json), applied by hypr/binds/user.lua:
+// Keybind changes (~/.config/someshell/keybinds.json), applied by hypr/binds/user.lua:
 //   overrides: { "<original combo>": { keys: "<new combo>" } | { disabled: true } }
 //   custom:    [ { keys, command, description, enabled } ]
 // `binds` is what Hyprland has bound right now (`hyprctl binds -j`), refreshed
@@ -106,7 +106,7 @@ Singleton {
     // While recording, the app parks Hyprland in a submap with no binds so
     // already-bound combos reach it (hypr/binds/user.lua defines it).
     function recordMode(on) {
-        Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.submap("${on ? "somehypr-record" : "reset"}")`]);
+        Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.submap("${on ? "someshell-record" : "reset"}")`]);
     }
 
     // xkb keycode -> Hyprland key name (US names, so Shift and the Thai layout

@@ -1,4 +1,4 @@
--- Keybind changes from the settings app (~/.config/somehypr/keybinds.json):
+-- Keybind changes from the settings app (~/.config/someshell/keybinds.json):
 --   overrides: { ["SUPER + V"] = { keys = "SUPER + B" } }  or  { disabled = true }
 --   custom:    [ { keys, command, description, enabled } ]
 --
@@ -8,7 +8,7 @@
 -- then restores hl.bind and adds the custom binds plus the key-recording submap.
 -- A bad entry is skipped and listed in USER_BINDS_ERRORS instead of breaking the config.
 
-local data, err = JSON.read(SOMEHYPR_DIR .. "/keybinds.json")
+local data, err = JSON.read(SOMESHELL_DIR .. "/keybinds.json")
 data = type(data) == "table" and data or {}
 USER_BINDS_ERRORS = {}
 if err and err ~= "missing" then table.insert(USER_BINDS_ERRORS, "keybinds.json: " .. err) end
@@ -71,7 +71,7 @@ function UserBinds.finish()
     -- The settings app enters this submap while recording a shortcut, so combos
     -- that are already bound reach it instead of firing. It leaves on its own;
     -- CTRL + ALT + Escape is the way out if it ever cannot.
-    hl.define_submap("somehypr-record", function()
+    hl.define_submap("someshell-record", function()
         bind("CTRL + ALT + Escape", hl.dsp.submap("reset"))
     end)
 end

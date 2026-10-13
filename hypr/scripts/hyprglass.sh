@@ -16,7 +16,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 PATCH="$HERE/../plugins/hyprglass-fit-shape.patch"
 SRC="$HOME/.local/src/hyprglass"
-OUT_DIR="$HOME/.local/share/somehypr/plugins"
+OUT_DIR="$HOME/.local/share/someshell/plugins"
 VERSION="$(hyprctl version -j | jq -r .tag | sed 's/^v//; s/-.*//')"
 BRANCH="hyprland-$(cut -d. -f1,2 <<<"$VERSION")"
 OUT="$OUT_DIR/hyprglass-$VERSION.so"
@@ -37,7 +37,7 @@ else
     echo "no $BRANCH branch upstream, using main (meant for hyprland-git)" >&2
     REF="origin/main"
 fi
-git checkout --quiet --force -B somehypr "$REF"
+git checkout --quiet --force -B someshell "$REF"
 git apply "$PATCH"
 make clean >/dev/null 2>&1 || true
 make

@@ -22,7 +22,7 @@ Scope {
             screen: Quickshell.screens.find(s => s.name === Capture.monitor) ?? Quickshell.screens[0]
             readonly property HyprlandMonitor mon: Hyprland.monitors.values.find(m => m.name === Capture.monitor) ?? null
 
-            WlrLayershell.namespace: "somehypr:capture"
+            WlrLayershell.namespace: "someshell:capture"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
             exclusionMode: ExclusionMode.Ignore

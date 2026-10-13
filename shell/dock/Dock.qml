@@ -68,7 +68,7 @@ PanelWindow {
     readonly property bool shown: !UiState.hidden && !fullscreen && reveal
 
     visible: Config.dock.enabled && !GameMode.active
-    WlrLayershell.namespace: "somehypr:dock"
+    WlrLayershell.namespace: "someshell:dock"
     WlrLayershell.layer: WlrLayer.Top
     exclusionMode: mode === "never" ? ExclusionMode.Normal : ExclusionMode.Ignore
     exclusiveZone: mode === "never" ? dockHeight + margin : 0

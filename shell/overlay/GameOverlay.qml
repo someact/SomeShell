@@ -59,7 +59,7 @@ Scope {
             }
 
             screen: root.screen
-            WlrLayershell.namespace: "somehypr:overlay"
+            WlrLayershell.namespace: "someshell:overlay"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
             exclusionMode: ExclusionMode.Ignore

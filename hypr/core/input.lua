@@ -34,7 +34,7 @@ hl.config({
 -- Touchpad gestures (hypr.json touchpad.gestures, on by default). Without a
 -- touchpad they never fire.
 if setting("touchpad.gestures", true) then
-    local function overview() hl.dispatch(hl.dsp.global("somehypr:overviewToggle")) end
+    local function overview() hl.dispatch(hl.dsp.global("someshell:overviewToggle")) end
     hl.gesture({ fingers = 3, direction = "swipe", action = "move" })
     hl.gesture({ fingers = 3, direction = "pinch", action = "fullscreen" })
     hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })

@@ -16,7 +16,7 @@
 -- It re-samples the background only when something behind a surface changes
 -- (at most 30 times a second), otherwise it reuses the last frame.
 
-LIQUID_GLASS_PLUGIN = HOME .. "/.local/share/somehypr/plugins/hyprglass-" .. hl.version() .. ".so"
+LIQUID_GLASS_PLUGIN = HOME .. "/.local/share/someshell/plugins/hyprglass-" .. hl.version() .. ".so"
 
 if liquidGlass and file_exists(LIQUID_GLASS_PLUGIN) then
     hl.plugin.load(LIQUID_GLASS_PLUGIN)
@@ -34,7 +34,7 @@ if hg then
     -- One glass shape per surface only: fit_shape reads one rounded box from the
     -- region. The overlay and desktop widgets hold several cards, so they keep
     -- Hyprland's plain blur.
-    for _, ns in ipairs({ "somehypr:island", "somehypr:pill", "somehypr:dock", "somehypr:osk" }) do
+    for _, ns in ipairs({ "someshell:island", "someshell:pill", "someshell:dock", "someshell:osk" }) do
         hg.layer(ns, { mask_mode = "region" })
     end
     -- Windows stay as they are (their own blur) unless asked for

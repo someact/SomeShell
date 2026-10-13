@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SomeHypr installer. Sets up this repo as the desktop on any Arch/CachyOS PC.
+# SomeShell installer. Sets up this repo as the desktop on any Arch/CachyOS PC.
 #
 #   ./install.sh              full setup: packages, fonts, services, screens, links, start the shell
 #   ./install.sh --update     git pull, then the same setup (skips what is already done)
@@ -11,15 +11,19 @@
 #          --wallpaper <file> (set it once the shell runs; colors come from it)
 #
 # Every step is safe to run again. The first time a real directory is replaced
-# it is moved to <name>.pre-somehypr, which is what --rollback restores. If
+# it is moved to <name>.pre-someshell, which is what --rollback restores. If
 # Hyprland reports config errors after linking, the links are rolled back.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
-SUFFIX=".pre-somehypr"
+SUFFIX=".pre-someshell"
+# The project was called SomeHypr before; migrate_legacy moves its directories
+# over, and --rollback still restores backups made under the old name
+LEGACY="somehypr"
+LEGACY_SUFFIX=".pre-$LEGACY"
 MONITORS="$REPO/hypr/generated/monitors.lua"
-FONT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/somehypr"
+FONT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/someshell"
 SANS_URL="https://raw.githubusercontent.com/google/fonts/main/ofl/googlesansflex/GoogleSansFlex%5BGRAD,ROND,opsz,slnt,wdth,wght%5D.ttf"
 
 YES=0
@@ -31,7 +35,7 @@ MODE="setup"
 LINKS=(
     "hypr:$CONFIG/hypr"
     "matugen:$CONFIG/matugen"
-    "shell:$CONFIG/quickshell/somehypr"
+    "shell:$CONFIG/quickshell/someshell"
 )
 
 # Packages, as "package:command-or-path that proves it is there"
@@ -239,6 +243,11 @@ link_one() {
         ok "$dst"
         return
     fi
+    # A dead link (the repo moved or was renamed) holds nothing worth a backup
+    if [[ -L "$dst" && ! -e "$dst" ]]; then
+        warn "$dst pointed at $(readlink "$dst"), which is gone; relinking"
+        rm "$dst"
+    fi
     if [[ -e "$dst" || -L "$dst" ]]; then
         if [[ -e "$dst$SUFFIX" ]]; then
             local stamp="$dst$SUFFIX.$(date +%Y%m%d-%H%M%S)"
@@ -260,10 +269,58 @@ unlink_one() {
         rm "$dst"
         say "removed $dst"
     fi
-    if [[ -e "$dst$SUFFIX" && ! -e "$dst" ]]; then
-        mv "$dst$SUFFIX" "$dst"
-        say "restored $dst"
+    local backup
+    for backup in "$dst$SUFFIX" "$dst$LEGACY_SUFFIX"; do
+        if [[ -e "$backup" && ! -e "$dst" ]]; then
+            mv "$backup" "$dst"
+            say "restored $dst"
+        fi
+    done
+}
+
+# --- Migration from SomeHypr ---------------------------------------------------
+
+# Moves what the old name left behind to the new one. Every step checks first,
+# so it does nothing on a fresh machine or on a second run.
+migrate_legacy() {
+    local data="${XDG_DATA_HOME:-$HOME/.local/share}" moved=0 base old new f
+    for base in "$CONFIG" "${XDG_STATE_HOME:-$HOME/.local/state}" "${XDG_CACHE_HOME:-$HOME/.cache}" "$data" "$data/fonts"; do
+        old="$base/$LEGACY"
+        new="$base/someshell"
+        if [[ -d "$old" && ! -L "$old" && ! -e "$new" ]]; then
+            mv "$old" "$new"
+            ok "moved $old -> $new"
+            moved=1
+        fi
+    done
+    # The old shell link and the old shell itself (its shortcuts no longer match)
+    if [[ -L "$CONFIG/quickshell/$LEGACY" ]]; then
+        rm "$CONFIG/quickshell/$LEGACY"
+        moved=1
     fi
+    if hypr_running; then
+        local pids
+        pids="$(pgrep -a -x qs | awk -v n="$LEGACY" '{ for (i = 2; i < NF; i++) if ($i == "-c" && $(i + 1) == n) print $1 }' || true)"
+        if [[ -n "$pids" ]]; then
+            xargs -r kill <<<"$pids"
+            ok "stopped the old shell (qs -c $LEGACY)"
+            moved=1
+        fi
+    fi
+    # Files matugen wrote under the old names; it writes the new ones on the next wallpaper change
+    for f in "$data"/color-schemes/SomeHypr*.colors "$CONFIG/vesktop/themes/$LEGACY.theme.css" "$CONFIG"/zen/*/chrome/"$LEGACY-colors.css"; do
+        [[ -f "$f" ]] && rm "$f" && moved=1
+    done
+    for f in "$CONFIG"/zen/*/chrome/userChrome.css; do
+        [[ -f "$f" ]] && sed -i "s/$LEGACY-colors\.css/someshell-colors.css/g" "$f"
+    done
+    # State files that hold the old cache path
+    if [[ -d "${XDG_STATE_HOME:-$HOME/.local/state}/someshell" ]]; then
+        { grep -rlZ -- "/$LEGACY/" "${XDG_STATE_HOME:-$HOME/.local/state}/someshell" 2>/dev/null || true; } |
+            xargs -0 -r sed -i "s#/$LEGACY/#/someshell/#g"
+    fi
+    ((moved)) && say "Migrated from SomeHypr"
+    return 0
 }
 
 # State that end-4's ii keeps inside ~/.config/hypr and that should survive the swap
@@ -319,30 +376,30 @@ start_shell() {
     hypr_running || return 0
     say "Shell"
     local others
-    others="$( { pgrep -a -x qs | grep -v -- '-c somehypr'; pgrep -a -x quickshell; } || true)"
+    others="$( { pgrep -a -x qs | grep -v -- '-c someshell'; pgrep -a -x quickshell; } || true)"
     if [[ -n "$others" ]]; then
         warn "Another Quickshell is running:"
         echo "$others" | sed 's/^/     /' >&2
-        if ask "Stop it and start SomeHypr?"; then
+        if ask "Stop it and start SomeShell?"; then
             awk '{print $1}' <<<"$others" | xargs -r kill
             sleep 1
         fi
     fi
-    if qs -c somehypr ipc call island state >/dev/null 2>&1; then
-        ok "SomeHypr shell running"
+    if qs -c someshell ipc call island state >/dev/null 2>&1; then
+        ok "SomeShell shell running"
     else
-        hyprctl dispatch exec "qs -c somehypr" >/dev/null 2>&1 ||
-            hyprctl eval 'hl.exec_cmd("qs -c somehypr")' >/dev/null
+        hyprctl dispatch exec "qs -c someshell" >/dev/null 2>&1 ||
+            hyprctl eval 'hl.exec_cmd("qs -c someshell")' >/dev/null
         local i
         for i in {1..20}; do
-            qs -c somehypr ipc call island state >/dev/null 2>&1 && break
+            qs -c someshell ipc call island state >/dev/null 2>&1 && break
             sleep 0.5
         done
-        if qs -c somehypr ipc call island state >/dev/null 2>&1; then ok "SomeHypr shell started"; else warn "The shell did not answer; check: qs log -c somehypr"; fi
+        if qs -c someshell ipc call island state >/dev/null 2>&1; then ok "SomeShell shell started"; else warn "The shell did not answer; check: qs log -c someshell"; fi
     fi
     if [[ -n "$WALLPAPER" ]]; then
-        qs -c somehypr ipc call wallpaper set "$(realpath "$WALLPAPER")" >/dev/null && ok "wallpaper set; matugen recolors everything"
-    elif [[ ! -f "${XDG_STATE_HOME:-$HOME/.local/state}/somehypr/wallpaper.json" ]]; then
+        qs -c someshell ipc call wallpaper set "$(realpath "$WALLPAPER")" >/dev/null && ok "wallpaper set; matugen recolors everything"
+    elif [[ ! -f "${XDG_STATE_HOME:-$HOME/.local/state}/someshell/wallpaper.json" ]]; then
         say "No wallpaper yet: pick one with Ctrl+Super+T, or ./install.sh --wallpaper <file>"
     fi
 }
@@ -357,7 +414,7 @@ summary() {
     if hypr_running && hyprctl devices -j | jq -e '.mice[] | select(.name | test("touchpad"; "i"))' >/dev/null; then
         ok "touchpad: gestures on, options in Settings → Hyprland → Touchpad"
     fi
-    hypr_running || say "Log in to Hyprland to start SomeHypr (then run ./install.sh --detect for the screens)"
+    hypr_running || say "Log in to Hyprland to start SomeShell (then run ./install.sh --detect for the screens)"
 }
 
 # --- Main --------------------------------------------------------------------------
@@ -410,6 +467,7 @@ command -v Hyprland >/dev/null || die "Hyprland is not installed"
 setup_services
 verify || die "Config does not verify, nothing linked"
 carry_state
+migrate_legacy
 say "Links"
 for entry in "${LINKS[@]}"; do link_one "${entry%%:*}" "${entry#*:}"; done
 screens

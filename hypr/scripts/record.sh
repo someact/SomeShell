@@ -2,7 +2,7 @@
 
 # Fallback for when the shell is not running (services/Recorder.qml owns
 # recording otherwise). Same folder setting as the shell: capture.recordDir.
-CONFIG_FILE="$HOME/.config/somehypr/config.json"
+CONFIG_FILE="$HOME/.config/someshell/config.json"
 JSON_PATH=".capture.recordDir // empty"
 
 CUSTOM_PATH=$(jq -r "$JSON_PATH" "$CONFIG_FILE" 2>/dev/null)

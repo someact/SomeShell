@@ -30,7 +30,7 @@ Scope {
             readonly property bool uncovered: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
             readonly property bool editing: UiState.widgetEdit
 
-            WlrLayershell.namespace: "somehypr:widgets"
+            WlrLayershell.namespace: "someshell:widgets"
             WlrLayershell.layer: editing ? WlrLayer.Top : WlrLayer.Bottom
             WlrLayershell.keyboardFocus: editing ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand
             exclusionMode: ExclusionMode.Ignore

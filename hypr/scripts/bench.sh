@@ -25,12 +25,12 @@ done
 qs_pid() {
     local p
     for p in $(pgrep -x qs); do
-        if tr '\0' ' ' < "/proc/$p/cmdline" | grep -q -- "-c somehypr"; then echo "$p"; return; fi
+        if tr '\0' ' ' < "/proc/$p/cmdline" | grep -q -- "-c someshell"; then echo "$p"; return; fi
     done
 }
 QS=$(qs_pid || true)
 HY=$(pgrep -x Hyprland | head -1 || true)
-[[ -n "$QS" ]] || { echo "the shell (qs -c somehypr) is not running" >&2; exit 1; }
+[[ -n "$QS" ]] || { echo "the shell (qs -c someshell) is not running" >&2; exit 1; }
 
 mem() {
     local label="$1"
@@ -44,7 +44,7 @@ fonts() {
 }
 ticks() { awk '{print $14+$15}' "/proc/$1/stat"; }
 pct() { awk -v a="$1" -v b="$2" -v hz="$(getconf CLK_TCK)" -v s="$secs" 'BEGIN {printf "%.2f", (b-a)/hz/s*100}'; }
-ipc() { qs -c somehypr ipc call "$@" >/dev/null 2>&1 || true; }
+ipc() { qs -c someshell ipc call "$@" >/dev/null 2>&1 || true; }
 
 echo "shell pid $QS, up $(ps -o etime= -p "$QS" | tr -d ' ')"
 mem "now"

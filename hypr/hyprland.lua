@@ -1,11 +1,11 @@
--- SomeHypr: Hyprland entry point.
+-- SomeShell: Hyprland entry point.
 --
 -- Load order is fixed and every setting has exactly one home, so nothing
 -- silently overrides anything else. Machine-written files load last:
 --   generated/colors.lua    matugen (wallpaper colors)
 --   generated/monitors.lua  settings app, Displays page (per machine; else the
 --                           older tracked monitors.lua)
---   core/settings.lua       settings app choices (~/.config/somehypr/hypr.json)
+--   core/settings.lua       settings app choices (~/.config/someshell/hypr.json)
 
 require("lib.util")
 require("user")

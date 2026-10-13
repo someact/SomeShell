@@ -3,7 +3,7 @@ import Quickshell.Io
 import qs.core
 import qs.components
 
-// Quick notes, saved to ~/.local/state/somehypr/notes.md a moment after typing stops.
+// Quick notes, saved to ~/.local/state/someshell/notes.md a moment after typing stops.
 OverlayCard {
     id: root
     icon: "sticky_note_2"
