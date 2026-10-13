@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import qs.core
 import qs.components
 import qs.services
@@ -60,6 +61,44 @@ Column {
             anchors.verticalCenter: parent.verticalCenter
             text: "Turn on"
             onClicked: BluetoothState.toggle()
+        }
+    }
+
+    // The firewall drops what a phone sends here
+    Rectangle {
+        visible: QuickShare.blocked !== "" && QuickShare.enabled
+        width: parent.width
+        height: fw.implicitHeight + 16
+        radius: Theme.radius.normal
+        color: Theme.islandRaised
+        Column {
+            id: fw
+            anchors.verticalCenter: parent.verticalCenter
+            x: 12
+            width: parent.width - 24 - copy.width - 8
+            spacing: 2
+            Label {
+                width: parent.width
+                text: "The firewall (" + QuickShare.blocked + ") blocks phones from sending here"
+                font.pixelSize: Theme.font.small
+                font.weight: Theme.font.weightTitle
+            }
+            Label {
+                width: parent.width
+                text: "Run once in a terminal:  " + QuickShare.unblock
+                color: Theme.fgIslandDim
+                font.pixelSize: Theme.font.small
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
+            }
+        }
+        Chip {
+            id: copy
+            anchors.right: parent.right
+            anchors.rightMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Copy"
+            onClicked: Quickshell.execDetached(["wl-copy", "--", QuickShare.unblock])
         }
     }
 

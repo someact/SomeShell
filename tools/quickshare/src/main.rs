@@ -171,9 +171,11 @@ fn action(sender: &broadcast::Sender<ChannelMessage>, id: String, action: Channe
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    // --visibility <visible|invisible|temporarily>  --download <dir>
+    // --visibility <visible|invisible|temporarily>  --download <dir>  --port <n>
+    // Without --port the system picks one, which a firewall cannot be opened for
     let mut start = Visibility::Invisible;
     let mut download: Option<PathBuf> = None;
+    let mut port: Option<u32> = None;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -182,13 +184,24 @@ async fn main() -> Result<(), anyhow::Error> {
                 None => anyhow::bail!("--visibility takes visible, invisible or temporarily"),
             },
             "--download" => download = args.next().map(PathBuf::from),
+            "--port" => match args.next().and_then(|p| p.parse::<u32>().ok()) {
+                Some(p) if p > 0 && p < 65536 => port = Some(p),
+                _ => anyhow::bail!("--port takes a number from 1 to 65535"),
+            },
             other => anyhow::bail!("unknown argument: {other}"),
         }
     }
 
-    let mut rqs = RQS::new(start, None, download.clone());
+    let mut rqs = RQS::new(start, port, download.clone());
     let mut messages = rqs.message_sender.subscribe();
-    let (send_file, mut nearby) = rqs.run().await?;
+    let (send_file, mut nearby) = match rqs.run().await {
+        Ok(channels) => channels,
+        Err(e) => {
+            // Mostly the port: another helper or program holds it
+            error(format!("start: {e}"));
+            return Err(e);
+        }
+    };
     let (device_sender, mut devices) = broadcast::channel::<EndpointInfo>(20);
     // What looks for devices right now: the library's discovery (network and
     // Bluetooth), or the network part alone under a token of our own

@@ -78,7 +78,10 @@ Send files to and receive files from an Android phone over Quick Share (Nearby S
 - [x] Sending: `/share [file]`, a file dropped on the island, Dolphin's menu (`hypr/scripts/quickshare-send.sh`), IPC `quickshare offer`; pick the device on the page
 - [x] Streamer mode hides the sender and file names in the island prompt
 - [x] Settings → Island → Search → "Quick Share folder" (`quickshare.downloadDir`, empty: Downloads)
-- [ ] With a phone: receive a file, a link and several files; send to the phone; with Bluetooth off and on; decline; cancel half way
+- [x] With a phone: sending to the phone works (2026-10-14)
+- [x] The phone did not see the laptop: `ufw` drops incoming connections and the helper listened on a random port. It now listens on a fixed one (`quickshare.port`, 47893), the page warns when ufw or firewalld is in the way and gives the command to open it, and so does `scripts/quickshare.sh`
+- [ ] With a phone, after opening the port: receive a file, a link and several files; with Bluetooth off and on; decline; cancel half way
+- [ ] If the phone still does not see it: the helper announces every address of the machine (docker bridges, Tailscale too) and the phone may try a wrong one first
 - [ ] Drop a file on the island by hand (the drop target is written but could not be driven from a script)
 - [ ] The page in streamer mode still shows names (it is opened on purpose); decide whether to mask it too
 - [ ] Offer the build in `install.sh` when `cargo` is installed

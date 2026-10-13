@@ -37,6 +37,12 @@ Singleton {
 
     readonly property bool discovering: ready && outbox.length > 0
     readonly property bool wanted: available && !swapping && (enabled || outbox.length > 0 || active.length > 0 || handingOver)
+    // A phone connects to this TCP port to send. A firewall that drops incoming
+    // connections (ufw and firewalld do by default) makes this PC invisible to
+    // it, while sending from here still works; `blocked` is what the page warns about
+    readonly property int port: Config.quickshare.port
+    property string blocked: ""                 // "ufw" | "firewalld" | ""
+    readonly property string unblock: blocked === "ufw" ? "sudo ufw allow " + port + "/tcp" : blocked === "firewalld" ? "sudo firewall-cmd --permanent --add-port=" + port + "/tcp && sudo firewall-cmd --reload" : ""
     readonly property string downloadDir: Config.quickshare.downloadDir.replace(/^~/, Paths.home)
 
     readonly property string icon: "nearby"
@@ -224,7 +230,8 @@ Singleton {
         id: helper
         running: root.wanted
         stdinEnabled: true
-        command: [Paths.quickshare + (root.ble ? "" : "-net"), "--visibility", root.enabled ? "visible" : "invisible"].concat(root.downloadDir !== "" ? ["--download", root.downloadDir] : [])
+        command: [Paths.quickshare + (root.ble ? "" : "-net"), "--visibility", root.enabled ? "visible" : "invisible"].concat(root.downloadDir !== "" ? ["--download", root.downloadDir] : [], root.port > 0 ? ["--port", String(root.port)] : [])
+        onStarted: firewall.running = true
         stdout: SplitParser {
             onRead: line => {
                 let e;
@@ -251,6 +258,17 @@ Singleton {
             root.devices = [];
             // Whatever was going on ended with the helper
             root.transfers = root.transfers.map(t => root.isOver(t.state) ? t : Object.assign({}, t, { state: "disconnected" }));
+        }
+    }
+
+    // ufw's rules file is readable without root on most systems; when it is
+    // not (or with firewalld, which only answers root) the warning shows anyway
+    // and says "may", see the page
+    Process {
+        id: firewall
+        command: ["sh", "-c", 'port="$1"; if systemctl is-active -q ufw; then grep -qs -- "-p tcp --dport $port -j ACCEPT" /etc/ufw/user.rules && exit 0; echo ufw; elif systemctl is-active -q firewalld; then echo firewalld; fi', "sh", String(root.port)]
+        stdout: StdioCollector {
+            onStreamFinished: root.blocked = text.trim()
         }
     }
 

@@ -188,6 +188,7 @@ Singleton {
             property JsonObject quickshare: JsonObject {
                 property bool enabled: false          // visible to nearby devices, so a phone can send here
                 property string downloadDir: ""       // empty: the Downloads folder
+                property int port: 47893              // TCP port phones connect to; open it in the firewall (0: any free port)
             }
             property JsonObject media: JsonObject {
                 property bool lyrics: true            // fetch lyrics from LRCLIB (services/Lyrics.qml)

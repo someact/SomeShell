@@ -44,6 +44,16 @@ echo "built: $OUT and $OUT-net"
 # A running shell looks for the helper again
 qs -c someshell ipc call quickshare refresh >/dev/null 2>&1 || true
 
+# A phone sends to a TCP port on this PC (quickshare.port in the shell's
+# config.json, 47893 unless changed). A firewall that drops incoming
+# connections hides this PC from the phone, so say how to open it.
+PORT="$(jq -r '.quickshare.port // 47893' "${XDG_CONFIG_HOME:-$HOME/.config}/someshell/config.json" 2>/dev/null || echo 47893)"
+if systemctl is-active -q ufw 2>/dev/null; then
+    echo "firewall: ufw is on. To receive from a phone, run once:  sudo ufw allow $PORT/tcp"
+elif systemctl is-active -q firewalld 2>/dev/null; then
+    echo "firewall: firewalld is on. To receive from a phone, run once:  sudo firewall-cmd --permanent --add-port=$PORT/tcp && sudo firewall-cmd --reload"
+fi
+
 # Dolphin: right-click files → Send with Quick Share (KDE reads only executable service menus)
 MENU_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/kio/servicemenus"
 if command -v dolphin >/dev/null; then

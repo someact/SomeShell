@@ -49,4 +49,5 @@ Optional parts:
 ./scripts/sddm-theme.sh --install        # the SDDM login theme (--preview to try it, --rollback to undo)
 ~/.config/hypr/scripts/hyprglass.sh      # build liquid glass, then turn it on in Settings → Appearance
 ./scripts/quickshare.sh                  # build Quick Share (needs rust and protobuf), then turn on its quick tile
+sudo ufw allow 47893/tcp                 # with a firewall: let your phone send to this PC
 ```

@@ -9,6 +9,10 @@ It is a thin front end over [`rqs_lib`](https://github.com/Martichou/rquickshare
 GPL-3.0-or-later too, whatever the rest of the repository is licensed under.
 It is a separate program; the shell only talks to it over a pipe.
 
+Arguments: `--visibility <visible|invisible|temporarily>`, `--download <dir>`,
+`--port <n>` (the TCP port phones connect to; fixed so a firewall can be opened
+for it).
+
 Build it with `scripts/quickshare.sh` (needs `cargo` and `protoc`). The binary
 goes to `~/.local/share/someshell/bin/someshell-quickshare`.
 

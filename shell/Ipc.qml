@@ -67,7 +67,7 @@ Scope {
                 QuickShare.reject(QuickShare.pending.id);
         }
         function state(): string {
-            return JSON.stringify({ available: QuickShare.available, enabled: QuickShare.enabled, running: QuickShare.running, ready: QuickShare.ready, bluetooth: QuickShare.ble, discovering: QuickShare.discovering, devices: QuickShare.devices, outbox: QuickShare.outbox, transfers: QuickShare.transfers });
+            return JSON.stringify({ available: QuickShare.available, enabled: QuickShare.enabled, running: QuickShare.running, ready: QuickShare.ready, bluetooth: QuickShare.ble, port: QuickShare.port, blocked: QuickShare.blocked, discovering: QuickShare.discovering, devices: QuickShare.devices, outbox: QuickShare.outbox, transfers: QuickShare.transfers });
         }
     }
 
