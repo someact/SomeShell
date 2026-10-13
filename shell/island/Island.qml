@@ -10,7 +10,9 @@ import "ambient"
 import "views"
 
 // The island: one top-layer window per monitor. Collapsed it shows the most
-// important ambient state; expanded it hosts one view at a time. The notch
+// important ambient state, plus a side slot for recording and microphone /
+// screen-share use while something else has the main place (Config.island.dual);
+// expanded it hosts one view at a time. The notch
 // shape springs to the size of whatever it holds, and the content follows a
 // beat later, so shape and content move as one reaction.
 //
@@ -29,7 +31,11 @@ PanelWindow {
     readonly property bool shown: open || peek
 
     // Ambient priority: polkit → notification → OSD → recording → privacy → game dot → media → clock
-    // (in streamer mode notification peeks go to the private layer, see PrivatePeek.qml)
+    // (in streamer mode notification peeks go to the private layer, see PrivatePeek.qml).
+    // With the side slot on, recording and privacy let media keep the main place
+    // and show in the slot instead (never in game mode, where the island is a nub).
+    readonly property string persistent: Recorder.active ? "record" : Privacy.active ? "privacy" : ""
+    readonly property bool mediaShown: Media.active && Config.island.showMedia
     readonly property string ambient: {
         if (Polkit.active)
             return "polkit";
@@ -37,16 +43,18 @@ PanelWindow {
             return "notif";
         if (Osd.visible)
             return "osd";
-        if (Recorder.active)
-            return "record";
-        if (Privacy.active)
-            return "privacy";
+        if (persistent !== "" && (!Config.island.dual || !mediaShown || GameMode.active))
+            return persistent;
         if (GameMode.active)
             return "dot";
-        if (Media.active && Config.island.showMedia)
+        if (mediaShown)
             return "media";
         return "clock";
     }
+    // The side slot: only beside content that would otherwise hide the state
+    readonly property bool side: Config.island.dual && persistent !== "" && (ambient === "notif" || ambient === "osd" || ambient === "media")
+    readonly property real sideGap: 10
+    readonly property real sideWidth: sideLoader.item ? sideLoader.item.implicitWidth + sideGap : 0
 
     // Styles: notch hangs from the edge; floating and satellites are a free pill
     // level with the corner pills (satellites also pulls the pills to its sides)
@@ -63,7 +71,7 @@ PanelWindow {
         const a = ambientLoader.item;
         if (ambient === "dot")
             return a?.implicitWidth ?? 24;
-        return Math.max(minCollapsedWidth, (a?.implicitWidth ?? 60) + 32);
+        return Math.max(minCollapsedWidth, (a?.implicitWidth ?? 60) + 32) + sideWidth;
     }
     readonly property real targetHeight: {
         if (shown && viewLoader.item)
@@ -183,7 +191,9 @@ PanelWindow {
     // pause their animations and live updates (`live` on the loaded item)
     readonly property bool covered: fullscreen && !shown
     readonly property bool peekAllowed: Config.island.hoverPeek && !GameMode.active && !fullscreen && !UiState.hidden && !UiState.overview && ambient !== "polkit"
-    readonly property bool hovered: bodyHover.hovered || stripHover.hovered
+    // Not over the side slot: it is a button of its own (stop recording), and a
+    // peek opening under the pointer would take the click
+    readonly property bool hovered: (bodyHover.hovered || stripHover.hovered) && !(sideLoader.item?.hovered ?? false)
     readonly property string peekView: ambient === "notif" ? "notifications" : ambient === "media" ? "media" : "control"
 
     onHoveredChanged: {
@@ -322,6 +332,8 @@ PanelWindow {
         Loader {
             id: ambientLoader
             anchors.centerIn: parent
+            // Centered in what the side slot leaves
+            anchors.horizontalCenterOffset: -win.sideWidth / 2
             active: !win.shown || unload.running
             opacity: win.shown ? 0 : 1
             visible: opacity > 0
@@ -355,6 +367,29 @@ PanelWindow {
             Reveal {
                 id: reveal
                 target: ambientLoader.item
+            }
+        }
+
+        // Side slot, at the right end of the collapsed island
+        Loader {
+            id: sideLoader
+            anchors.right: parent.right
+            anchors.rightMargin: 14
+            anchors.verticalCenter: parent.verticalCenter
+            active: win.side && (!win.shown || unload.running)
+            opacity: win.shown ? 0 : 1
+            visible: opacity > 0
+            sourceComponent: sideAmbient
+            onLoaded: {
+                item.live = Qt.binding(() => !win.covered);
+                sideReveal.play();
+            }
+            Behavior on opacity {
+                NumberAnimation { duration: Motion.fast }
+            }
+            Reveal {
+                id: sideReveal
+                target: sideLoader.item
             }
         }
 
@@ -489,6 +524,10 @@ PanelWindow {
     Component {
         id: recordAmbient
         AmbientRecord {}
+    }
+    Component {
+        id: sideAmbient
+        AmbientSide {}
     }
     Component {
         id: dotAmbient

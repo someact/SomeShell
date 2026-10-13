@@ -189,6 +189,15 @@ Page {
             }
         }
         SettingRow {
+            icon: "splitscreen_right"
+            title: "Two things at once"
+            subtitle: "Recording and microphone or screen-share use sit at the side while media, a notification or a volume change shows; off: they take the island over"
+            Switch {
+                checked: Config.island.dual
+                onToggled: on => Config.island.dual = on
+            }
+        }
+        SettingRow {
             icon: "music_note"
             title: "Show media"
             subtitle: "Album art, title and peak bars while something plays"

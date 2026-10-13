@@ -16,19 +16,9 @@ Item {
         anchors.centerIn: parent
         spacing: 8
 
-        Rectangle {
-            id: dot
+        PulseDot {
             anchors.verticalCenter: parent.verticalCenter
-            width: 8
-            height: 8
-            radius: 4
-            color: "#ff453a"
-            SequentialAnimation on opacity {
-                loops: Animation.Infinite
-                running: !GameMode.active && root.live
-                NumberAnimation { to: 0.35; duration: 900; easing.type: Easing.InOutSine }
-                NumberAnimation { to: 1; duration: 900; easing.type: Easing.InOutSine }
-            }
+            live: root.live
         }
         Icon {
             anchors.verticalCenter: parent.verticalCenter

@@ -3,7 +3,7 @@
 Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, one 1920x1080@100 monitor DP-1, US/TH keyboard, UGTablet pen) and a laptop (Lenovo Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Laptop features are detected at runtime, never assumed.
 The project was called SomeHypr until Phase 12; `install.sh` (`migrate_legacy`) moves the old `somehypr` directories over, and that is the only place the old name may appear.
 Goals and the task tracker are in `docs/plan.md`. Phases 0–11 are finished and live in git history only.
-Current work: Phase 13 (13a WARP and 13b tile sizes are done; then two contents in the island, Quick Share with Android), then Phase 14 (public release). Phase 12 (rename, fixes from the code review) is done.
+Current work: Phase 13 (13a WARP, 13b tile sizes and 13c the island side slot are done; open: 13d Quick Share with Android, 13e emoji picker, 13f clipboard image previews, 13g GIF search), then Phase 14 (public release). Phase 12 (rename, fixes from the code review) is done.
 
 ## Layout
 - `hypr/` is linked to `~/.config/hypr`. `hyprland.lua` loads files in a fixed order, and each setting lives in exactly one file:
@@ -20,7 +20,7 @@ Current work: Phase 13 (13a WARP and 13b tile sizes are done; then two contents 
 - Wallpaper state is `~/.local/state/someshell/wallpaper.json`; set it through the shell (`qs -c someshell ipc call wallpaper set <path>`) so videos start mpvpaper and get a matugen frame. Images are shown from a screen-sized copy (`~/.cache/someshell/wall-<WxH>-<md5>.jpg`, ImageMagick), because Qt keeps a large original's full decode in memory. The time-of-day schedule is `shell/services/Schedule.qml` (slot model in `shell/lib/schedule.js`, shared with the settings page so it never runs a second scheduler); `Wallpaper.save()` does nothing until the saved state is `loaded`, so a check at start cannot write an empty path over it.
 - `shell/` is linked to `~/.config/quickshell/someshell` and runs with `qs -c someshell`:
   - `core/` singletons (Config, Theme, Motion, Paths, UiState, GameMode), `components/`, `services/` (one singleton per system source).
-  - `island/Island.qml` is the notch window; `island/views/*View.qml` are loaded only while open; `island/ambient/` holds the collapsed states.
+  - `island/Island.qml` is the notch window; `island/views/*View.qml` are loaded only while open; `island/ambient/` holds the collapsed states. `ambient` is the main one; `side` (`AmbientSide.qml`, `island.dual`) shows recording and privacy beside media, a notification or the OSD, and is left out of the hover that starts a peek.
   - `commands/` holds one file per `/command`, registered in `commands/Commands.qml`.
   - `Shortcuts.qml` (global shortcuts) and `Ipc.qml` (IPC targets) sit at the root; `corners/` holds the pills: `PillParts.qml` defines each part (a `PillPart`, glass or floating per `config.json` `pills`), `Pills.qml` creates a `CornerWindow` per zone (corners or beside the island, `pills.layout`), which joins neighboring glass parts into one pill and `wallpaper/` the background layer.
   - `settings.qml` + `settings/` is the settings app, a separate process (`qs -c someshell ipc call settings open` or `settings page <id>`; a second call focuses the running one). `settings/` holds its stores (HyprSettings, KeybindStore, ShellIpc), `ui/` and one file per page in `pages/`. It changes shell state over IPC, never by running a second copy of a service.

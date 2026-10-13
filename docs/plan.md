@@ -58,11 +58,15 @@ Each tile is full (icon, title, state), medium (icon, title) or icon only: penci
 
 Checked with the pointer: the chooser, the badge through all three sizes, the grid button, drag to reorder and click to hide (both still work with the right button added).
 
-### 13c Island: two contents at once
-- [ ] The collapsed island shows a main content and a side slot
-- [ ] Microphone / screen share and the recording timer move to the side slot while media, a notification or the OSD is the main content; alone they stay the main content
-- [ ] One switch in Settings → Island
-- [ ] Check under game mode and under a fullscreen window (animations pause)
+### 13c Island: two contents at once ✅
+- [x] The collapsed island shows a main content and a side slot (`island/ambient/AmbientSide.qml`: a small pill at the right end with the red dot, the recording timer, and the screen-share and microphone icons)
+- [x] Microphone / screen share and the recording timer move to the side slot while media, a notification or the OSD is the main content; alone they stay the main content
+- [x] Clicking the slot stops the recording (or opens Control when nothing records); the hover peek does not open while the pointer is on it
+- [x] One switch in Settings → Island → "Two things at once" (`island.dual`, on by default)
+- [x] Game mode keeps the old behavior (the state takes the island over); the pulse stops under a fullscreen window like the other ambient states
+- [x] The pulsing dot is one component now (`island/ambient/PulseDot.qml`)
+
+Checked live with a test track, a microphone stream, a notification and a recording, switch on and off, and a click on the slot. Not checked: the OSD as the main content (same code path as the notification), and a screen share.
 
 ### 13d Quick Share with Android (added 2026-10-14)
 Send files to and receive files from an Android phone over Quick Share (Nearby Share).
@@ -72,6 +76,25 @@ Send files to and receive files from an Android phone over Quick Share (Nearby S
 - [ ] Receiving: the island asks to accept or decline (sender and file names), shows progress, then a notification that opens the file or its folder (`~/Downloads` by default, a setting)
 - [ ] Sending: `/share <file>` in search, a file dropped on the island, and a "Send to phone" entry for the file manager; pick the device in the island
 - [ ] Streamer mode hides sender and file names; nothing is accepted without a click
+
+### 13e Emoji picker (added 2026-10-14)
+`/emoji` reads its list from the data inside `hypr/scripts/fuzzel-emoji.sh` and shows a plain filtered list.
+- [ ] The full Unicode emoji set with names and keywords as a data file of its own (`shell/lib/`), loaded only while the view is open; the fuzzel fallback reads the same file
+- [ ] A grid instead of a list, with category tabs (smileys, people, animals, food, travel, activities, objects, symbols, flags) and a "recent" row
+- [ ] Search across names and keywords; arrows move in the grid, Enter copies, Shift+Enter copies and keeps it open
+- [ ] Skin tone choice for the emoji that have one (remembered)
+
+### 13f Clipboard history with image previews (added 2026-10-14)
+The clipboard view shows text only; an image entry is just a "[[ binary data … ]]" title.
+- [ ] Image entries show a thumbnail (decoded with `cliphist decode` into the cache, once per entry, removed with the entry)
+- [ ] A larger preview of the selected entry beside the list: the image, or the full text
+- [ ] Type and size on the row (image 1280×720, 12 lines of text), streamer mode hides previews
+
+### 13g GIF search (added 2026-10-14)
+- [ ] `/gif <words>` searches online and shows a grid of animated previews in the island
+- [ ] Choose the service first: it needs a free API usable from curl (Tenor and Giphy both need a key; the key is a setting, never in the repo)
+- [ ] Enter copies the GIF (as a file, so it pastes into chat apps); Ctrl+S saves it to `~/Pictures/gif` (a setting, the folder is created)
+- [ ] Previews load only while the view is open and are dropped when it closes; nothing is fetched until a search is typed
 
 ## Phase 14: Public release
 
@@ -87,7 +110,6 @@ Carried over from Phase 11. The repo is already public.
 
 - [ ] `island/Island.qml`: the view and ambient `switch` blocks plus 13 `Component` declarations become one table
 - [ ] `services/QuickTiles.qml`: `ids` and `byId` are two lists kept in sync by hand
-- [ ] The pulsing red dot is written twice (`AmbientPrivacy`, `AmbientRecord`); 13c makes it one component
 - [ ] The translate language list is in three files (`TranslateView`, `TranslateCard`, `CapturePage`)
 - [ ] `scripts/check.sh`: the CLAUDE.md checks plus shellcheck in one command
 - [ ] `services/Brightness.qml` takes the first backlight device by name; `services/Lock.qml` sizes the blurred backdrop from the first screen only

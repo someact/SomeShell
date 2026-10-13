@@ -63,6 +63,7 @@ Singleton {
                 property int osdMs: 1500              // volume / brightness / layout
                 property bool showMedia: true
                 property bool hoverPeek: true         // hovering the island (or the top edge above it) peeks a view
+                property bool dual: true              // recording and mic / screen-share use sit beside media, a notification or the OSD
             }
             property JsonObject glass: JsonObject {
                 property real tint: 0.4               // surface tint over the frost (pills, dock, cards)
