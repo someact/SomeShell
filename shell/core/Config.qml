@@ -102,8 +102,8 @@ Singleton {
                 // Tiles and sliders (slider:volume, slider:mic, slider:brightness) in order;
                 // empty: `tiles` followed by the three sliders (layouts saved before the sliders moved)
                 property list<string> layout: []
-                property string tileStyle: "full"     // default size: full (icon, title, state) | icon (icon only)
-                property var sizes: ({})              // tile id -> full | icon, overrides tileStyle
+                property string tileStyle: "full"     // default size: full (icon, title, state) | medium (icon, title) | icon
+                property var sizes: ({})              // tile id -> full | medium | icon, overrides tileStyle
             }
             property JsonObject search: JsonObject {
                 property int maxResults: 8

@@ -8,12 +8,13 @@ import qs.services
 // spring, so an item shown, hidden, resized or dragged slides instead of the
 // grid being rebuilt.
 //
-// Items flow on 8 units per row: an icon tile takes 1, a full tile 4, a slider
-// the whole row; an item that does not fit starts the next row.
+// Items flow on 8 units per row: an icon tile takes 1, a medium tile 2, a full
+// tile 4, a slider the whole row; an item that does not fit starts the next row.
 //
 // Edit mode: shown items first, then a "Hidden" row; click shows or hides an
 // item, drag a shown one to reorder (committed on release), the corner badge
-// switches a tile between full and icon.
+// steps a tile through icon → medium → full, and a right-click lists the
+// three sizes (`sizeMenu`).
 Item {
     id: grid
 
@@ -33,7 +34,7 @@ Item {
 
     function unitsOf(id) {
         const s = QuickTiles.size(id);
-        return s === "icon" ? 1 : s === "full" ? 4 : units;
+        return s === "icon" ? 1 : s === "medium" ? 2 : s === "full" ? 4 : units;
     }
     // { slots: id -> { x, y, w, h }, height }
     function pack(list, top) {
@@ -58,6 +59,10 @@ Item {
     readonly property var hiddenPack: pack(hiddenTiles, hiddenTop)
 
     signal rightClicked(string id)
+
+    // Edit mode: the tile whose size chooser is open ("" = none)
+    property string sizeMenu: ""
+    onEditChanged: sizeMenu = ""
 
     // The view opens with the grid at width 0; springs start one tick after the
     // first real width, so opening lays everything out without animating it
@@ -123,7 +128,8 @@ Item {
             required property string modelData
             readonly property var item: QuickTiles.tile(modelData)
             readonly property bool slider: QuickTiles.isSlider(modelData)
-            readonly property bool iconOnly: QuickTiles.size(modelData) === "icon"
+            readonly property string size: QuickTiles.size(modelData)
+            readonly property bool iconOnly: size === "icon"
             readonly property int shownIdx: grid.order.indexOf(modelData)
             readonly property bool isShown: shownIdx >= 0
             readonly property var slot: isShown ? grid.shownPack.slots[modelData] : grid.hiddenPack.slots[modelData]
@@ -175,6 +181,7 @@ Item {
                 id: toggleItem
                 Toggle {
                     compact: cell.iconOnly
+                    titleOnly: cell.size === "medium"
                     icon: cell.item.icon
                     title: cell.item.title
                     subtitle: cell.item.subtitle
@@ -203,14 +210,18 @@ Item {
                 enabled: grid.edit
                 cursorShape: cell.dragging ? Qt.ClosedHandCursor : cell.isShown ? Qt.OpenHandCursor : Qt.PointingHandCursor
                 preventStealing: true
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
                 property point start
                 property bool moved: false
                 onPressed: event => {
                     start = Qt.point(event.x, event.y);
                     moved = false;
+                    // Right-click a shown tile: its size chooser; any other press closes it
+                    const menu = event.button === Qt.RightButton && cell.isShown && !cell.slider && grid.sizeMenu !== cell.modelData;
+                    grid.sizeMenu = menu ? cell.modelData : "";
                 }
                 onPositionChanged: event => {
-                    if (!pressed || !cell.isShown)
+                    if (!(pressedButtons & Qt.LeftButton) || !cell.isShown)
                         return;
                     if (!moved && Math.hypot(event.x - start.x, event.y - start.y) < 6)
                         return;
@@ -225,11 +236,11 @@ Item {
                     cell.dragY = p.y - start.y - anchors.margins;
                     grid.dragTo(cell.modelData, p.x, p.y);
                 }
-                onReleased: {
+                onReleased: event => {
                     if (cell.dragging) {
                         cell.dragging = false;
                         grid.commit();
-                    } else if (!moved) {
+                    } else if (!moved && event.button === Qt.LeftButton) {
                         grid.toggleShown(cell.modelData);
                     }
                 }
@@ -252,7 +263,7 @@ Item {
                     color: cell.isShown ? Theme.fgIsland : Theme.fgPrimary
                 }
             }
-            // Size: full ↔ icon (tiles only)
+            // Size: icon → medium → full → icon (tiles only)
             Rectangle {
                 visible: grid.edit && cell.isShown && !cell.slider && !cell.dragging
                 anchors.left: parent.left
@@ -264,7 +275,7 @@ Item {
                 color: sizeArea.containsMouse ? Theme.primary : grid.badgeColor
                 Icon {
                     anchors.centerIn: parent
-                    name: cell.iconOnly ? "open_in_full" : "close_fullscreen"
+                    name: cell.size === "full" ? "close_fullscreen" : "open_in_full"
                     size: 12
                     color: sizeArea.containsMouse ? Theme.fgPrimary : Theme.fgIsland
                 }
@@ -274,7 +285,55 @@ Item {
                     anchors.margins: -3
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: QuickTiles.setSize(cell.modelData, cell.iconOnly ? "full" : "icon")
+                    onClicked: {
+                        grid.sizeMenu = "";
+                        QuickTiles.setSize(cell.modelData, QuickTiles.nextSize(cell.size));
+                    }
+                }
+            }
+        }
+    }
+
+    // Size chooser for the right-clicked tile, just under it
+    Rectangle {
+        id: chooser
+        readonly property var slot: grid.shownPack.slots[grid.sizeMenu]
+        visible: grid.edit && slot !== undefined
+        z: 3
+        x: slot ? Math.max(0, Math.min(grid.width - width, slot.x + slot.w / 2 - width / 2)) : 0
+        y: slot ? slot.y + slot.h + 4 : 0
+        width: chips.implicitWidth + 8
+        height: 34
+        radius: 17
+        color: grid.badgeColor
+        border.width: 1
+        border.color: Theme.glassRim
+
+        Row {
+            id: chips
+            anchors.centerIn: parent
+            spacing: 2
+            Repeater {
+                model: QuickTiles.sizes
+                PressButton {
+                    id: chip
+                    required property var modelData
+                    width: chipLabel.implicitWidth + 22
+                    height: 26
+                    active: QuickTiles.size(grid.sizeMenu) === modelData.id
+                    activeColor: Theme.accentIsland
+                    onClicked: {
+                        QuickTiles.setSize(grid.sizeMenu, modelData.id);
+                        grid.sizeMenu = "";
+                    }
+                    Label {
+                        id: chipLabel
+                        anchors.centerIn: parent
+                        text: chip.modelData.name
+                        font.pixelSize: Theme.font.small
+                        font.weight: Theme.font.weightTitle
+                        color: chip.active ? Theme.fgAccentIsland : Theme.fgIsland
+                    }
                 }
             }
         }

@@ -5,7 +5,7 @@ import qs.services
 
 // Quick tiles and sliders, one layout (TileGrid). ↑/↓ select, Enter toggles,
 // ←/→ adjust a selected slider. The pencil edits the layout (show, hide, reorder,
-// tile size); the grid button sets every tile to icon or full.
+// tile size); the grid button steps every tile through icon, medium and full.
 // Right-click a tile: its detail page here (network, Bluetooth, WARP, night light,
 // audio devices; Esc or ← goes back) or its page in the settings app.
 FocusScope {
@@ -95,7 +95,7 @@ FocusScope {
             Label {
                 visible: root.detail === ""
                 anchors.verticalCenter: parent.verticalCenter
-                text: tiles.edit ? "Click to show or hide · drag to reorder · corner badge resizes" : ""
+                text: tiles.edit ? "Click to show or hide · drag to reorder · badge or right-click resizes" : ""
                 color: Theme.fgIslandDim
                 font.pixelSize: Theme.font.small
             }
@@ -107,9 +107,11 @@ FocusScope {
                     width: 30
                     height: 26
                     iconSize: 17
-                    icon: Config.control.tileStyle === "icon" ? "view_agenda" : "grid_view"
+                    // Shows the size a click gives every tile: icon → medium → full
+                    readonly property string next: QuickTiles.nextSize(Config.control.tileStyle)
+                    icon: next === "icon" ? "grid_view" : next === "medium" ? "view_module" : "view_agenda"
                     iconColor: Theme.fgIslandDim
-                    onClicked: QuickTiles.setAllSizes(Config.control.tileStyle === "icon" ? "full" : "icon")
+                    onClicked: QuickTiles.setAllSizes(next)
                 }
                 IconButton {
                     width: 30

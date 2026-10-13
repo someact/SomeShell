@@ -3,7 +3,7 @@
 Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, one 1920x1080@100 monitor DP-1, US/TH keyboard, UGTablet pen) and a laptop (Lenovo Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Laptop features are detected at runtime, never assumed.
 The project was called SomeHypr until Phase 12; `install.sh` (`migrate_legacy`) moves the old `somehypr` directories over, and that is the only place the old name may appear.
 Goals and the task tracker are in `docs/plan.md`. Phases 0–11 are finished and live in git history only.
-Current work: Phase 13 (13a WARP is done; then tile sizes, two contents in the island, Quick Share with Android), then Phase 14 (public release). Phase 12 (rename, fixes from the code review) is done.
+Current work: Phase 13 (13a WARP and 13b tile sizes are done; then two contents in the island, Quick Share with Android), then Phase 14 (public release). Phase 12 (rename, fixes from the code review) is done.
 
 ## Layout
 - `hypr/` is linked to `~/.config/hypr`. `hyprland.lua` loads files in a fixed order, and each setting lives in exactly one file:

@@ -50,11 +50,13 @@ Most of these only break on a machine that is not the one the code was written o
 
 Checked on a registered client: off and on, `doh` ↔ `dot`, several mode clicks in a row, a shell reload. Not checked: a machine without `warp-cli`, an unregistered client, the tunnel modes (they would have rerouted this session's network).
 
-### 13b Quick option sizes
-Each tile is already full (icon, title, state) or icon only (pencil, then the badge at the tile's corner).
-- [ ] Third size `medium`: icon and title, two of the eight units, so four fit in a row
-- [ ] The edit badge cycles icon → medium → full; right-click in edit mode lists the three sizes
-- [ ] The grid button cycles all tiles through the three sizes
+### 13b Quick option sizes ✅
+Each tile is full (icon, title, state), medium (icon, title) or icon only: pencil, then the badge at the tile's corner or a right-click.
+- [x] Third size `medium`: icon and title, two of the eight units, so four fit in a row; a long title wraps to two lines ("Streamer / mode")
+- [x] The edit badge steps icon → medium → full; right-click in edit mode lists the three sizes under the tile
+- [x] The grid button steps all tiles through the three sizes
+
+Checked with the pointer: the chooser, the badge through all three sizes, the grid button, drag to reorder and click to hide (both still work with the right button added).
 
 ### 13c Island: two contents at once
 - [ ] The collapsed island shows a main content and a side slot

@@ -11,8 +11,9 @@ import qs.core
 //
 // Which tiles and sliders show, and in what order: Config.control.layout (ids;
 // sliders are slider:<name>). Everything else is hidden and can be added back in
-// the view's edit mode. Each tile is full (icon, title, state) or icon only
-// (Config.control.sizes, else tileStyle); sliders always take a whole row.
+// the view's edit mode. Each tile is full (icon, title, state), medium (icon,
+// title) or icon only (Config.control.sizes, else tileStyle); sliders always
+// take a whole row.
 Singleton {
     id: root
 
@@ -29,8 +30,20 @@ Singleton {
     function isSlider(id) {
         return id.startsWith("slider:");
     }
+    // Smallest to largest; the edit badge and the grid button step through them
+    readonly property var sizes: [
+        { id: "icon", name: "Icon" },
+        { id: "medium", name: "Medium" },
+        { id: "full", name: "Full" }
+    ]
     function size(id) {
-        return isSlider(id) ? "slider" : (Config.control.sizes[id] ?? Config.control.tileStyle);
+        if (isSlider(id))
+            return "slider";
+        const s = Config.control.sizes[id] ?? Config.control.tileStyle;
+        return sizes.some(z => z.id === s) ? s : "full";    // a hand-edited value it does not know
+    }
+    function nextSize(s) {
+        return sizes[(sizes.findIndex(z => z.id === s) + 1) % sizes.length].id;
     }
     function setSize(id, s) {
         const next = Object.assign({}, Config.control.sizes);

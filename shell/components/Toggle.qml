@@ -1,8 +1,9 @@
 import QtQuick
 import qs.core
 
-// Phone-style quick toggle tile: icon, title and optional subtitle, or the
-// icon alone (`compact`).
+// Phone-style quick toggle tile: icon, title and optional subtitle; the icon
+// alone (`compact`); or icon and title on up to two lines (`titleOnly`, for a
+// narrow tile).
 PressButton {
     id: root
 
@@ -10,6 +11,7 @@ PressButton {
     property string title
     property string subtitle
     property bool compact: false
+    property bool titleOnly: false
     property color activeFg: Theme.fgPrimary
 
     implicitWidth: 170
@@ -32,9 +34,9 @@ PressButton {
     Row {
         visible: !root.compact
         anchors.fill: parent
-        anchors.leftMargin: 14
-        anchors.rightMargin: 10
-        spacing: 10
+        anchors.leftMargin: root.titleOnly ? 12 : 14
+        anchors.rightMargin: root.titleOnly ? 8 : 10
+        spacing: root.titleOnly ? 8 : 10
 
         Icon {
             anchors.verticalCenter: parent.verticalCenter
@@ -45,16 +47,21 @@ PressButton {
         }
         Column {
             anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - 42
+            width: parent.width - 22 - parent.spacing
             Label {
                 width: parent.width
                 text: root.title
                 font.weight: Theme.font.weightTitle
                 color: root.active ? root.activeFg : Theme.fgIsland
+                // Narrow tile: "Do not / disturb" on two lines instead of cut off
+                wrapMode: root.titleOnly ? Text.WordWrap : Text.NoWrap
+                maximumLineCount: root.titleOnly ? 2 : 1
+                lineHeight: root.titleOnly ? 0.9 : 1
+                font.pixelSize: root.titleOnly ? Theme.font.normal - 1 : Theme.font.normal
             }
             Label {
                 width: parent.width
-                visible: text !== ""
+                visible: text !== "" && !root.titleOnly
                 text: root.subtitle
                 font.pixelSize: Theme.font.small
                 color: root.active ? root.activeFg : Theme.fgIslandDim
