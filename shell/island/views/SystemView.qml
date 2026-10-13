@@ -36,12 +36,14 @@ FocusScope {
             detail: SysStats.memUsedGb.toFixed(1) + " / " + SysStats.memTotalGb.toFixed(1) + " GB"
         }
         Meter {
+            visible: SysStats.hasGpu
             icon: "developer_board"
             title: "GPU"
             value: SysStats.gpu
             detail: SysStats.gpuTemp > 0 ? Math.round(SysStats.gpuTemp) + " °C" : ""
         }
         Meter {
+            visible: SysStats.hasGpu
             icon: "sd_card"
             title: "VRAM"
             value: SysStats.vram

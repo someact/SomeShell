@@ -5,7 +5,9 @@ import Quickshell
 import Quickshell.Io
 
 // CPU, RAM and GPU usage. Nothing runs unless a view raises `watchers`; then
-// /proc is read every second and nvidia-smi streams once a second.
+// /proc is read every second. The GPU comes from nvidia-smi (streams once a
+// second) or an AMD card's sysfs counters (services/Gpu.qml); with neither,
+// `hasGpu` is false and views leave the GPU rows out.
 Singleton {
     id: root
 
@@ -20,6 +22,7 @@ Singleton {
     property real gpu: 0
     property real gpuTemp: 0
     property real vram: 0
+    readonly property bool hasGpu: Gpu.nvidia || Gpu.amd !== ""
     property var _lastCpu: null
     property string _tempPath: ""
 
@@ -33,6 +36,10 @@ Singleton {
             meminfo.reload();
             if (root._tempPath !== "")
                 temp.reload();
+            if (!Gpu.nvidia && Gpu.amd !== "") {
+                amdBusy.reload();
+                amdVram.reload();
+            }
         }
     }
 
@@ -70,17 +77,38 @@ Singleton {
         onLoaded: root.cpuTemp = parseInt(text()) / 1000
     }
 
-    // Find the k10temp (Ryzen) sensor once
+    // Find the CPU sensor once: k10temp or zenpower (AMD), coretemp (Intel)
     Process {
         running: true
-        command: ["sh", "-c", "for h in /sys/class/hwmon/hwmon*; do [ \"$(cat $h/name)\" = k10temp ] && echo $h/temp1_input && break; done"]
+        command: ["sh", "-c", "for n in k10temp zenpower coretemp; do for h in /sys/class/hwmon/hwmon*; do [ \"$(cat $h/name 2>/dev/null)\" = $n ] && echo $h/temp1_input && exit; done; done"]
         stdout: StdioCollector {
             onStreamFinished: root._tempPath = text.trim()
         }
     }
 
+    // AMD: usage in percent, VRAM in bytes (no temperature here)
+    FileView {
+        id: amdBusy
+        path: root.active && !Gpu.nvidia && Gpu.amd !== "" ? Gpu.amd + "/gpu_busy_percent" : ""
+        printErrors: false
+        onLoaded: root.gpu = (parseInt(text()) || 0) / 100
+    }
+    FileView {
+        id: amdVram
+        path: root.active && !Gpu.nvidia && Gpu.amd !== "" ? Gpu.amd + "/mem_info_vram_used" : ""
+        printErrors: false
+        onLoaded: root.vram = amdTotal.bytes > 0 ? (parseInt(text()) || 0) / amdTotal.bytes : 0
+    }
+    FileView {
+        id: amdTotal
+        property real bytes: 0
+        path: !Gpu.nvidia && Gpu.amd !== "" ? Gpu.amd + "/mem_info_vram_total" : ""
+        printErrors: false
+        onLoaded: bytes = parseInt(text()) || 0
+    }
+
     Process {
-        running: root.active
+        running: root.active && Gpu.nvidia
         command: ["nvidia-smi", "--query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total", "--format=csv,noheader,nounits", "-lms", "1000"]
         stdout: SplitParser {
             onRead: line => {

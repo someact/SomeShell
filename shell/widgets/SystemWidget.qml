@@ -84,12 +84,13 @@ DesktopWidget {
         Ring {
             name: "CPU"
             value: SysStats.cpu
-            detail: `${Math.round(SysStats.cpuTemp)}°C`
+            detail: SysStats.cpuTemp > 0 ? `${Math.round(SysStats.cpuTemp)}°C` : " "
         }
         Ring {
+            visible: SysStats.hasGpu
             name: "GPU"
             value: SysStats.gpu
-            detail: `${Math.round(SysStats.gpuTemp)}°C`
+            detail: SysStats.gpuTemp > 0 ? `${Math.round(SysStats.gpuTemp)}°C` : " "
         }
         Ring {
             name: "RAM"
@@ -97,6 +98,7 @@ DesktopWidget {
             detail: `${SysStats.memUsedGb.toFixed(1)} GB`
         }
         Ring {
+            visible: SysStats.hasGpu
             name: "VRAM"
             value: SysStats.vram
             detail: " "

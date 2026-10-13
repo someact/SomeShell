@@ -58,12 +58,13 @@ OverlayCard {
         Meter {
             name: "CPU"
             value: SysStats.cpu
-            detail: `${Math.round(SysStats.cpu * 100)}%  ${Math.round(SysStats.cpuTemp)}°`
+            detail: `${Math.round(SysStats.cpu * 100)}%` + (SysStats.cpuTemp > 0 ? `  ${Math.round(SysStats.cpuTemp)}°` : "")
         }
         Meter {
+            visible: SysStats.hasGpu
             name: "GPU"
             value: SysStats.gpu
-            detail: `${Math.round(SysStats.gpu * 100)}%  ${Math.round(SysStats.gpuTemp)}°`
+            detail: `${Math.round(SysStats.gpu * 100)}%` + (SysStats.gpuTemp > 0 ? `  ${Math.round(SysStats.gpuTemp)}°` : "")
         }
         Meter {
             name: "RAM"
@@ -71,6 +72,7 @@ OverlayCard {
             detail: `${SysStats.memUsedGb.toFixed(1)} / ${SysStats.memTotalGb.toFixed(0)} GB`
         }
         Meter {
+            visible: SysStats.hasGpu
             name: "VRAM"
             value: SysStats.vram
             detail: `${Math.round(SysStats.vram * 100)}%`
