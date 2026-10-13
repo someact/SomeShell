@@ -277,6 +277,14 @@ QtObject {
                 dim: !BluetoothState.enabled
                 detail: "bluetooth"
             }
+            // Only while WARP is connected (or connecting, dimmed)
+            StatusIcon {
+                part: statusPart
+                name: "vpn_lock"
+                visible: Warp.connected || Warp.connecting
+                dim: Warp.connecting
+                detail: "warp"
+            }
             StatusIcon {
                 part: statusPart
                 name: Audio.icon

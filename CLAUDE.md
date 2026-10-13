@@ -3,7 +3,7 @@
 Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, one 1920x1080@100 monitor DP-1, US/TH keyboard, UGTablet pen) and a laptop (Lenovo Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Laptop features are detected at runtime, never assumed.
 The project was called SomeHypr until Phase 12; `install.sh` (`migrate_legacy`) moves the old `somehypr` directories over, and that is the only place the old name may appear.
 Goals and the task tracker are in `docs/plan.md`. Phases 0–11 are finished and live in git history only.
-Current work: Phase 12 (rename, fixes from the code review), then Phase 13 (WARP, tile sizes, two contents in the island) and Phase 14 (public release).
+Current work: Phase 13 (13a WARP is done; then tile sizes, two contents in the island, Quick Share with Android), then Phase 14 (public release). Phase 12 (rename, fixes from the code review) is done.
 
 ## Layout
 - `hypr/` is linked to `~/.config/hypr`. `hyprland.lua` loads files in a fixed order, and each setting lives in exactly one file:
@@ -27,6 +27,7 @@ Current work: Phase 12 (rename, fixes from the code review), then Phase 13 (WARP
   - `capture/RegionSelector.qml` is the region picker over a grim-frozen frame; `services/Capture.qml` runs the tools and `services/Recorder.qml` owns wf-recorder (the island shows the timer).
   - `overlay/` is the Super+G game overlay (one card file per widget). Its cards are frosted over the game itself (shell layers have no `xray`); game mode turns compositor blur back on only while it is open, or while frosted cards are pinned (`overlay.blur` / `overlay.pinnedBlur`, `GameMode.overlay()` in `modes/gamemode.lua`). Card blur regions are built from the card's window x/y, because an `item:` region does not follow a dragged parent.
   - Laptop: `services/Battery.qml` (UPower; `available` false on a desktop) feeds the status pill, the `battery` quick tile and Settings → Power (listed only with a battery). Battery bypass is UPower `EnableChargeThreshold` on the real battery (`UPower.devices`; the display device has no path), with no password for the active session. UPower devices populate only once something binds to them. `services/Brightness.qml` uses the backlight (brightnessctl) for eDP/LVDS/DSI, DDC otherwise.
+  - `services/Warp.qml` is Cloudflare WARP (`available` only with `warp-cli`): one long-lived `warp-cli -l -j status` for status, `settings` for the mode, commands queued one at a time. Tile `warp`, page `island/views/WarpDetail.qml`, IPC `warp toggle · mode <name> · state`.
   - `services/Streamer.qml` is streamer mode; peeks then go to `island/PrivatePeek.qml` on the `someshell:private` layer (`no_screen_share`). `services/GameClients.qml` feeds gamemoded PIDs to `GameMode.set_clients()`.
   - `lock/` is the lock screen (`WlSessionLock`, surfaces only while locked); state and PAM live in `services/Lock.qml`. `hypr/scripts/lock.sh` calls `ipc call lock lock` and runs hyprlock when the shell does not answer. There is no unlock IPC; test with `ipc call lock preview` (no PAM, Esc closes).
   - `widgets/` holds the desktop widgets (bottom layer, one window per screen, hidden in game mode); `services/Widgets.qml` lists them, `config.json` `widgets` stores which are on and where. Edit mode: `ipc call widgets edit`.
@@ -64,6 +65,7 @@ Shell changes:
 timeout 10 qs -p shell/shell.qml 2>&1 | grep -E "WARN|ERROR"   # dev copy; only notification/polkit clashes with the live shell may appear
 qs -c someshell ipc call island open <view>                     # search control media notifications system power clipboard emoji keys
 qs -c someshell ipc call island state
+qs -c someshell ipc call island control <page>                 # wifi bluetooth warp nightlight audio
 qs -c someshell ipc call overview toggle
 qs -c someshell ipc call capture region <mode>                   # shot ocr lens translate record recordSound
 qs -c someshell ipc call overlay toggle · streamer toggle

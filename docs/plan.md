@@ -41,11 +41,14 @@ Most of these only break on a machine that is not the one the code was written o
 
 ## Phase 13: Features
 
-### 13a Cloudflare WARP
-- [ ] `services/Warp.qml`: available only when `warp-cli` is installed; state from `warp-cli -l -j status` (an event stream, no polling)
-- [ ] Quick tile: click connects or disconnects, the subtitle shows state and mode
-- [ ] Right-click: a detail page with the modes (`warp`, `doh`, `warp+doh`, `dot`, `warp+dot`, `proxy`, `tunnel_only`), and a hint when the client is not registered
-- [ ] Status pill icon while connected
+### 13a Cloudflare WARP ✅
+- [x] `services/Warp.qml`: available only when `warp-cli` is installed; state from `warp-cli -l -j status` (an event stream, no polling); the mode is read from `settings` after each status change
+- [x] Quick tile: click connects or disconnects, the subtitle shows state and mode
+- [x] Right-click: a detail page (`island/views/WarpDetail.qml`) with the modes (`warp`, `doh`, `warp+doh`, `dot`, `warp+dot`, `proxy`, `tunnel_only`), and a hint when the client is not registered or the service is down
+- [x] Status pill icon while connected (dim while connecting); right-click opens the page
+- [x] IPC: `warp toggle`, `warp mode <name>`, `warp state`, and `island control <page>` for any Control detail page
+
+Checked on a registered client: off and on, `doh` ↔ `dot`, several mode clicks in a row, a shell reload. Not checked: a machine without `warp-cli`, an unregistered client, the tunnel modes (they would have rerouted this session's network).
 
 ### 13b Quick option sizes
 Each tile is already full (icon, title, state) or icon only (pencil, then the badge at the tile's corner).
@@ -58,6 +61,15 @@ Each tile is already full (icon, title, state) or icon only (pencil, then the ba
 - [ ] Microphone / screen share and the recording timer move to the side slot while media, a notification or the OSD is the main content; alone they stay the main content
 - [ ] One switch in Settings → Island
 - [ ] Check under game mode and under a fullscreen window (animations pause)
+
+### 13d Quick Share with Android (added 2026-10-14)
+Send files to and receive files from an Android phone over Quick Share (Nearby Share).
+- [ ] Choose the backend. It has to run without a window, report events (no polling) and not be Python: `rquickshare`'s core as a small headless helper is the first candidate; a GUI-only tool does not fit. Note what it needs (Bluetooth for discovery, mDNS, an open port) and add it to the installer as optional
+- [ ] `services/QuickShare.qml`: available only with the backend installed; visibility (off, contacts, everyone), nearby devices, transfers with progress
+- [ ] Quick tile: visibility on/off; right-click page lists nearby devices and recent transfers
+- [ ] Receiving: the island asks to accept or decline (sender and file names), shows progress, then a notification that opens the file or its folder (`~/Downloads` by default, a setting)
+- [ ] Sending: `/share <file>` in search, a file dropped on the island, and a "Send to phone" entry for the file manager; pick the device in the island
+- [ ] Streamer mode hides sender and file names; nothing is accepted without a click
 
 ## Phase 14: Public release
 

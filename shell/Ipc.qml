@@ -14,6 +14,10 @@ Scope {
         function toggle(view: string): void {
             UiState.toggle(view);
         }
+        // The Control view on a detail page: wifi bluetooth warp nightlight audio
+        function control(detail: string): void {
+            UiState.openControl(detail);
+        }
         function search(text: string): void {
             UiState.open("search", text);
         }
@@ -25,6 +29,20 @@ Scope {
         }
         function state(): string {
             return JSON.stringify({ expanded: UiState.expanded, peeking: UiState.peeking, view: UiState.view, ambient: UiState.ambient });
+        }
+    }
+
+    // WARP (services/Warp.qml): state is { available, service, registered, status, reason, mode }
+    IpcHandler {
+        target: "warp"
+        function toggle(): void {
+            Warp.toggle();
+        }
+        function mode(name: string): void {
+            Warp.setMode(name);
+        }
+        function state(): string {
+            return JSON.stringify({ available: Warp.available, service: Warp.service, registered: Warp.registered, status: Warp.status, reason: Warp.reason, mode: Warp.mode });
         }
     }
 

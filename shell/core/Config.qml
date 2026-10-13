@@ -98,7 +98,7 @@ Singleton {
             property JsonObject control: JsonObject {
                 // Quick tiles shown in the Control view, in order (services/QuickTiles.qml ids);
                 // the rest are hidden and can be added back in its edit mode
-                property list<string> tiles: ["wifi", "bluetooth", "dnd", "game", "nightlight", "caffeine", "mic", "dark", "streamer", "record", "battery"]
+                property list<string> tiles: ["wifi", "bluetooth", "warp", "dnd", "game", "nightlight", "caffeine", "mic", "dark", "streamer", "record", "battery"]
                 // Tiles and sliders (slider:volume, slider:mic, slider:brightness) in order;
                 // empty: `tiles` followed by the three sliders (layouts saved before the sliders moved)
                 property list<string> layout: []

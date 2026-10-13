@@ -6,7 +6,7 @@ A Hyprland desktop with a dynamic island instead of a bar, glass surfaces, sprin
 
 - **Dynamic island.** Collapsed, it shows the clock, the playing track, notifications, volume and brightness changes, recording, and microphone or screen-share use. Tap Super or click it to open search, quick options, media, notifications, system stats and power. Hover it for a peek.
 - **Search and commands.** Type right after Super to launch apps, calculate, or run a `/command` (`/wallpaper`, `/settings`, `/translate` and more). Clipboard history and an emoji picker are built in.
-- **Quick options.** Wi-Fi, Bluetooth, do not disturb, game mode, night light, keep awake, microphone, dark mode, streamer mode, record, screenshot and battery bypass, plus volume, microphone and brightness sliders. Show, hide, reorder and resize them with the pencil; right-click one for its details.
+- **Quick options.** Wi-Fi, Bluetooth, Cloudflare WARP (when `warp-cli` is installed: on/off and mode), do not disturb, game mode, night light, keep awake, microphone, dark mode, streamer mode, record, screenshot and battery bypass, plus volume, microphone and brightness sliders. Show, hide, reorder and resize them with the pencil; right-click one for its details.
 - **Media.** Player controls, the player's own volume, a per-app mixer and synced lyrics.
 - **Pills.** Workspaces, window title, tray, status icons and clock, in the top corners or beside the island, as glass or floating.
 - **Dock and overview.** A bottom dock with pinned and running apps, and a workspace overview on Super+Tab.

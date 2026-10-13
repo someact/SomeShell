@@ -6,7 +6,7 @@ import qs.services
 // Quick tiles and sliders, one layout (TileGrid). ↑/↓ select, Enter toggles,
 // ←/→ adjust a selected slider. The pencil edits the layout (show, hide, reorder,
 // tile size); the grid button sets every tile to icon or full.
-// Right-click a tile: its detail page here (network, Bluetooth, night light,
+// Right-click a tile: its detail page here (network, Bluetooth, WARP, night light,
 // audio devices; Esc or ← goes back) or its page in the settings app.
 FocusScope {
     id: root
@@ -20,7 +20,7 @@ FocusScope {
 
     // The open detail page, "" for the tiles (in UiState so pills can open one)
     readonly property string detail: UiState.controlDetail
-    readonly property var detailTitles: ({ wifi: "Network", bluetooth: "Bluetooth", nightlight: "Night light", audio: "Sound devices" })
+    readonly property var detailTitles: ({ wifi: "Network", bluetooth: "Bluetooth", warp: "WARP", nightlight: "Night light", audio: "Sound devices" })
 
     function openTile(id) {
         const t = QuickTiles.tile(id);
@@ -130,7 +130,7 @@ FocusScope {
             visible: active
             width: parent.width
             height: item ? item.implicitHeight : 0
-            sourceComponent: ({ wifi: networkPage, bluetooth: bluetoothPage, nightlight: nightPage, audio: audioPage })[root.detail] ?? null
+            sourceComponent: ({ wifi: networkPage, bluetooth: bluetoothPage, warp: warpPage, nightlight: nightPage, audio: audioPage })[root.detail] ?? null
             onLoaded: {
                 item.width = Qt.binding(() => page.width);
                 pageIn.play();
@@ -158,6 +158,10 @@ FocusScope {
     Component {
         id: bluetoothPage
         BluetoothDetail {}
+    }
+    Component {
+        id: warpPage
+        WarpDetail {}
     }
     Component {
         id: nightPage
