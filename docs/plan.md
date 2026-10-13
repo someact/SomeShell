@@ -84,7 +84,7 @@ Send files to and receive files from an Android phone over Quick Share (Nearby S
 - [x] Easier to open what arrived: the notification has Open and Show in folder, and on the page a received transfer opens on click, with a folder button that shows the files selected in the file manager (`hypr/scripts/quickshare-open.sh`)
 - [ ] Still to try with a phone: a link, several files, Bluetooth off, decline, cancel half way
 - [ ] If the phone still does not see it: the helper announces every address of the machine (docker bridges, Tailscale too) and the phone may try a wrong one first
-- [ ] Drop a file on the island by hand (the drop target is written but could not be driven from a script)
+- [x] Drop a file on the island by hand: a file dragged from Dolphin lands in the Quick Share page (confirmed 2026-10-14)
 - [ ] The page in streamer mode still shows names (it is opened on purpose); decide whether to mask it too
 - [ ] Offer the build in `install.sh` when `cargo` is installed
 
@@ -108,8 +108,8 @@ The clipboard view shows text only; an image entry is just a "[[ binary data …
 - [ ] Previews load only while the view is open and are dropped when it closes; nothing is fetched until a search is typed
 
 ### 13h Drop anything on the island (added 2026-10-14)
-Drag a file, an image, a link or selected text onto the island and choose what happens to it. The island already takes dropped files for Quick Share (13d), not yet tried by hand; that drop is the first thing to confirm, because everything here builds on it.
-- [ ] Confirm a drop reaches the island at all (file from Dolphin, image and link from the browser, selected text), in notch and floating style, and note what each source offers (`text/uri-list`, `text/plain`, image data)
+Drag a file, an image, a link or selected text onto the island and choose what happens to it. The island already takes dropped files for Quick Share (13d), and a file dragged from Dolphin works (confirmed 2026-10-14), so the foundation is there.
+- [ ] Check the other sources: an image and a link from the browser, selected text, in notch and floating style, and note what each one offers (`text/uri-list`, `text/plain`, image data)
 - [ ] While something is dragged near the top edge, the island grows into a drop target that says what it will take
 - [ ] After the drop, a small shelf with actions that fit the content: files: send with Quick Share, copy, move or copy to a folder (recent folders, Downloads, Pictures); images: also save, copy text (OCR), Lens; links: open, copy, send to phone; text: copy, save as a note, translate, search
 - [ ] The shelf keeps what was dropped until it is used or dismissed, so several things can be collected and sent together; it can be dragged back out to another app
