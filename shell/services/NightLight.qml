@@ -6,7 +6,9 @@ import Quickshell.Io
 import qs.core
 
 // hyprsunset on/off and temperature. State is read once at start and then
-// tracked locally; a temperature change while on goes over hyprsunset's IPC.
+// tracked locally (and checked again a moment after each toggle, so a missing
+// or failed hyprsunset does not show as on); a temperature change while on
+// goes over hyprsunset's IPC.
 Singleton {
     id: root
 
@@ -31,9 +33,16 @@ Singleton {
         else
             Quickshell.execDetached(["hyprsunset", "-t", String(temperature)]);
         active = !active;
+        check.restart();
+    }
+    Timer {
+        id: check
+        interval: 700
+        onTriggered: probe.running = true
     }
 
     Process {
+        id: probe
         running: true
         command: ["pidof", "hyprsunset"]
         onExited: code => root.active = code === 0

@@ -26,15 +26,11 @@ local function is_game(w)
         or matches_any(w.title, GAME_TITLE_PATTERNS)
 end
 
--- Tell the shell (socket2 `custom>>someshell_gamemode,1`) so it never has to poll
-local function announce()
-    hl.dispatch(hl.dsp.event("someshell_gamemode," .. (GameMode.active and "1" or "0")))
-end
-
 local function apply(on)
     if on == GameMode.active then return end
     GameMode.active = on
-    announce()
+    -- Tell the shell (socket2 `custom>>someshell_gamemode,1`) so it never has to poll
+    hl.dispatch(hl.dsp.event("someshell_gamemode," .. (on and "1" or "0")))
     if on then
         hl.config({
             decoration = { blur = { enabled = GameMode.overlay_open and look.blur.enabled }, shadow = { enabled = false } },
@@ -90,9 +86,7 @@ for _, event in ipairs({ "window.fullscreen", "window.active", "window.destroy",
     hl.on(event, evaluate)
 end
 -- A reload starts this file again with game mode off (a forced mode is
--- dropped), so the shell is told the state even when nothing changed here;
--- otherwise it would keep showing the mode from before the reload.
-hl.on("config.reloaded", function()
-    evaluate()
-    announce()
-end)
+-- dropped) and sends no event for that, so the shell reads the state itself
+-- after `configreloaded` (shell/core/GameMode.qml). Dispatching the event from
+-- here crashes `Hyprland --verify-config`, which also runs this handler.
+hl.on("config.reloaded", evaluate)

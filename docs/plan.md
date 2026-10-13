@@ -36,7 +36,7 @@ Most of these only break on a machine that is not the one the code was written o
 - [x] 8. `Capture.qml` builds shell strings with paths inside quotes; the OCR command is written twice; the fallback scripts use fixed `/tmp` file names — snippets run against a folder with a quote and a space; a drag in the picker is a hands-on check
 - [x] 9. The location lookup for weather and sun times uses plain http
 - [x] 10. `HYPR_DIR`, `record.sh` and the Appearance page ignore `XDG_CONFIG_HOME` — hypridle.conf and hyprlock.conf still name ~/.config (their format has no variable for it)
-- [x] 11. Game mode forced on followed by `hyprctl reload` left the shell showing game mode for good: the state is now announced after every reload (a forced mode ends with the reload). The suspected first-run write race (`config.json`, `wallpaper.json` right after a detached `mkdir -p`) did not reproduce in three fresh starts each, so nothing changed there
+- [x] 11. Game mode forced on followed by `hyprctl reload` left the shell showing game mode for good: the shell now reads the state again after every reload (a forced mode ends with the reload). The suspected first-run write race (`config.json`, `wallpaper.json` right after a detached `mkdir -p`) did not reproduce in three fresh starts each, so nothing changed there
 - [x] 12. Small: a failed `grim` shows a message; night light checks `hyprsunset` again after a toggle
 
 ## Phase 13: Features

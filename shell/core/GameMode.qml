@@ -6,7 +6,8 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 // Bridge to hypr/modes/gamemode.lua. Hyprland emits `custom>>someshell_gamemode,<0|1>`
-// whenever game mode flips, so this never polls; the state is read once at start.
+// whenever game mode flips, so this never polls; the state is read once at start
+// and again after a config reload (which resets the Lua side without an event).
 // gamemoded clients reach Hyprland through services/GameClients.qml.
 Singleton {
     id: root
@@ -30,10 +31,19 @@ Singleton {
         function onRawEvent(event) {
             if (event.name === "custom" && event.data.startsWith("someshell_gamemode,"))
                 root.active = event.data.endsWith(",1");
+            else if (event.name === "configreloaded")
+                reread.restart();
         }
+    }
+    // After the reload handlers in gamemode.lua have run
+    Timer {
+        id: reread
+        interval: 300
+        onTriggered: state.running = true
     }
 
     Process {
+        id: state
         running: true
         command: ["hyprctl", "repl", "return GameMode and GameMode.active"]
         stdout: StdioCollector {
