@@ -56,8 +56,13 @@ Singleton {
     }
     function invoke(n, action) {
         action.invoke();
+        // Many senders close the notification themselves once an action is
+        // taken (notify-send -A does); dismiss only what is still there
         if (!n.resident)
-            n.dismiss();
+            Qt.callLater(() => {
+                if (server.trackedNotifications.values.includes(n))
+                    n.dismiss();
+            });
     }
 
     NotificationServer {

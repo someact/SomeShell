@@ -80,7 +80,9 @@ Send files to and receive files from an Android phone over Quick Share (Nearby S
 - [x] Settings → Island → Search → "Quick Share folder" (`quickshare.downloadDir`, empty: Downloads)
 - [x] With a phone: sending to the phone works (2026-10-14)
 - [x] The phone did not see the laptop: `ufw` drops incoming connections and the helper listened on a random port. It now listens on a fixed one (`quickshare.port`, 47893), the page warns when ufw or firewalld is in the way and gives the command to open it, and so does `scripts/quickshare.sh`
-- [ ] With a phone, after opening the port: receive a file, a link and several files; with Bluetooth off and on; decline; cancel half way
+- [x] With a phone, after opening the port: receiving works (2026-10-14)
+- [x] Easier to open what arrived: the notification has Open and Show in folder, and on the page a received transfer opens on click, with a folder button that shows the files selected in the file manager (`hypr/scripts/quickshare-open.sh`)
+- [ ] Still to try with a phone: a link, several files, Bluetooth off, decline, cancel half way
 - [ ] If the phone still does not see it: the helper announces every address of the machine (docker bridges, Tailscale too) and the phone may try a wrong one first
 - [ ] Drop a file on the island by hand (the drop target is written but could not be driven from a script)
 - [ ] The page in streamer mode still shows names (it is opened on purpose); decide whether to mask it too
@@ -104,6 +106,14 @@ The clipboard view shows text only; an image entry is just a "[[ binary data …
 - [ ] Choose the service first: it needs a free API usable from curl (Tenor and Giphy both need a key; the key is a setting, never in the repo)
 - [ ] Enter copies the GIF (as a file, so it pastes into chat apps); Ctrl+S saves it to `~/Pictures/gif` (a setting, the folder is created)
 - [ ] Previews load only while the view is open and are dropped when it closes; nothing is fetched until a search is typed
+
+### 13h Drop anything on the island (added 2026-10-14)
+Drag a file, an image, a link or selected text onto the island and choose what happens to it. The island already takes dropped files for Quick Share (13d), not yet tried by hand; that drop is the first thing to confirm, because everything here builds on it.
+- [ ] Confirm a drop reaches the island at all (file from Dolphin, image and link from the browser, selected text), in notch and floating style, and note what each source offers (`text/uri-list`, `text/plain`, image data)
+- [ ] While something is dragged near the top edge, the island grows into a drop target that says what it will take
+- [ ] After the drop, a small shelf with actions that fit the content: files: send with Quick Share, copy, move or copy to a folder (recent folders, Downloads, Pictures); images: also save, copy text (OCR), Lens; links: open, copy, send to phone; text: copy, save as a note, translate, search
+- [ ] The shelf keeps what was dropped until it is used or dismissed, so several things can be collected and sent together; it can be dragged back out to another app
+- [ ] Nothing leaves the PC without a click (Lens uploads, Quick Share sends)
 
 ## Phase 14: Public release
 

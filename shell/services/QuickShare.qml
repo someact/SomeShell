@@ -208,8 +208,26 @@ Singleton {
             Quickshell.execDetached(["wl-copy", "--", t.text]);
             notify("From " + t.device, "Copied: " + t.text.slice(0, 120), false);
         } else {
-            notify("Received from " + t.device, describe(t) + " · " + (t.destination || downloadDir || "Downloads"), false);
+            // With Open and Show in folder on the notification
+            received("notify", t, ["Received from " + t.device, describe(t) + " · " + folder(t)]);
         }
+    }
+    // Where a received transfer's files are
+    function folder(t) {
+        return t.destination || downloadDir || Paths.home + "/Downloads";
+    }
+    function hasFiles(t) {
+        return t.direction === "in" && t.state === "finished" && t.files.length > 0;
+    }
+    // Open the received file (several: show them in the folder), or show them selected
+    function open(t) {
+        received("open", t, []);
+    }
+    function reveal(t) {
+        received("show", t, []);
+    }
+    function received(mode, t, extra) {
+        Quickshell.execDetached([Paths.scripts + "/quickshare-open.sh", mode].concat(extra, [folder(t)], t.files.map(f => f.split("/").pop())));
     }
     function notify(title, body, failed) {
         Quickshell.execDetached(["notify-send", "-a", "Quick Share", "-i", "folder-download"].concat(failed ? ["-u", "critical"] : [], [title, body]));

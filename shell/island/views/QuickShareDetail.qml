@@ -215,13 +215,21 @@ Column {
                 id: row
                 required property var modelData
                 readonly property bool live: !QuickShare.isOver(modelData.state)
+                readonly property bool openable: QuickShare.hasFiles(modelData)
                 icon: modelData.direction === "in" ? "download" : "upload_file"
                 title: QuickShare.describe(modelData) + (modelData.direction === "in" ? " from " : " to ") + modelData.device
-                subtitle: QuickShare.stateText(modelData) + (modelData.state === "receiving" || modelData.state === "sending" ? " · " + Math.round(QuickShare.progress(modelData) * 100) + "%" : "") + (modelData.total > 0 ? " · " + QuickShare.size(modelData.total) : "")
+                subtitle: (openable ? "Click to open · " : "") + QuickShare.stateText(modelData) + (modelData.state === "receiving" || modelData.state === "sending" ? " · " + Math.round(QuickShare.progress(modelData) * 100) + "%" : "") + (modelData.total > 0 ? " · " + QuickShare.size(modelData.total) : "")
                 current: live
                 busy: modelData.state === "connecting"
-                action: live ? "close" : ""
-                onActionClicked: QuickShare.cancel(modelData.id)
+                // Running: cancel. Received files: click opens, the button shows them in the folder
+                action: live ? "close" : openable ? "folder_open" : ""
+                onActionClicked: live ? QuickShare.cancel(modelData.id) : QuickShare.reveal(modelData)
+                onClicked: {
+                    if (openable) {
+                        QuickShare.open(modelData);
+                        UiState.close();
+                    }
+                }
             }
         }
     }
