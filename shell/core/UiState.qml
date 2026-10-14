@@ -10,7 +10,7 @@ Singleton {
     // Views reachable with ←/→ while the island is open, in order
     readonly property list<string> mainViews: ["search", "control", "media", "notifications", "system", "power"]
     // Views opened by commands/shortcuts only
-    readonly property list<string> extraViews: ["clipboard", "emoji", "gif", "keys", "polkit", "wallpaper", "translate", "mixer"]
+    readonly property list<string> extraViews: ["clipboard", "emoji", "gif", "shelf", "keys", "polkit", "wallpaper", "translate", "mixer"]
 
     property bool expanded: false
     // Hover peek: the island shows a view on one screen without keyboard focus;

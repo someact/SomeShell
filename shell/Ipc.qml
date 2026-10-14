@@ -71,6 +71,30 @@ Scope {
         }
     }
 
+    // The shelf (things dropped on the island). add takes paths or URLs, one per
+    // line, and goes through the same sorting as a drop.
+    IpcHandler {
+        target: "shelf"
+        function add(items: string): void {
+            const urls = items.split("\n").map(s => s.trim()).filter(s => s !== "").map(s => s.startsWith("/") ? Shelf.fileUrl(s) : s);
+            if (Shelf.take({ formats: ["text/uri-list"], hasUrls: true, urls: urls, hasText: false, text: "", html: "" }) > 0)
+                UiState.open("shelf");
+        }
+        function text(t: string): void {
+            if (Shelf.take({ formats: ["text/plain"], hasUrls: false, urls: [], hasText: true, text: t, html: "" }) > 0)
+                UiState.open("shelf");
+        }
+        function open(): void {
+            UiState.open("shelf");
+        }
+        function clear(): void {
+            Shelf.clear();
+        }
+        function state(): string {
+            return JSON.stringify({ items: Shelf.items, recent: Shelf.recent, lastFormats: Shelf.lastFormats });
+        }
+    }
+
     IpcHandler {
         target: "overview"
         function toggle(): void {

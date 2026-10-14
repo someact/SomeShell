@@ -111,6 +111,7 @@ Singleton {
             property JsonObject search: JsonObject {
                 property int maxResults: 8
                 property string projectsDir: ""       // /project lists its folders; empty: the command is off
+                property string webSearch: "https://duckduckgo.com/?q=%s"   // web search for text on the shelf; %s is the text
             }
             property JsonObject notifications: JsonObject {
                 property bool dnd: false

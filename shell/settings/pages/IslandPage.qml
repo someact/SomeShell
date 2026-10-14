@@ -332,6 +332,22 @@ Page {
                 onCommitted: t => Config.search.projectsDir = t.trim()
             }
         }
+        SettingRow {
+            icon: "travel_explore"
+            title: "Web search"
+            subtitle: "Search on the shelf opens this address; %s is the text"
+            changed: Config.search.webSearch !== "https://duckduckgo.com/?q=%s"
+            onReset: Config.search.webSearch = "https://duckduckgo.com/?q=%s"
+            Field {
+                implicitWidth: 260
+                mono: true
+                text: Config.search.webSearch
+                onCommitted: t => {
+                    if (t.includes("%s"))
+                        Config.search.webSearch = t.trim();
+                }
+            }
+        }
     }
 
     Section {

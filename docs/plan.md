@@ -124,11 +124,15 @@ Checked live on a stand-in folder (root GIFs, "Funny cats" with a space, Reactio
 
 ### 13h Drop anything on the island (added 2026-10-14)
 Drag a file, an image, a link or selected text onto the island and choose what happens to it. The island already takes dropped files for Quick Share (13d), and a file dragged from Dolphin works (confirmed 2026-10-14), so the foundation is there.
-- [ ] Check the other sources: an image and a link from the browser, selected text, in notch and floating style, and note what each one offers (`text/uri-list`, `text/plain`, image data)
-- [ ] While something is dragged near the top edge, the island grows into a drop target that says what it will take
-- [ ] After the drop, a small shelf with actions that fit the content: files: send with Quick Share, copy, move or copy to a folder (recent folders, Downloads, Pictures); images: also save, copy text (OCR), Lens; links: open, copy, send to phone; text: copy, save as a note, translate, search
-- [ ] The shelf keeps what was dropped until it is used or dismissed, so several things can be collected and sent together; it can be dragged back out to another app
-- [ ] Nothing leaves the PC without a click (Lens uploads, Quick Share sends)
+- [ ] Check the other sources: an image and a link from the browser, selected text, in notch and floating style, and note what each one offers (`text/uri-list`, `text/plain`, image data). Every drop logs what it offered (`Shelf: drop offered [...]` in `qs log -c someshell`, and `lastFormats` in `ipc call shelf state`); the sorting already handles image data (`image/*`, written to the cache), web image URLs (downloaded), links and text
+- [x] While something is dragged over the island or the 2 px top-edge strip beside it, the island grows into a drop target that says what it will take (`island/ambient/AmbientDrop.qml`: "3 files", "Link · github.com", "Image", "Text") — not tried with a real drag yet
+- [x] After the drop, the shelf (`services/Shelf.qml`, view `island/views/ShelfView.qml`) with actions that fit the content: files: open, copy, copy or move to a folder (Downloads and Pictures from `xdg-user-dir`, the last 3 folders used, Other… with kdialog; a taken name gets `N_`), send with Quick Share; images: copy (as image data), save or copy/move, copy text (OCR), Lens, send; links: open, copy, send to phone; text: copy, add to notes (`notes.md`, the overlay notes), translate, web search (`search.webSearch`, Settings → Island → Search)
+- [~] Send to phone for a link sends a small `.txt` file with the link: the Quick Share library (`rqs_lib`) can only send files
+- [x] The shelf keeps what was dropped until it is removed or cleared (a Move takes the item off, since it now lives in the folder), so several things can be collected and sent together ("Send all"); a count sits in the island's side slot while it holds something, and a click opens it. Drag an item's picture out to put it into another app (a platform drag; the island does not close under it) — the drag out is not tried yet
+- [x] Nothing leaves the PC without a click (Lens uploads, Quick Share sends; a web image is only downloaded)
+- [x] IPC `shelf add <paths or URLs> · text <text> · open · clear · state`, through the same sorting as a drop
+
+Checked through IPC: a file, a local image, a web image (downloaded to the cache), a link and text sort into the right kinds with the right actions; Enter copies a file as `text/uri-list` and an image as `image/png`; the side-slot count; the copy/move snippet with a taken name. Not checked: a real drag in, the drop target, a drag out, the folder chips and the other buttons by mouse.
 
 ## Phase 14: Public release
 

@@ -30,16 +30,21 @@ PanelWindow {
     readonly property bool peek: UiState.peeking && !UiState.expanded && UiState.peekScreen === modelData.name
     readonly property bool shown: open || peek
 
-    // Ambient priority: polkit → Quick Share asking → notification → OSD → Quick Share
+    // Ambient priority: polkit → a drag over the island → Quick Share asking → notification → OSD → Quick Share
     // progress → recording → privacy → game dot → media → clock
     // (in streamer mode notification peeks go to the private layer, see PrivatePeek.qml).
     // With the side slot on, recording and privacy let media keep the main place
     // and show in the slot instead (never in game mode, where the island is a nub).
     readonly property string persistent: Recorder.active ? "record" : Privacy.active ? "privacy" : ""
     readonly property bool mediaShown: Media.active && Config.island.showMedia
+    // Something is being dragged over the island or the top edge beside it
+    property bool dropHover: false
+    property var dropInfo: ({ icon: "move_to_inbox", text: "" })
     readonly property string ambient: {
         if (Polkit.active)
             return "polkit";
+        if (dropHover)
+            return "drop";
         if (QuickShare.pending)
             return "share";
         if (Notifs.peeked && !Streamer.active)
@@ -56,8 +61,10 @@ PanelWindow {
             return "media";
         return "clock";
     }
-    // The side slot: only beside content that would otherwise hide the state
-    readonly property bool side: Config.island.dual && persistent !== "" && (ambient === "notif" || ambient === "osd" || ambient === "media" || ambient === "share")
+    // The side slot: recording and privacy only beside content that would
+    // otherwise hide them; the shelf count beside anything but the game dot
+    readonly property bool sideState: Config.island.dual && persistent !== "" && (ambient === "notif" || ambient === "osd" || ambient === "media" || ambient === "share")
+    readonly property bool side: (sideState || Shelf.count > 0) && ambient !== "dot" && ambient !== "drop" && ambient !== "polkit"
     readonly property real sideGap: 10
     readonly property real sideWidth: sideLoader.item ? sideLoader.item.implicitWidth + sideGap : 0
 
@@ -169,7 +176,9 @@ PanelWindow {
     HyprlandFocusGrab {
         id: grab
         windows: [win]
-        onCleared: if (win.open) UiState.close()
+        // Not while a shelf item is dragged to another window: the view (the
+        // drag source) must live until the drop
+        onCleared: if (win.open && !Shelf.draggingOut) UiState.close()
     }
     Timer {
         id: grabDelay
@@ -231,9 +240,13 @@ PanelWindow {
         id: hotStrip
         x: body.x - 16
         width: body.width + 32
-        height: win.peekAllowed ? 2 : 0
+        // Also the way in for drags (the island then grows into a drop target)
+        height: !win.fullscreen && !UiState.hidden && !GameMode.active ? 2 : 0
         HoverHandler {
             id: stripHover
+        }
+        IslandDrop {
+            anchors.fill: parent
         }
     }
 
@@ -337,17 +350,9 @@ PanelWindow {
             onWheel: event => Audio.setVolume(Audio.volume + (event.angleDelta.y > 0 ? 0.05 : -0.05))
         }
 
-        // Files dropped on the island go to Quick Share (its page then lists the devices)
-        DropArea {
+        // Anything dropped on the island goes to the shelf
+        IslandDrop {
             anchors.fill: parent
-            enabled: QuickShare.available
-            keys: ["text/uri-list"]
-            onDropped: drop => {
-                if (drop.hasUrls) {
-                    QuickShare.offer(drop.urls.map(u => u.toString()));
-                    drop.accept();
-                }
-            }
         }
 
         // Collapsed content
@@ -363,6 +368,8 @@ PanelWindow {
                 switch (win.ambient) {
                 case "polkit":
                     return polkitAmbient;
+                case "drop":
+                    return dropAmbient;
                 case "notif":
                     return notifAmbient;
                 case "osd":
@@ -406,6 +413,7 @@ PanelWindow {
             sourceComponent: sideAmbient
             onLoaded: {
                 item.live = Qt.binding(() => !win.covered);
+                item.showState = Qt.binding(() => win.sideState);
                 sideReveal.play();
             }
             Behavior on opacity {
@@ -475,6 +483,8 @@ PanelWindow {
                         return emojiView;
                     case "gif":
                         return gifView;
+                    case "shelf":
+                        return shelfView;
                     case "keys":
                         return keysView;
                     case "polkit":
@@ -506,6 +516,34 @@ PanelWindow {
                 onActiveChanged: if (active && win.peek) UiState.promote()
             }
         }
+    }
+
+    // A drop zone (the notch, and the top-edge strip beside it). Entering makes
+    // the island a drop target; leaving waits a moment, because the island grows
+    // under the pointer and the drag passes from the strip to the notch.
+    component IslandDrop: DropArea {
+        // The shelf's own drags pass over the island on their way out
+        enabled: !Shelf.draggingOut
+        onEntered: drag => {
+            dropLeave.stop();
+            win.dropInfo = Shelf.describe(drag);
+            win.dropHover = true;
+            drag.accept(Qt.CopyAction);
+        }
+        onExited: dropLeave.restart()
+        onDropped: drop => {
+            dropLeave.stop();
+            win.dropHover = false;
+            if (Shelf.take(drop) > 0) {
+                drop.accept(Qt.CopyAction);
+                UiState.open("shelf");
+            }
+        }
+    }
+    Timer {
+        id: dropLeave
+        interval: 200
+        onTriggered: win.dropHover = false
     }
 
     component ViewTabs: Row {
@@ -558,6 +596,12 @@ PanelWindow {
     Component {
         id: sideAmbient
         AmbientSide {}
+    }
+    Component {
+        id: dropAmbient
+        AmbientDrop {
+            info: win.dropInfo
+        }
     }
     Component {
         id: dotAmbient
@@ -622,6 +666,10 @@ PanelWindow {
     Component {
         id: gifView
         GifView {}
+    }
+    Component {
+        id: shelfView
+        ShelfView {}
     }
     Component {
         id: keysView

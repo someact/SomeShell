@@ -3,7 +3,7 @@
 Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, one 1920x1080@100 monitor DP-1, US/TH keyboard, UGTablet pen) and a laptop (Lenovo Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Laptop features are detected at runtime, never assumed.
 The project was called SomeHypr until Phase 12; `install.sh` (`migrate_legacy`) moves the old `somehypr` directories over, and that is the only place the old name may appear.
 Goals and the task tracker are in `docs/plan.md`. Phases 0–11 are finished and live in git history only.
-Current work: Phase 13 (13a WARP, 13b tile sizes, 13c the island side slot, 13e the emoji picker and 13f clipboard previews are done; 13d Quick Share and 13g GIF search are built but not tried for real (a phone; an API key); open: 13h drop on the island), then Phase 14 (public release). Phase 12 (rename, fixes from the code review) is done.
+Current work: Phase 13 (13a WARP, 13b tile sizes, 13c the island side slot, 13e the emoji picker and 13f clipboard previews are done; 13d Quick Share and 13g GIF search are built but not fully tried (more phone cases; Giphy); 13h the drop shelf is built, real drags still to try), then Phase 14 (public release). Phase 12 (rename, fixes from the code review) is done.
 
 ## Layout
 - `hypr/` is linked to `~/.config/hypr`. `hyprland.lua` loads files in a fixed order, and each setting lives in exactly one file:
@@ -23,6 +23,7 @@ Current work: Phase 13 (13a WARP, 13b tile sizes, 13c the island side slot, 13e 
   - `island/Island.qml` is the notch window; `island/views/*View.qml` are loaded only while open; `island/ambient/` holds the collapsed states. `ambient` is the main one; `side` (`AmbientSide.qml`, `island.dual`) shows recording and privacy beside media, a notification or the OSD, and is left out of the hover that starts a peek.
   - `commands/` holds one file per `/command`, registered in `commands/Commands.qml`.
   - `services/Clipboard.qml` reads `cliphist list` when the clipboard view opens; images are decoded once into `~/.cache/someshell/clipboard/<id>.<ext>` (pruned against the list on each refresh), text gets line/character counts once per session. The preview pane is `FilterListView.side`.
+  - `services/Shelf.qml` is the shelf: anything dropped on the island (`IslandDrop` in `island/Island.qml`, on the notch and the 2 px top-edge strip) is sorted by `Shelf.take()` into file, image, link or text; the island shows `ambient/AmbientDrop.qml` while a drag is over it and opens `views/ShelfView.qml` after the drop; the side slot shows the count. Image data and web images go to `~/.cache/someshell/shelf` (emptied with the shelf). Items drag back out with `Drag.Automatic`; `Shelf.draggingOut` keeps the focus grab from closing the island (the drag source) mid-drag. Every drop logs its formats. IPC `shelf add · text · open · clear · state`.
   - `services/Gifs.qml` is `/gif` (Klipy or Giphy, `gif.key` in config.json; Tenor's API is gone). With nothing typed it lists the saved GIFs: `gif.saveDir` is "Uncategorized", each folder one level down is a category, and Ctrl+S saves into the selected one. Copy puts a `text/uri-list` file on the clipboard; `SOMESHELL_GIF_FIXTURE` (a JSON answer in the service's format, its URLs may be `file://`) replaces the network for tests.
   - `lib/emoji.tsv` is the emoji list (emoji, group, name, keywords, light-skin-tone form) for `services/Emojis.qml` and `hypr/scripts/fuzzel-emoji.sh`; rebuild it with `scripts/emoji-data.sh` (Unicode + CLDR, capped at the newest version the emoji fonts draw). The tone form has U+1F3FB swapped for the chosen tone.
   - `Shortcuts.qml` (global shortcuts) and `Ipc.qml` (IPC targets) sit at the root; `corners/` holds the pills: `PillParts.qml` defines each part (a `PillPart`, glass or floating per `config.json` `pills`), `Pills.qml` creates a `CornerWindow` per zone (corners or beside the island, `pills.layout`), which joins neighboring glass parts into one pill and `wallpaper/` the background layer.
@@ -75,6 +76,7 @@ qs -c someshell ipc call overview toggle
 qs -c someshell ipc call capture region <mode>                   # shot ocr lens translate record recordSound
 qs -c someshell ipc call overlay toggle · streamer toggle
 qs -c someshell ipc call lock preview · widgets edit · osk toggle
+qs -c someshell ipc call shelf add <paths or URLs> · shelf text <text> · shelf state   # the drop shelf without a drag
 qs -c someshell ipc call schedule state · schedule at <HH:MM|now> · wallpaper slot <name>   # time-of-day schedule (at/slot change the wallpaper)
 timeout 8 qs -p shell/settings.qml 2>&1 | grep -E "WARN|ERROR"   # settings app
 ```

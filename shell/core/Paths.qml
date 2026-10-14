@@ -24,6 +24,7 @@ Singleton {
 
     readonly property string notes: stateDir + "/notes.md"                 // overlay notes (desktop widget too, Phase 7)
     readonly property string emojiState: stateDir + "/emoji.json"            // recent picks and skin tone
+    readonly property string shelfState: stateDir + "/shelf.json"            // recent copy/move folders of the shelf
 
     // Capture scratch files (tmpfs)
     readonly property string runtime: Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"
@@ -42,6 +43,7 @@ Singleton {
     readonly property string clipboardCache: cacheHome + "/someshell/clipboard"   // decoded clipboard images, <cliphist id>.<ext>
     readonly property string gifCache: cacheHome + "/someshell/gif"           // GIFs copied from /gif (kept a day)
     readonly property string gifPreviews: cacheHome + "/someshell/gif-previews"   // /gif grid previews, removed when the view closes
+    readonly property string shelfCache: cacheHome + "/someshell/shelf"       // things dropped on the island that are not files yet (image data, downloaded images, link files)
     readonly property string lockBlur: cacheHome + "/someshell/lock-blur.jpg"   // blurred wallpaper for the lock screen
     readonly property string mpvSocket: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/someshell-mpvpaper.sock"
     readonly property string mpvPid: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/someshell-mpvpaper.pid"
