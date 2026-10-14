@@ -112,6 +112,15 @@ Checked live: thumbnails, the image and text preview, the counts, streamer mode 
 - [x] Klipy with a real key: search works (confirmed 2026-10-14)
 - [ ] Still to try: Giphy with a real key, and a paste into Discord / Vesktop. Checked before that against a local stand-in in Klipy's format (`SOMESHELL_GIF_FIXTURE`): grid, arrows, Enter, Ctrl+S, ads left out; and against both real APIs with a wrong key (their error is shown). The Klipy fields come from its API as other open-source clients use it, not from a live answer
 
+### 13g+ Saved GIFs in /gif (added 2026-10-14) ✅
+The GIF save folder becomes a small library inside /gif.
+- [x] With nothing typed, /gif shows the GIFs saved in `gif.saveDir` (`~/Pictures/gif`), newest first; works without an API key. Read with one `find` when the view opens and after each save, dropped with the view
+- [x] Each folder in it (one level) is a category tab with its count; GIFs in the folder itself are "Uncategorized" (listed when it has GIFs or there are no folders). Tab switches the category
+- [x] Enter copies a saved GIF straight from the folder (a percent-encoded `file://` URI); Ctrl+S on a search result saves into the selected category, and the tab updates when the download lands
+- [x] Previews of saved GIFs stay light: played from disk with `cache: false` and frames scaled to the cell
+
+Checked live on a stand-in folder (root GIFs, "Funny cats" with a space, Reactions, an empty folder): the tabs and counts, Tab, Enter on a saved GIF, Ctrl+S from a Klipy search. Not checked: Shift+Tab (keys were landing in other windows), memory with large full-size saved GIFs.
+
 ### 13h Drop anything on the island (added 2026-10-14)
 Drag a file, an image, a link or selected text onto the island and choose what happens to it. The island already takes dropped files for Quick Share (13d), and a file dragged from Dolphin works (confirmed 2026-10-14), so the foundation is there.
 - [ ] Check the other sources: an image and a link from the browser, selected text, in notch and floating style, and note what each one offers (`text/uri-list`, `text/plain`, image data)

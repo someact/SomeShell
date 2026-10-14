@@ -14,8 +14,9 @@ import qs.core
 // every frame (~150 MB for one page). The folder goes with the view.
 // Copy downloads the GIF into Paths.gifCache and puts it on the clipboard as a
 // file (text/uri-list), which chat apps paste as an upload; save downloads it
-// into Config.gif.saveDir. SOMESHELL_GIF_FIXTURE (a JSON file in the chosen
-// service's format) replaces the network for tests.
+// into the selected category of Config.gif.saveDir. A saved GIF (the library
+// below) is copied straight from its file. SOMESHELL_GIF_FIXTURE (a JSON file
+// in the chosen service's format) replaces the network for tests.
 Singleton {
     id: root
 
@@ -37,6 +38,16 @@ Singleton {
     property var previews: ({})   // id -> local file, once downloaded
     property int revision: 0      // bumps when previews changes
     property var queue: []        // { id, url } waiting for the downloader
+
+    // Saved GIFs: the files in saveDir ("" = Uncategorized) and one folder
+    // level below it (each folder is a category). Read when the view opens and
+    // after each save; dropped with the view.
+    property var library: []      // { id, title, path, category, local: true }, newest first
+    property var categories: []   // folder names, sorted
+    property string category: ""  // selected tab; Ctrl+S saves here too
+    property bool libraryLoaded: false
+    property var saves: []        // { url, dir, name } waiting for the saver
+    readonly property string categoryDir: category === "" ? saveDir : saveDir + "/" + category
 
     function search(text) {
         const q = text.trim();
@@ -62,6 +73,20 @@ Singleton {
         previews = {};
         revision++;
         Quickshell.execDetached(["rm", "-rf", Paths.gifPreviews]);
+        library = [];
+        categories = [];
+        libraryLoaded = false;
+    }
+
+    function loadLibrary() {
+        libraryScan.running = false;
+        libraryScan.running = true;
+    }
+    function inCategory(name) {
+        return library.filter(g => g.category === name);
+    }
+    function count(name) {
+        return library.reduce((n, g) => n + (g.category === name ? 1 : 0), 0);
         query = "";
         results = [];
         status = "idle";
@@ -134,6 +159,8 @@ Singleton {
 
     // Local preview URL, "" until it is downloaded
     function previewUrl(item) {
+        if (item.local)
+            return fileUrl(item.path);
         revision; // dependency
         const p = previews[item.id];
         return p ? "file://" + p : "";
@@ -162,6 +189,10 @@ Singleton {
     // Download in the background, then copy as a file. Cached copies older than
     // a day are removed (the clipboard only needs the newest).
     function copy(item) {
+        if (item.local) {
+            Quickshell.execDetached(["wl-copy", "-t", "text/uri-list", fileUrl(item.path) + "\n"]);
+            return;
+        }
         Quickshell.execDetached(["bash", "-c", `
 dir="$1"; f="$dir/$2"
 mkdir -p "$dir" && find "$dir" -name '*.gif' -mtime +1 -delete
@@ -171,14 +202,77 @@ else
     rm -f "$f.part"; notify-send -a GIF -u critical "GIF not copied" "The download failed"
 fi`, "_", Paths.gifCache, fileName(item), item.copyUrl]);
     }
+    // Into the selected category, one at a time; the library is read again after each
     function save(item) {
-        Quickshell.execDetached(["bash", "-c", `
+        if (item.local)
+            return;
+        saves = saves.concat([{ url: item.saveUrl, dir: categoryDir, name: fileName(item) }]);
+        nextSave();
+    }
+    function nextSave() {
+        if (saver.running || saves.length === 0)
+            return;
+        const s = saves[0];
+        saves = saves.slice(1);
+        saver.command = ["bash", "-c", `
 f="$1/$2"
 if mkdir -p "$1" && curl -fsSL --max-time 60 -o "$f.part" "$3" && mv "$f.part" "$f"; then
     notify-send -a GIF -i image-gif "GIF saved" "$f"
 else
     rm -f "$f.part"; notify-send -a GIF -u critical "GIF not saved" "The download failed"
-fi`, "_", saveDir, fileName(item), item.saveUrl]);
+fi`, "_", s.dir, s.name, s.url];
+        saver.running = true;
+    }
+    // Spaces and other characters in folder names must be escaped in a URL
+    function fileUrl(path) {
+        return "file://" + path.split("/").map(encodeURIComponent).join("/");
+    }
+
+    Process {
+        id: saver
+        onExited: {
+            if (root.libraryLoaded)
+                root.loadLibrary();
+            root.nextSave();
+        }
+    }
+
+    // "D<tab>name" per folder, "F<tab>mtime<tab>relative path" per GIF
+    Process {
+        id: libraryScan
+        command: ["bash", "-c", `
+dir="$1"; [ -d "$dir" ] || exit 0
+find "$dir" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf 'D\\t%f\\n'
+find "$dir" -maxdepth 2 -type f -iname '*.gif' ! -path '*/.*' -printf 'F\\t%T@\\t%P\\n'`, "_", root.saveDir]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const dirs = [];
+                const files = [];
+                for (const l of text.split("\n")) {
+                    const f = l.split("\t");
+                    if (f[0] === "D" && f.length === 2)
+                        dirs.push(f[1]);
+                    else if (f[0] === "F" && f.length === 3)
+                        files.push({ time: parseFloat(f[1]), rel: f[2] });
+                }
+                files.sort((a, b) => b.time - a.time);
+                root.categories = dirs.sort((a, b) => a.localeCompare(b));
+                root.library = files.map(f => {
+                    const slash = f.rel.lastIndexOf("/");
+                    const name = f.rel.slice(slash + 1);
+                    return { id: "local-" + f.rel, title: name.replace(/\.gif$/i, ""), path: root.saveDir + "/" + f.rel, category: slash < 0 ? "" : f.rel.slice(0, slash), local: true };
+                });
+                // First open: start on Uncategorized when it has GIFs, else the first folder that has some
+                if (!root.libraryLoaded && root.count("") === 0) {
+                    const first = root.categories.find(c => root.count(c) > 0);
+                    if (first !== undefined)
+                        root.category = first;
+                }
+                if (root.category !== "" && !root.categories.includes(root.category))
+                    root.category = "";
+                root.libraryLoaded = true;
+            }
+        }
     }
 
     Process {
