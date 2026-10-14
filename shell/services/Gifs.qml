@@ -8,6 +8,10 @@ import qs.core
 // GIF search for /gif over Klipy or Giphy (Config.gif; both need a free key,
 // Tenor closed its API in June 2026). Nothing is fetched until a search is
 // typed, and the results are dropped when the view closes (clear()).
+// Previews are downloaded with curl into Paths.gifPreviews and played from
+// there: an AnimatedImage on a network URL with cache: false recurses until
+// the stack overflows (Qt 6.12, crashed the shell), and cache: true holds
+// every frame (~150 MB for one page). The folder goes with the view.
 // Copy downloads the GIF into Paths.gifCache and puts it on the clipboard as a
 // file (text/uri-list), which chat apps paste as an upload; save downloads it
 // into Config.gif.saveDir. SOMESHELL_GIF_FIXTURE (a JSON file in the chosen
@@ -30,6 +34,9 @@ Singleton {
     property int page: 1
     property bool hasMore: false
     property string seed: ""      // /gif <words> hands the words to the view
+    property var previews: ({})   // id -> local file, once downloaded
+    property int revision: 0      // bumps when previews changes
+    property var queue: []        // { id, url } waiting for the downloader
 
     function search(text) {
         const q = text.trim();
@@ -37,6 +44,7 @@ Singleton {
             return;
         query = q;
         results = [];
+        queue = [];
         page = 1;
         hasMore = false;
         fetch();
@@ -49,6 +57,11 @@ Singleton {
     }
     function clear() {
         request.running = false;
+        downloader.running = false;
+        queue = [];
+        previews = {};
+        revision++;
+        Quickshell.execDetached(["rm", "-rf", Paths.gifPreviews]);
         query = "";
         results = [];
         status = "idle";
@@ -119,6 +132,28 @@ Singleton {
         }));
     }
 
+    // Local preview URL, "" until it is downloaded
+    function previewUrl(item) {
+        revision; // dependency
+        const p = previews[item.id];
+        return p ? "file://" + p : "";
+    }
+    function download(list) {
+        queue = queue.concat(list.filter(g => !previews[g.id]).map(g => ({ id: g.id, url: g.preview })));
+        nextDownload();
+    }
+    function nextDownload() {
+        if (downloader.running || queue.length === 0)
+            return;
+        const batch = queue;
+        queue = [];
+        let args = ["curl", "-sS", "--fail", "--location", "--max-time", "30", "--create-dirs", "--parallel", "--parallel-max", "6", "-w", "%{http_code} %{filename_effective}\\n"];
+        for (const g of batch)
+            args = args.concat(["-o", Paths.gifPreviews + "/" + g.id + ".gif", g.url]);
+        downloader.command = args;
+        downloader.running = true;
+    }
+
     function fileName(item) {
         const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48);
         return (slug ? slug + "-" : "") + item.id + ".gif";
@@ -157,6 +192,7 @@ fi`, "_", saveDir, fileName(item), item.saveUrl]);
                 try {
                     const list = root.parse(text);
                     root.results = request.forPage === 1 ? list : root.results.concat(list);
+                    root.download(list);
                     root.status = "ready";
                 } catch (e) {
                     if (root.status === "error")
@@ -174,5 +210,21 @@ fi`, "_", saveDir, fileName(item), item.saveUrl]);
                 }
             }
         }
+    }
+
+    // One line per finished preview: "<http code> <file>"
+    Process {
+        id: downloader
+        stdout: SplitParser {
+            onRead: line => {
+                const sp = line.indexOf(" ");
+                if (line.slice(0, sp) !== "200")
+                    return;
+                const file = line.slice(sp + 1);
+                root.previews[file.slice(file.lastIndexOf("/") + 1, -4)] = file;
+                root.revision++;
+            }
+        }
+        onExited: root.nextDownload()
     }
 }

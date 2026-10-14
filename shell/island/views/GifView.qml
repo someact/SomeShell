@@ -151,7 +151,8 @@ FocusScope {
 
                 AnimatedImage {
                     anchors.fill: parent
-                    source: cell.modelData.preview
+                    // A local copy (Gifs.download): cache: false on a network URL crashes Qt
+                    source: Gifs.previewUrl(cell.modelData)
                     // Frames are decoded as they play instead of all kept in memory
                     cache: false
                     fillMode: Image.PreserveAspectCrop
