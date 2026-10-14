@@ -110,7 +110,8 @@ Checked live: thumbnails, the image and text preview, the counts, streamer mode 
 - [x] Previews load only while the view is open and are dropped when it closes; nothing is fetched until a search is typed
 - [x] The shell crashed (segfault) with the grid open: AnimatedImage with `cache: false` on a network URL overflows the stack on Qt 6.12 (reproduced in a bare Quickshell window; local files with `cache: false` do not crash). Previews are now downloaded with curl into `~/.cache/someshell/gif-previews` and played from there; the folder is removed when the view closes. Checked: two pages of a real Klipy search open for over a minute, about +30 MB for 48 previews (2026-10-14)
 - [x] Klipy with a real key: search works (confirmed 2026-10-14)
-- [ ] Still to try: Giphy with a real key, and a paste into Discord / Vesktop. Checked before that against a local stand-in in Klipy's format (`SOMESHELL_GIF_FIXTURE`): grid, arrows, Enter, Ctrl+S, ads left out; and against both real APIs with a wrong key (their error is shown). The Klipy fields come from its API as other open-source clients use it, not from a live answer
+- [x] A copied GIF pastes into Discord (confirmed 2026-10-14)
+- [ ] Giphy with a real key (left open on purpose: no Giphy key yet). Checked before that against a local stand-in in Klipy's format (`SOMESHELL_GIF_FIXTURE`): grid, arrows, Enter, Ctrl+S, ads left out; and against both real APIs with a wrong key (their error is shown). The Klipy fields come from its API as other open-source clients use it, not from a live answer
 
 ### 13g+ Saved GIFs in /gif (added 2026-10-14) ✅
 The GIF save folder becomes a small library inside /gif.
