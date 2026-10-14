@@ -8,6 +8,7 @@ Rectangle {
     property alias text: input.text
     property string placeholder
     property bool mono: false
+    property bool secret: false     // dots unless it is being edited (API keys)
     signal committed(string text)
 
     implicitWidth: 300
@@ -30,6 +31,7 @@ Rectangle {
         font.family: field.mono ? Theme.font.mono : Theme.font.ui
         font.pixelSize: Theme.font.normal
         selectByMouse: true
+        echoMode: field.secret ? TextInput.PasswordEchoOnEdit : TextInput.Normal
         onAccepted: field.committed(text)
         onActiveFocusChanged: if (!activeFocus) field.committed(text)
     }

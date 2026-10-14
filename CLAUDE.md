@@ -3,7 +3,7 @@
 Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, one 1920x1080@100 monitor DP-1, US/TH keyboard, UGTablet pen) and a laptop (Lenovo Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Laptop features are detected at runtime, never assumed.
 The project was called SomeHypr until Phase 12; `install.sh` (`migrate_legacy`) moves the old `somehypr` directories over, and that is the only place the old name may appear.
 Goals and the task tracker are in `docs/plan.md`. Phases 0–11 are finished and live in git history only.
-Current work: Phase 13 (13a WARP, 13b tile sizes, 13c the island side slot, 13e the emoji picker and 13f clipboard previews are done; 13d Quick Share is built but not fully tried with a phone; open: 13g GIF search, 13h drop on the island), then Phase 14 (public release). Phase 12 (rename, fixes from the code review) is done.
+Current work: Phase 13 (13a WARP, 13b tile sizes, 13c the island side slot, 13e the emoji picker and 13f clipboard previews are done; 13d Quick Share and 13g GIF search are built but not tried for real (a phone; an API key); open: 13h drop on the island), then Phase 14 (public release). Phase 12 (rename, fixes from the code review) is done.
 
 ## Layout
 - `hypr/` is linked to `~/.config/hypr`. `hyprland.lua` loads files in a fixed order, and each setting lives in exactly one file:
@@ -23,6 +23,7 @@ Current work: Phase 13 (13a WARP, 13b tile sizes, 13c the island side slot, 13e 
   - `island/Island.qml` is the notch window; `island/views/*View.qml` are loaded only while open; `island/ambient/` holds the collapsed states. `ambient` is the main one; `side` (`AmbientSide.qml`, `island.dual`) shows recording and privacy beside media, a notification or the OSD, and is left out of the hover that starts a peek.
   - `commands/` holds one file per `/command`, registered in `commands/Commands.qml`.
   - `services/Clipboard.qml` reads `cliphist list` when the clipboard view opens; images are decoded once into `~/.cache/someshell/clipboard/<id>.<ext>` (pruned against the list on each refresh), text gets line/character counts once per session. The preview pane is `FilterListView.side`.
+  - `services/Gifs.qml` is `/gif` (Klipy or Giphy, `gif.key` in config.json; Tenor's API is gone). Copy puts a `text/uri-list` file on the clipboard; `SOMESHELL_GIF_FIXTURE` (a JSON answer in the service's format, its URLs may be `file://`) replaces the network for tests.
   - `lib/emoji.tsv` is the emoji list (emoji, group, name, keywords, light-skin-tone form) for `services/Emojis.qml` and `hypr/scripts/fuzzel-emoji.sh`; rebuild it with `scripts/emoji-data.sh` (Unicode + CLDR, capped at the newest version the emoji fonts draw). The tone form has U+1F3FB swapped for the chosen tone.
   - `Shortcuts.qml` (global shortcuts) and `Ipc.qml` (IPC targets) sit at the root; `corners/` holds the pills: `PillParts.qml` defines each part (a `PillPart`, glass or floating per `config.json` `pills`), `Pills.qml` creates a `CornerWindow` per zone (corners or beside the island, `pills.layout`), which joins neighboring glass parts into one pill and `wallpaper/` the background layer.
   - `settings.qml` + `settings/` is the settings app, a separate process (`qs -c someshell ipc call settings open` or `settings page <id>`; a second call focuses the running one). `settings/` holds its stores (HyprSettings, KeybindStore, ShellIpc), `ui/` and one file per page in `pages/`. It changes shell state over IPC, never by running a second copy of a service.
@@ -66,7 +67,7 @@ hyprctl binds -j | jq length         # 201 (with no keybinds.json)
 Shell changes:
 ```sh
 timeout 10 qs -p shell/shell.qml 2>&1 | grep -E "WARN|ERROR"   # dev copy; only notification/polkit clashes with the live shell may appear
-qs -c someshell ipc call island open <view>                     # search control media notifications system power clipboard emoji keys
+qs -c someshell ipc call island open <view>                     # search control media notifications system power clipboard emoji gif keys
 qs -c someshell ipc call island state
 qs -c someshell ipc call island control <page>                 # wifi bluetooth warp nightlight audio
 qs -c someshell ipc call overview toggle

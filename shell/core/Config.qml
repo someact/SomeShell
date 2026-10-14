@@ -29,6 +29,7 @@ Singleton {
     readonly property alias osk: adapter.osk
     readonly property alias media: adapter.media
     readonly property alias quickshare: adapter.quickshare
+    readonly property alias gif: adapter.gif
     property bool ready: false
 
     FileView {
@@ -189,6 +190,11 @@ Singleton {
                 property bool enabled: false          // visible to nearby devices, so a phone can send here
                 property string downloadDir: ""       // empty: the Downloads folder
                 property int port: 47893              // TCP port phones connect to; open it in the firewall (0: any free port)
+            }
+            property JsonObject gif: JsonObject {
+                property string service: "klipy"      // klipy | giphy (Tenor closed its API in June 2026)
+                property string key: ""               // the service's API key (free sign-up); lives only in this file
+                property string saveDir: ""           // Ctrl+S in /gif saves here; empty: ~/Pictures/gif
             }
             property JsonObject media: JsonObject {
                 property bool lyrics: true            // fetch lyrics from LRCLIB (services/Lyrics.qml)

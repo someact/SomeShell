@@ -473,6 +473,8 @@ PanelWindow {
                         return clipboardView;
                     case "emoji":
                         return emojiView;
+                    case "gif":
+                        return gifView;
                     case "keys":
                         return keysView;
                     case "polkit":
@@ -616,6 +618,10 @@ PanelWindow {
     Component {
         id: emojiView
         EmojiView {}
+    }
+    Component {
+        id: gifView
+        GifView {}
     }
     Component {
         id: keysView

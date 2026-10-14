@@ -335,6 +335,50 @@ Page {
     }
 
     Section {
+        title: "GIF search"
+        SettingRow {
+            icon: "gif_box"
+            title: "Service"
+            subtitle: "Where /gif searches. Both need a free API key (Tenor closed its API in June 2026)"
+            changed: Config.gif.service !== "klipy"
+            onReset: Config.gif.service = "klipy"
+            Choice {
+                model: [{ value: "klipy", label: "Klipy" }, { value: "giphy", label: "Giphy" }]
+                value: Config.gif.service
+                onPicked: v => Config.gif.service = v
+            }
+        }
+        SettingRow {
+            icon: "key"
+            title: "API key"
+            subtitle: Config.gif.service === "giphy" ? "From developers.giphy.com → Dashboard → Create an API key" : "From partner.klipy.com (free)"
+            changed: Config.gif.key !== ""
+            onReset: Config.gif.key = ""
+            Field {
+                implicitWidth: 260
+                mono: true
+                secret: true
+                placeholder: "Paste the key"
+                text: Config.gif.key
+                onCommitted: t => Config.gif.key = t.trim()
+            }
+        }
+        SettingRow {
+            icon: "folder"
+            title: "Save folder"
+            subtitle: "Ctrl+S in /gif saves the GIF here (the folder is created)"
+            changed: Config.gif.saveDir !== ""
+            onReset: Config.gif.saveDir = ""
+            Field {
+                implicitWidth: 260
+                placeholder: "~/Pictures/gif"
+                text: Config.gif.saveDir
+                onCommitted: t => Config.gif.saveDir = t.trim()
+            }
+        }
+    }
+
+    Section {
         title: "Notifications"
         SettingRow {
             icon: "history"

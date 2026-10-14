@@ -104,10 +104,11 @@ Checked live with typed keys: search, arrows, Tab, Enter and Shift+Enter, the re
 Checked live: thumbnails, the image and text preview, the counts, streamer mode on and off, Delete on an image entry (its file went with it).
 
 ### 13g GIF search (added 2026-10-14)
-- [ ] `/gif <words>` searches online and shows a grid of animated previews in the island
-- [ ] Choose the service first: it needs a free API usable from curl (Tenor and Giphy both need a key; the key is a setting, never in the repo)
-- [ ] Enter copies the GIF (as a file, so it pastes into chat apps); Ctrl+S saves it to `~/Pictures/gif` (a setting, the folder is created)
-- [ ] Previews load only while the view is open and are dropped when it closes; nothing is fetched until a search is typed
+- [x] `/gif <words>` searches online and shows a grid of animated previews in the island (`services/Gifs.qml`, `island/views/GifView.qml`); scrolling to the end loads the next page
+- [x] Service: Tenor closed its API on 2026-06-30, so it is Klipy (default; the Tenor team's successor, free key at partner.klipy.com) or Giphy, both over curl. The key is `gif.key` in config.json (Settings → Island → GIF search, masked), never in the repo; without one the view says where to get it
+- [x] Enter copies the GIF as a file (`text/uri-list`, downloaded into `~/.cache/someshell/gif`, kept a day); Ctrl+S (or a right-click) saves it to `gif.saveDir` (empty: `~/Pictures/gif`, created)
+- [x] Previews load only while the view is open and are dropped when it closes; nothing is fetched until a search is typed
+- [ ] With a real key: a search on each service, and a paste into Discord / Vesktop. Checked so far against a local stand-in in Klipy's format (`SOMESHELL_GIF_FIXTURE`): grid, arrows, Enter, Ctrl+S, ads left out; and against both real APIs with a wrong key (their error is shown). The Klipy fields come from its API as other open-source clients use it, not from a live answer
 
 ### 13h Drop anything on the island (added 2026-10-14)
 Drag a file, an image, a link or selected text onto the island and choose what happens to it. The island already takes dropped files for Quick Share (13d), and a file dragged from Dolphin works (confirmed 2026-10-14), so the foundation is there.

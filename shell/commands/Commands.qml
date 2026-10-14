@@ -6,7 +6,7 @@ import Quickshell
 // Registry of island commands, typed as `/name arg` in search.
 Singleton {
     readonly property list<QtObject> all: [
-        WallpaperCommand {}, SettingsCommand {}, PowerCommand {}, LockCommand {}, ClipCommand {}, EmojiCommand {}, ProjectCommand {},
+        WallpaperCommand {}, SettingsCommand {}, PowerCommand {}, LockCommand {}, ClipCommand {}, EmojiCommand {}, GifCommand {}, ProjectCommand {},
         GameCommand {}, OverlayCommand {}, DndCommand {}, StreamCommand {}, ShotCommand {}, OcrCommand {}, LensCommand {}, TranslateCommand {},
         RecordCommand {}, KeysCommand {}, WidgetsCommand {}, OskCommand {}, ShareCommand {}
     ]
