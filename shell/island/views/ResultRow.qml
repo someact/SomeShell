@@ -10,6 +10,7 @@ Item {
     property string icon            // Material Symbols name
     property string iconSource      // image path/url (app icons)
     property string glyph           // plain text instead of an icon (emoji)
+    property string thumb           // image url shown as a small cropped picture (clipboard)
     property string title
     property string subtitle
     property string hint
@@ -36,9 +37,23 @@ Item {
         spacing: 12
 
         Item {
-            width: 28
-            height: 28
+            id: lead
+            width: root.thumb !== "" ? 48 : 28
+            height: root.thumb !== "" ? 36 : 28
             anchors.verticalCenter: parent.verticalCenter
+            ClippingRectangle {
+                anchors.fill: parent
+                visible: root.thumb !== ""
+                radius: 6
+                color: Theme.islandRaised
+                Image {
+                    anchors.fill: parent
+                    source: root.thumb
+                    sourceSize: Qt.size(96, 72)
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                }
+            }
             IconImage {
                 anchors.fill: parent
                 visible: root.iconSource !== ""
@@ -46,7 +61,7 @@ Item {
             }
             Icon {
                 anchors.centerIn: parent
-                visible: root.iconSource === "" && root.glyph === ""
+                visible: root.iconSource === "" && root.glyph === "" && root.thumb === ""
                 name: root.icon
                 size: 22
                 color: root.current ? Theme.accentIsland : Theme.fgIsland
@@ -61,7 +76,7 @@ Item {
 
         Column {
             anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - 40 - (hintLabel.visible ? hintLabel.implicitWidth + 12 : 0)
+            width: parent.width - lead.width - 12 - (hintLabel.visible ? hintLabel.implicitWidth + 12 : 0)
             Label {
                 width: parent.width
                 text: root.title

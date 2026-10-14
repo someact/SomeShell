@@ -39,6 +39,7 @@ Singleton {
     readonly property string cacheHome: Quickshell.env("XDG_CACHE_HOME") || home + "/.cache"
     readonly property string thumbs: cacheHome + "/someshell/thumbs"
     readonly property string lyrics: cacheHome + "/someshell/lyrics"         // LRCLIB answers, one file per track
+    readonly property string clipboardCache: cacheHome + "/someshell/clipboard"   // decoded clipboard images, <cliphist id>.<ext>
     readonly property string lockBlur: cacheHome + "/someshell/lock-blur.jpg"   // blurred wallpaper for the lock screen
     readonly property string mpvSocket: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/someshell-mpvpaper.sock"
     readonly property string mpvPid: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/someshell-mpvpaper.pid"

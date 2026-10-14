@@ -96,11 +96,12 @@ Send files to and receive files from an Android phone over Quick Share (Nearby S
 
 Checked live with typed keys: search, arrows, Tab, Enter and Shift+Enter, the recent row, a saved tone on the hands and the two-person emoji. The tone button was not clicked by hand (a scripted click missed the island).
 
-### 13f Clipboard history with image previews (added 2026-10-14)
-The clipboard view shows text only; an image entry is just a "[[ binary data … ]]" title.
-- [ ] Image entries show a thumbnail (decoded with `cliphist decode` into the cache, once per entry, removed with the entry)
-- [ ] A larger preview of the selected entry beside the list: the image, or the full text
-- [ ] Type and size on the row (image 1280×720, 12 lines of text), streamer mode hides previews
+### 13f Clipboard history with image previews (added 2026-10-14) ✅
+- [x] Image entries show a thumbnail (decoded with `cliphist decode` into `~/.cache/someshell/clipboard/<id>.<ext>`, once per entry; Delete removes the file with the entry, wipe the folder, and each refresh drops files of entries cliphist no longer has)
+- [x] A larger preview of the selected entry beside the list: the image, or the full text (decoded when the selection rests, up to 20,000 bytes)
+- [x] Type and size on the row ("image · 1280×720 · 409 KiB", "12 lines · 340 characters"; text is counted once per entry per session), streamer mode hides thumbnails and the preview
+
+Checked live: thumbnails, the image and text preview, the counts, streamer mode on and off, Delete on an image entry (its file went with it).
 
 ### 13g GIF search (added 2026-10-14)
 - [ ] `/gif <words>` searches online and shows a grid of animated previews in the island
