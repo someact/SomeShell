@@ -131,6 +131,7 @@ Drag a file, an image, a link or selected text onto the island and choose what h
 - [x] The shelf keeps what was dropped until it is removed or cleared (a Move takes the item off, since it now lives in the folder), so several things can be collected and sent together ("Send all"); a count sits in the island's side slot while it holds something, and a click opens it. Drag an item's picture out to put it into another app (a platform drag; the island does not close under it) — the drag out is not tried yet
 - [x] Nothing leaves the PC without a click (Lens uploads, Quick Share sends; a web image is only downloaded)
 - [x] IPC `shelf add <paths or URLs> · text <text> · open · clear · state`, through the same sorting as a drop
+- [x] Fix: the side-slot count looped the layout (its click areas sat inside the Rows they measured), and the island stopped committing its blur region: a frost the size of the open shelf stayed on screen after it closed. The click areas are siblings of the Row now
 
 Checked through IPC: a file, a local image, a web image (downloaded to the cache), a link and text sort into the right kinds with the right actions; Enter copies a file as `text/uri-list` and an image as `image/png`; the side-slot count; the copy/move snippet with a taken name. Not checked: a real drag in, the drop target, a drag out, the folder chips and the other buttons by mouse.
 

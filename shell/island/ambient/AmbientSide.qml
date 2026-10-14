@@ -57,18 +57,6 @@ Rectangle {
                 name: "mic"
                 size: 14
             }
-
-            MouseArea {
-                id: stateArea
-                // Covers the state part only, with the pill's padding
-                x: -8
-                y: -6
-                width: stateRow.width + 13
-                height: stateRow.height + 12
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: Recorder.active ? Recorder.stop() : UiState.open("control")
-            }
         }
 
         Row {
@@ -89,17 +77,31 @@ Rectangle {
                 font.pixelSize: Theme.font.small
                 font.weight: Theme.font.weightTitle
             }
-
-            MouseArea {
-                id: shelfArea
-                x: -6
-                y: -6
-                width: shelfRow.width + 14
-                height: shelfRow.height + 12
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: UiState.open("shelf")
-            }
         }
+    }
+
+    // Click areas sit outside the Rows: inside, a size taken from the Row they
+    // are in loops the layout (and the window stops committing its blur region)
+    MouseArea {
+        id: stateArea
+        visible: stateRow.visible
+        x: 0
+        y: 0
+        width: shelfRow.visible ? row.x + shelfRow.x - row.spacing / 2 : root.width
+        height: root.height
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: Recorder.active ? Recorder.stop() : UiState.open("control")
+    }
+    MouseArea {
+        id: shelfArea
+        visible: shelfRow.visible
+        x: stateRow.visible ? row.x + shelfRow.x - row.spacing / 2 : 0
+        y: 0
+        width: root.width - x
+        height: root.height
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: UiState.open("shelf")
     }
 }
