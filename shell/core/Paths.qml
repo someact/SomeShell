@@ -23,6 +23,7 @@ Singleton {
     readonly property string videoFrame: stateDir + "/video-frame.jpg"     // matugen input for video wallpapers
 
     readonly property string notes: stateDir + "/notes.md"                 // overlay notes (desktop widget too, Phase 7)
+    readonly property string emojiState: stateDir + "/emoji.json"            // recent picks and skin tone
 
     // Capture scratch files (tmpfs)
     readonly property string runtime: Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"

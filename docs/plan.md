@@ -88,12 +88,13 @@ Send files to and receive files from an Android phone over Quick Share (Nearby S
 - [ ] The page in streamer mode still shows names (it is opened on purpose); decide whether to mask it too
 - [ ] Offer the build in `install.sh` when `cargo` is installed
 
-### 13e Emoji picker (added 2026-10-14)
-`/emoji` reads its list from the data inside `hypr/scripts/fuzzel-emoji.sh` and shows a plain filtered list.
-- [ ] The full Unicode emoji set with names and keywords as a data file of its own (`shell/lib/`), loaded only while the view is open; the fuzzel fallback reads the same file
-- [ ] A grid instead of a list, with category tabs (smileys, people, animals, food, travel, activities, objects, symbols, flags) and a "recent" row
-- [ ] Search across names and keywords; arrows move in the grid, Enter copies, Shift+Enter copies and keeps it open
-- [ ] Skin tone choice for the emoji that have one (remembered)
+### 13e Emoji picker (added 2026-10-14) ✅
+- [x] The full Unicode emoji set with names and keywords as a data file of its own (`shell/lib/emoji.tsv`, 1,914 emoji), loaded only while the view is open; the fuzzel fallback reads the same file. `scripts/emoji-data.sh` rebuilds it from the Unicode emoji-test.txt and the CLDR keywords, up to Emoji 17.0 (18.0 has no glyphs in Noto or Twemoji yet)
+- [x] A grid instead of a list, with category tabs (smileys, people, animals, food, travel, activities, objects, symbols, flags) and a "recent" row on top (the last 12)
+- [x] Search across names and keywords; arrows move in the grid, Tab switches the category, Enter copies, Shift+Enter (or a right-click) copies and keeps it open
+- [x] Skin tone choice for the emoji that have one (the hand button; remembered with the recent ones in `~/.local/state/someshell/emoji.json`)
+
+Checked live with typed keys: search, arrows, Tab, Enter and Shift+Enter, the recent row, a saved tone on the hands and the two-person emoji. The tone button was not clicked by hand (a scripted click missed the island).
 
 ### 13f Clipboard history with image previews (added 2026-10-14)
 The clipboard view shows text only; an image entry is just a "[[ binary data … ]]" title.
@@ -132,7 +133,7 @@ Carried over from Phase 11. The repo is already public.
 - [ ] The translate language list is in three files (`TranslateView`, `TranslateCard`, `CapturePage`)
 - [ ] `scripts/check.sh`: the CLAUDE.md checks plus shellcheck in one command
 - [ ] `services/Brightness.qml` takes the first backlight device by name; `services/Lock.qml` sizes the blurred backdrop from the first screen only
-- [ ] `hypr/scripts/fuzzel-emoji.sh` is 1,950 lines of data inside a script
+- [x] `hypr/scripts/fuzzel-emoji.sh` is 1,950 lines of data inside a script — the data is `shell/lib/emoji.tsv` now (13e)
 - [ ] Saved screenshots are named with `date`, which follows the locale calendar (year 2569 under `th_TH`), while recordings use Qt and say 2026
 
 ## Verification
