@@ -11,17 +11,12 @@ Item {
     implicitWidth: row.implicitWidth
     implicitHeight: Theme.barHeight
 
-    property bool live: true    // false under a fullscreen window: the minute clock stops
+    property bool live: true    // false under a fullscreen window
 
     readonly property var dl: Launcher.download
     readonly property var game: Launcher.playing
-    Binding {
-        target: Launcher
-        property: "clockWanted"
-        value: root.live
-        when: root.game !== null
-        restoreMode: Binding.RestoreValue
-    }
+    Component.onCompleted: Launcher.clockWatchers++
+    Component.onDestruction: Launcher.clockWatchers--
 
     Row {
         id: row

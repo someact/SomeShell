@@ -141,7 +141,9 @@ Checked through IPC: a file, a local image, a web image (downloaded to the cache
 SomeLauncher (`someact/SomeLauncher`, Phase 5e there) is the game launcher beside the shell. Its daemon `somelauncherd` owns games and downloads, so the shell reads it directly and shows what it does even while the launcher window is hidden or closed. All of it stays off while the daemon is not there.
 - [x] `services/Launcher.qml`: a client of somelauncherd's socket (`$XDG_RUNTIME_DIR/somelauncher.sock`, JSON lines): what runs (`game.state`), downloads (`download.*`), the library for names and playtime (`library.changed`). It never starts the daemon; it tries again when a window opens (a game or the launcher always opens one), not on a timer
 - [x] Island: a `launcher` ambient state between recording/privacy and the game dot: download progress, else "Playing X" with the session time; a click opens the launcher (`qs -c somelauncher ipc call launcher open`, else starts it). `island.showLauncher` turns it off
-- [ ] Overlay: a Games card (the running game, its session and total playtime, the recently played games) in the Super+G overlay
+- [x] Overlay: a Games card (the running game, its session and total playtime, the recently played games) in the Super+G overlay — last in the bar (key 8), so the other cards keep their keys; a click on a game opens its page in the launcher
+
+Checked live against a test somelauncherd: a dummy game on the island ("Dummy · <1 min") and in the card, a background job's progress on the island. Not checked: a click on the island or a card opening the launcher (`qs -c somelauncher` is installed only from SomeLauncher's Phase 9a; until then the IPC call fails and nothing opens)
 
 ## Phase 14: Public release
 

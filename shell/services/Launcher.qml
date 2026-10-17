@@ -45,11 +45,12 @@ Singleton {
     readonly property var recent: Object.values(games).filter(g => g.lastPlayed && !g.hidden).sort((a, b) => b.lastPlayed - a.lastPlayed).slice(0, 5)
     readonly property bool active: available && (playing !== null || download !== null)
 
-    // Unix seconds, ticked once a minute while something is played and someone shows it
+    // Unix seconds, ticked once a minute while something is played and someone
+    // shows it (`clockWatchers++` while shown, as SysStats.watchers)
     property real now: Date.now() / 1000
-    property bool clockWanted: false
+    property int clockWatchers: 0
     Timer {
-        running: root.clockWanted && root.playing !== null && root.playing.state === "running"
+        running: root.clockWatchers > 0 && root.playing !== null && root.playing.state === "running"
         interval: 60000
         repeat: true
         triggeredOnStart: true

@@ -20,7 +20,8 @@ Scope {
         { id: "mixer", icon: "graphic_eq", name: "Mixer" },
         { id: "notes", icon: "sticky_note_2", name: "Notes" },
         { id: "lyrics", icon: "lyrics", name: "Lyrics" },
-        { id: "translate", icon: "g_translate", name: "Live translate" }
+        { id: "translate", icon: "g_translate", name: "Live translate" },
+        { id: "games", icon: "stadia_controller", name: "Games" }
     ]
     readonly property bool hasPinned: Config.overlay.pinned.length > 0
     property ShellScreen screen: Quickshell.screens[0]
@@ -81,7 +82,7 @@ Scope {
             // `item:` region only updates when that item's own geometry changes,
             // so it stayed behind while a card was dragged by its parent.
             readonly property bool frostOpen: Theme.glass && Config.overlay.style.look === "glass" && Config.overlay.blur && win.shown
-            readonly property bool frostPinned: Theme.glass && Config.overlay.pinnedBlur && !win.shown && [crosshairCard, fpsCard, resourcesCard, mixerCard, notesCard, lyricsCard, translateCard].some(l => l.item !== null)
+            readonly property bool frostPinned: Theme.glass && Config.overlay.pinnedBlur && !win.shown && [crosshairCard, fpsCard, resourcesCard, mixerCard, notesCard, lyricsCard, translateCard, gamesCard].some(l => l.item !== null)
             Region {
                 id: frost
                 Region { item: win.frostOpen ? bar.frost : null; radius: bar.frostRadius }
@@ -92,6 +93,7 @@ Scope {
                 CardRegion { loader: notesCard }
                 CardRegion { loader: lyricsCard }
                 CardRegion { loader: translateCard }
+                CardRegion { loader: gamesCard }
             }
             BackgroundEffect.blurRegion: win.frostOpen || win.frostPinned ? frost : null
 
@@ -181,6 +183,15 @@ Scope {
                         interactive: win.shown
                         overlayScreen: root.screen
                         defaultPos: Qt.point(Math.round(win.width / 2 - 200), 90)
+                    }
+                }
+                Loader {
+                    id: gamesCard
+                    active: win.isOpen("games")
+                    sourceComponent: GamesCard {
+                        widgetId: "games"
+                        interactive: win.shown
+                        defaultPos: Qt.point(Math.round(win.width / 2 - 150), win.height - 420)
                     }
                 }
                 Loader {
