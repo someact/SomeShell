@@ -31,7 +31,7 @@ PanelWindow {
     readonly property bool shown: open || peek
 
     // Ambient priority: polkit → a drag over the island → Quick Share asking → notification → OSD → Quick Share
-    // progress → recording → privacy → game dot → media → clock
+    // progress → recording → privacy → SomeLauncher (a download, a game outside game mode) → game dot → media → clock
     // (in streamer mode notification peeks go to the private layer, see PrivatePeek.qml).
     // With the side slot on, recording and privacy let media keep the main place
     // and show in the slot instead (never in game mode, where the island is a nub).
@@ -55,6 +55,8 @@ PanelWindow {
             return "share";
         if (persistent !== "" && (!Config.island.dual || !mediaShown || GameMode.active))
             return persistent;
+        if (Launcher.active && Config.island.showLauncher && !GameMode.active)
+            return "launcher";
         if (GameMode.active)
             return "dot";
         if (mediaShown)
@@ -336,6 +338,12 @@ PanelWindow {
                 case "share":
                     UiState.openControl("quickshare");
                     break;
+                case "launcher":
+                    if (Launcher.download === null && Launcher.playing !== null)
+                        Launcher.openGame(Launcher.playing.id);
+                    else
+                        Launcher.open();
+                    break;
                 case "record":
                     Recorder.stop();
                     break;
@@ -380,6 +388,8 @@ PanelWindow {
                     return privacyAmbient;
                 case "record":
                     return recordAmbient;
+                case "launcher":
+                    return launcherAmbient;
                 case "dot":
                     return dotAmbient;
                 case "media":
@@ -602,6 +612,10 @@ PanelWindow {
         AmbientDrop {
             info: win.dropInfo
         }
+    }
+    Component {
+        id: launcherAmbient
+        AmbientLauncher {}
     }
     Component {
         id: dotAmbient

@@ -137,6 +137,12 @@ Drag a file, an image, a link or selected text onto the island and choose what h
 
 Checked through IPC: a file, a local image, a web image (downloaded to the cache), a link and text sort into the right kinds with the right actions; Enter copies a file as `text/uri-list` and an image as `image/png`; the side-slot count; the copy/move snippet with a taken name. Not checked: a real drag in, the drop target, a drag out, the folder chips and the other buttons by mouse.
 
+### 13i SomeLauncher on the island and in the overlay (added 2026-10-17)
+SomeLauncher (`someact/SomeLauncher`, Phase 5e there) is the game launcher beside the shell. Its daemon `somelauncherd` owns games and downloads, so the shell reads it directly and shows what it does even while the launcher window is hidden or closed. All of it stays off while the daemon is not there.
+- [x] `services/Launcher.qml`: a client of somelauncherd's socket (`$XDG_RUNTIME_DIR/somelauncher.sock`, JSON lines): what runs (`game.state`), downloads (`download.*`), the library for names and playtime (`library.changed`). It never starts the daemon; it tries again when a window opens (a game or the launcher always opens one), not on a timer
+- [x] Island: a `launcher` ambient state between recording/privacy and the game dot: download progress, else "Playing X" with the session time; a click opens the launcher (`qs -c somelauncher ipc call launcher open`, else starts it). `island.showLauncher` turns it off
+- [ ] Overlay: a Games card (the running game, its session and total playtime, the recently played games) in the Super+G overlay
+
 ## Phase 14: Public release
 
 Carried over from Phase 11. The repo is already public.
