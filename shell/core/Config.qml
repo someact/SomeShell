@@ -11,6 +11,7 @@ Singleton {
 
     property alias island: adapter.island
     property alias theme: adapter.theme
+    property alias wallpaper: adapter.wallpaper
     readonly property bool loaded: file.loaded
 
     FileView {
@@ -49,6 +50,11 @@ Singleton {
             property JsonObject theme: JsonObject {
                 property string mode: "dark"          // dark or light
                 property string scheme: "scheme-smart" // matugen scheme
+            }
+
+            property JsonObject wallpaper: JsonObject {
+                // Where /wall looks for images (empty = ~/Pictures/Wallpapers)
+                property string folder: ""
             }
         }
     }

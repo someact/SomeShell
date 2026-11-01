@@ -12,6 +12,7 @@ Item {
     property real radius: Theme.shape.small
     property bool active: false        // turned on: filled with the accent
     property bool outlined: false
+    property bool highlighted: false   // chosen with the keyboard
     property bool enabled: true
     readonly property bool hovered: mouse.containsMouse
     readonly property bool pressed: mouse.pressed
@@ -29,7 +30,7 @@ Item {
         radius: root.radius
         color: root.pressed ? Theme.ink.fg
             : root.active ? Theme.ink.accent
-            : root.hovered ? Theme.ink.raised : "transparent"
+            : root.hovered || root.highlighted ? Theme.ink.raised : "transparent"
         border.width: root.outlined && !root.active && !root.pressed ? 1 : 0
         border.color: Theme.ink.line
         Behavior on color {

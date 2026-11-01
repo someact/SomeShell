@@ -32,9 +32,9 @@ Old bugs (section 6 of `SomeShell.md`):
 - [x] Global shortcuts (all 23 names in keybinds.lua; unbuilt ones say which step brings them) and IPC (`island`, `wallpaper`, `theme`)
 
 ## Step 3: Search and power
-- [ ] Apps (fuzzy, recent first), math parser, web fallback
-- [ ] Commands: `/clip` (Super+V), `/emoji`, `/wall`, `/settings`
-- [ ] Power page with hold to confirm; lock screen hand-off (`scripts/lock.sh`)
+- [x] Apps (name, generic name and keywords; letters-in-order matches; apps you open often and recently rank first, `launches.json`; an empty search lists only apps you have opened), math parser `lib/calc.js` (no eval, 18 cases tested with node), web search fallback (Google). The page is as tall as its results
+- [x] Commands: `/clip` (Super+V; text and images, image thumbnails decoded once), `/emoji` (Super+.; list from `scripts/emoji-data.sh`, recent first), `/wall` (Ctrl+Super+T; thumbnails made once with ImageMagick, each shown as soon as it exists; Ctrl+Super+Alt+T picks a random one), `/settings` (says step 7). At start the shell recolors when the palette was made from another wallpaper
+- [~] Power page: lock, sleep, log out, restart, shut down; hold 0.8 s to confirm (fills like ink inside the rounded shape), letting go early cancels; tested with `SOMESHELL_DRY_POWER=1`. Lock goes through `loginctl lock-session` → `scripts/lock.sh`, which falls back to hyprlock until the shell has its own lock screen (step 7)
 
 ## Step 4: Control, media, notifications
 - [ ] Control tiles in a fixed layout: Internet, Bluetooth, Sound, Brightness, Night light, Do not disturb, Keep awake, Game mode, Screenshot, Record

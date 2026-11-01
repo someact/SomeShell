@@ -12,6 +12,9 @@ Singleton {
     id: root
 
     readonly property bool dark: palette.mode !== "light"
+    // The wallpaper the palette was made from, and whether the file was read
+    readonly property string image: palette.image
+    property bool paletteRead: false
 
     // The island's colors: always the dark set, or the opposite of the desktop
     readonly property bool inkDark: Config.island.color === "inverse" ? !dark : true
@@ -70,6 +73,8 @@ Singleton {
         path: Paths.state + "/palette.json"
         watchChanges: true
         onFileChanged: reload()
+        onLoaded: root.paletteRead = true
+        onLoadFailed: root.paletteRead = true
         JsonAdapter {
             id: palette
             property string mode: "dark"

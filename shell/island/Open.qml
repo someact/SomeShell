@@ -10,8 +10,9 @@ FocusScope {
 
     readonly property var current: Ui.pages[Ui.page]
 
-    implicitWidth: Math.max(tabs.implicitWidth, page.implicitWidth) + 52
-    implicitHeight: tabs.implicitHeight + head.implicitHeight + 1 + page.implicitHeight + 30
+    // Wide enough for the page, and for the tabs plus the clock at the end
+    implicitWidth: Math.max(tabs.x + tabs.implicitWidth + 24 + clock.width + 24, page.implicitWidth + 52)
+    implicitHeight: page.y + page.implicitHeight + 24
 
     focus: true
     Component.onCompleted: forceActiveFocus()
@@ -85,6 +86,7 @@ FocusScope {
     }
 
     Digits {
+        id: clock
         anchors.right: parent.right
         anchors.rightMargin: 24
         anchors.verticalCenter: tabs.verticalCenter
@@ -128,8 +130,11 @@ FocusScope {
         anchors.top: head.bottom
         anchors.topMargin: 16
         x: 26
-        // Each page is its own file from step 3 on; until then a placeholder
-        sourceComponent: placeholder
+        // One file per page; pages not built yet show a placeholder
+        readonly property var files: ({ search: "pages/SearchPage.qml", power: "pages/PowerPage.qml" })
+        source: files[root.current.id] ?? ""
+        sourceComponent: files[root.current.id] ? undefined : placeholder
+        focus: true
     }
 
     Component {

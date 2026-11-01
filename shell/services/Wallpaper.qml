@@ -50,6 +50,17 @@ Singleton {
         }
     }
 
+    // At start: recolor when the palette was made from another wallpaper
+    // (or does not exist yet)
+    function checkPalette() {
+        if (file.loaded && Theme.paletteRead && state.path && Theme.image !== state.path)
+            recolor();
+    }
+    Connections {
+        target: Theme
+        function onPaletteReadChanged() { root.checkPalette(); }
+    }
+
     // Light/dark and the scheme recolor everything
     Connections {
         target: Config.theme
@@ -62,6 +73,7 @@ Singleton {
         path: Paths.state + "/wall.json"
         watchChanges: true
         onFileChanged: reload()
+        onLoaded: root.checkPalette()
 
         onLoadFailed: error => {
             if (error === FileViewError.FileNotFound) {

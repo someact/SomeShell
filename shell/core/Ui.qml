@@ -25,6 +25,8 @@ Singleton {
     property bool openedByHover: false
     // Hidden by Super+J until shown again
     property bool hidden: false
+    // Text for the search box when it opens (Super+V opens it on "/clip ")
+    property string query: ""
 
     // The monitor the island is on. It follows the mouse only while closed,
     // so it never jumps away while you use it.
@@ -58,7 +60,8 @@ Singleton {
         return i < 0 ? 0 : i;
     }
 
-    function openPage(id, byHover) {
+    function openPage(id, byHover, query) {
+        root.query = query ?? "";
         page = pageIndex(id);
         openedByHover = byHover === true;
         hidden = false;
