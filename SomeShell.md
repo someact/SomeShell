@@ -63,6 +63,8 @@ What these images have in common, and how it could become the shell:
 
 Everything is done through the island: control, search, media, all with just the **Super** key.
 
+Design mockup (round 1, 2026-11-02, until approved): https://claude.ai/artifact/6LrcbPr2QcDrkv24VohiGj
+
 ### 3.1 How to call it
 - **Super key:** press to open the island on the search page. Arrow keys to move, Enter to choose, Super or Esc again to close.
 - **Mouse:** move onto the island and it **peeks** (grows a little and shows more). Click it to open fully, click outside to close. When it was opened by hover, moving away closes it.
