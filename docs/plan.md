@@ -24,12 +24,12 @@ Old bugs (section 6 of `SomeShell.md`):
 ## Step 2: Shell skeleton
 - [x] matugen config (relative template paths, run with `-c`) and the core templates: the shell palette (every role in dark and light, `~/.local/state/someshell/palette.json`), Hyprland borders and background, hyprlock
 - [ ] App templates: GTK 3/4, KDE, Kitty and other terminals, Zen, Vesktop, Fuzzel (last in step 2: they recolor live apps, so they are written only when the switch is near)
-- [ ] Shell entry, theme from the color file, Mitr faces, motion parts (resize spring, rolling digits, press invert, wipe on open)
-- [ ] Wallpaper layer (screen-sized copy), wallpaper state and IPC
-- [ ] Island window: rest, live (several at once, smaller), alert over them, peek, open, quiet; size from content; follows the mouse while closed
-- [ ] Keyboard focus rules: none at rest, only while open; outside click closes
-- [ ] Workspace badge per monitor, tray tab
-- [ ] Global shortcuts and IPC for every action the keybinds use
+- [x] Shell entry, theme from the palette (desktop colors follow the mode; the island uses the ink set: always dark, or the opposite of the desktop), Mitr faces, motion parts (resize spring, rolling digits, press invert, fade-in on open)
+- [x] Wallpaper layer (decoded at screen size, crossfade), state `wall.json` (first start takes v1's wallpaper), matugen on wallpaper, mode and scheme changes, IPC
+- [~] Island window: rest, alert over everything, peek on hover, open (tabs on top, each page sets the size), quiet line in game mode or fullscreen; size from content with a spring; follows the mouse while closed; shapes ears, tab, float. Live items (music, recording, several at once) come with their services in step 4
+- [~] Keyboard focus: none at rest, OnDemand while open (keys stay with the island even when the mouse moves over windows), Esc and Tab work, a hover-opened island closes 450 ms after the mouse leaves, a click outside closes it. Exception: a click on a window border or in the gap between windows does not count (Hyprland takes it for resizing); tested by mouse with ydotool 2026-11-02
+- [x] Workspace badge per monitor (slot number, scroll to switch), tray tab with the keyboard layout (tray icons untested: no tray apps were running)
+- [x] Global shortcuts (all 23 names in keybinds.lua; unbuilt ones say which step brings them) and IPC (`island`, `wallpaper`, `theme`)
 
 ## Step 3: Search and power
 - [ ] Apps (fuzzy, recent first), math parser, web fallback

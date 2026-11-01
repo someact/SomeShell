@@ -1,0 +1,125 @@
+import QtQuick
+import QtQuick.Shapes
+import Quickshell
+import Quickshell.Io
+import Quickshell.Hyprland
+import Quickshell.Services.SystemTray
+import Quickshell.Widgets
+import qs.core
+import qs.components
+
+// The tray tab in the top right corner: app tray icons and the keyboard
+// layout. Status icons (network, sound) come with their services in step 4.
+Item {
+    id: root
+
+    property var window
+
+    implicitWidth: row.implicitWidth + 34
+    implicitHeight: Theme.shape.band
+
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.ink.bg
+        bottomLeftRadius: Theme.shape.restRadius
+    }
+    // Ear where the tab meets the top edge
+    Shape {
+        readonly property real e: Theme.shape.ear
+        x: -e
+        width: e
+        height: e
+        preferredRendererType: Shape.CurveRenderer
+        ShapePath {
+            fillColor: Theme.ink.bg
+            strokeWidth: -1
+            startX: 0; startY: 0
+            PathLine { x: Theme.shape.ear; y: 0 }
+            PathLine { x: Theme.shape.ear; y: Theme.shape.ear }
+            PathCubic { x: 0; y: 0; control1X: Theme.shape.ear; control1Y: Theme.shape.ear * 0.4477; control2X: Theme.shape.ear * 0.5523; control2Y: 0 }
+        }
+    }
+
+    Row {
+        id: row
+        anchors.centerIn: parent
+        anchors.horizontalCenterOffset: 2
+        spacing: 12
+
+        Repeater {
+            model: SystemTray.items
+
+            Item {
+                id: entry
+                required property var modelData
+                width: 18
+                height: 18
+                anchors.verticalCenter: parent.verticalCenter
+
+                IconImage {
+                    anchors.fill: parent
+                    source: entry.modelData.icon
+                    asynchronous: true
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: event => {
+                        const item = entry.modelData;
+                        if (event.button === Qt.MiddleButton) {
+                            item.secondaryActivate();
+                        } else if (event.button === Qt.RightButton || item.onlyMenu) {
+                            if (item.hasMenu) {
+                                const p = entry.mapToItem(null, 0, entry.height + 8);
+                                item.display(root.window, p.x, p.y);
+                            }
+                        } else {
+                            item.activate();
+                        }
+                    }
+                }
+            }
+        }
+
+        Txt {
+            anchors.verticalCenter: parent.verticalCenter
+            text: layout.code
+            caps: true
+            color: Theme.ink.mute
+        }
+    }
+
+    // Keyboard layout: from Hyprland's events, read once at start
+    QtObject {
+        id: layout
+        property string code: ""
+        function from(name) {
+            if (!name)
+                return "";
+            if (/^english/i.test(name))
+                return "EN";
+            return name.replace(/[^A-Za-z]/g, "").slice(0, 2).toUpperCase();
+        }
+    }
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "activelayout")
+                layout.code = layout.from(event.data.split(",").slice(1).join(","));
+        }
+    }
+    Process {
+        running: true
+        command: ["hyprctl", "devices", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const kb = JSON.parse(text).keyboards ?? [];
+                    const main = kb.find(k => k.main) ?? kb[0];
+                    layout.code = layout.from(main?.active_keymap ?? "");
+                } catch (e) {}
+            }
+        }
+    }
+}
