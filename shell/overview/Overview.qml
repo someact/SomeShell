@@ -61,7 +61,7 @@ Scope {
             Rectangle {
                 id: backdrop
                 anchors.fill: parent
-                color: Qt.rgba(0, 0, 0, Theme.blur ? 0.4 : 0.7)
+                color: Theme.blur ? Qt.rgba(0, 0, 0, 0.4) : Qt.rgba(Theme.islandFlat.r, Theme.islandFlat.g, Theme.islandFlat.b, 0.94)
                 opacity: win.shown ? 1 : 0
                 Behavior on opacity {
                     NumberAnimation { duration: Motion.normal }

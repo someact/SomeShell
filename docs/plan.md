@@ -74,9 +74,9 @@ Changed 2026-11-01, after the mockup was approved: the redesign is done **in pla
 - [x] Icons and font: done in 16b (filled Material Symbols Rounded, Mitr)
 
 ### 16d Quick options and audio
-- [ ] Tiles: icon only or with text, show/hide and reorder in place
-- [ ] Right-click opens the tile's own settings (Wi-Fi, Bluetooth, WARP, …)
-- [ ] Mixer: right-click on volume opens per-app volume
+- [~] Tiles: icon only, medium or full, show/hide and reorder in place: already there (13b); flat now
+- [~] Right-click opens the tile's own page (Wi-Fi, Bluetooth, WARP, Quick Share, Night light, Sound devices) or its Settings page: already there
+- [~] Mixer: right-click on the volume slider opens the per-app mixer (`views/MixerView.qml`): already there; flat now
 
 ### 16e Media
 - [ ] Browser extension (Zen/Firefox, native messaging to the shell): page URL, full-size cover, lyrics when the site has them; without it, MPRIS as today
