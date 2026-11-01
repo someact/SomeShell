@@ -3,7 +3,7 @@
 A shell where everything happens through one **Island**, and the island changes with the workspace you are on.
 
 > [!info] Status
-> Brainstorm only, no code yet (2026-11-02). The old shell is archived as git tag `archive/shell-v1`; this machine still runs it until the new one is ready.
+> Design approved (island mockup, round 2, 2026-11-02). Next: plan the features (section 7), then code. No code yet. The old shell is archived as git tag `archive/shell-v1`; this machine still runs it until the new one is ready.
 
 ---
 
@@ -63,7 +63,13 @@ What these images have in common, and how it could become the shell:
 
 Everything is done through the island: control, search, media, all with just the **Super** key.
 
-Design mockup (round 1, 2026-11-02, until approved): https://claude.ai/artifact/6LrcbPr2QcDrkv24VohiGj
+Design mockup, **approved** 2026-11-02 (round 2): https://claude.ai/artifact/6LrcbPr2QcDrkv24VohiGj
+
+> [!check] Decided from the mockup
+> - Pages are tabs along the **top** of the open island: icons, and the active one opens to show its number and name. The clock sits at the end of the tab row.
+> - **Every page has its own island size**, shaped by its content, and the island reshapes with a spring when the page changes (Search tall and narrow, Notifications narrowest, System wide and short, Media music wide and short, Media video taller). Sub-pages (a tile's details, music vs video) resize too.
+> - Island shape (tab with ears, plain tab, floating) and island color (always ink, or opposite of the desktop) both become options in Edit desktop. Default: tab with ears, always ink.
+> - The mockup is a design reference, not code to copy: it has bugs of its own.
 
 ### 3.1 How to call it
 - **Super key:** press to open the island on the search page. Arrow keys to move, Enter to choose, Super or Esc again to close.
@@ -91,7 +97,7 @@ In the desktop editor (section 4) each workspace can get its own design: a name 
 Switching workspace animates the island to the new layout, and the workspace name flashes big for a moment like a poster headline.
 
 ### 3.4 Pages
-Pages in the open island, switched with Tab or arrows, numbered `01 / 07`:
+Pages in the open island, tabs along the top, switched with Tab or arrows, numbered `01 / 07`:
 
 **Search (first page)**
 - Apps, quick math, files maybe later.
@@ -184,13 +190,85 @@ Before building, reproduce each old bug on v1 and write down the cause, so the d
 
 ---
 
-## 7. Build order (draft)
-1. Design page: the look from section 2 on a few screens (rest island, open search, control panel, music), to approve before code.
-2. Hyprland config, fresh: keybinds, window rules, look, focus behavior (rules 1–4 in section 6).
-3. Base: colors from the wallpaper, Mitr, motion parts, the island window with its states.
-4. Search and commands.
-5. Control panel with the snap grid.
-6. Media and the browser extension.
-7. Notifications, calendar, resources, power.
-8. Edit desktop, widgets, presets.
-9. Lock, overview, dock, installer, the rest.
+## 7. Features: how each one works
+
+The design is the easy part; features are where the work is. For each feature: where the data comes from, how the shell gets it, and what makes it hard. Difficulty: ● easy, ●● some work, ●●● hard.
+
+Built on Quickshell. It already ships modules for Hyprland, PipeWire audio, media players (MPRIS), notifications, Bluetooth, battery (UPower), the system tray, app list, lock screen and PAM. Everything else talks to a command-line tool or a file.
+
+### 7.1 Foundation
+| Feature | Source and method | Hard part | |
+|---|---|---|---|
+| Workspaces, windows, focus | Quickshell Hyprland module (live events); actions are Hyprland dispatches | Never keep our own copy of focus (rule 1); reread state after a config reload | ●● |
+| Super tap opens the island | Hyprland bind on Super release, only if no other key was pressed | Must not fire after Super+key combos (Blender); test that first | ●● |
+| Keyboard focus | Island layer takes no keyboard at rest, takes it only while open; an outside click closes it | The old focus bugs came from here: test with Blender, games, fullscreen | ●●● |
+| Colors from wallpaper | matugen writes a color file on wallpaper change; the shell watches it; templates for Hyprland, GTK, KDE, terminals, Zen | Light/dark switch and gray wallpapers (scheme-smart) | ● |
+| Wallpaper | Shell draws it (screen-sized copy for memory); video later with mpvpaper | Big images use a lot of memory | ●● |
+| Motion parts | Shared pieces: wipe-in, drawn line, rolling digits, typing text, crop marks, press invert, per-page resize | Qt crashes with a spring inside a sequence (known); keep idle CPU at 0 | ●● |
+| Island states | One window, one state machine: rest, live, alert, peek, open, quiet | Several live things at once (music + recording + alert): need a priority order | ●● |
+
+### 7.2 Island pages
+| Feature | Source and method | Hard part | |
+|---|---|---|---|
+| Search apps | Quickshell app list (desktop files), fuzzy match, recent apps first | Good ranking | ● |
+| Quick math | Own small parser (never `eval`) | Units and currency later | ● |
+| `/clip` clipboard | cliphist (stores in the background); read when opened | Image previews: decode once and cache | ●● |
+| `/emoji` | Bundled emoji list with names and skin tones | — | ● |
+| `/gif` | Klipy API with the user's key; files downloaded, played locally | Network errors, saved GIF folders | ●● |
+| `/wall` | Wallpaper folder, cached thumbnails | — | ● |
+| Internet | NetworkManager through `nmcli` (live events from `nmcli monitor`) | Asking for a Wi-Fi password inside the island; DNS and IP editing; hidden networks | ●●● |
+| Bluetooth | Quickshell Bluetooth module (BlueZ) | Pairing with a PIN; renaming the PC | ●● |
+| Sound and mixer | Quickshell PipeWire module: outputs, inputs, per-app volume | Switching output while playing | ●● |
+| Brightness | `brightnessctl` on laptops, `ddcutil` for desktop monitors | DDC is slow: queue changes and send only the last | ●● |
+| Night light | `hyprsunset` (Hyprland's own) with a temperature; schedule computed in the shell | Sunset times need a location setting | ●● |
+| Keep awake | Idle inhibitor (Quickshell) | — | ● |
+| Do not disturb | Our own notification server holds alerts | Auto-on during games and screen share | ● |
+| Game mode | Hyprland settings off (blur, animations) while a fullscreen game is focused | Telling a game from a fullscreen video | ●● |
+| Screenshot, record, color picker | `grim` + own region picker, `gpu-screen-recorder` or `wf-recorder`, `hyprpicker` | Region picker in the new look; NVIDIA encoding | ●● |
+| WARP, Quick Share | `warp-cli`; Quick Share helper (Rust) | Only when installed; later | ●● |
+| Battery (laptop) | Quickshell UPower module | Hidden on a desktop | ● |
+| Control layout editing | Snap grid 1×1, 2×1, 1×2, 2×2, saved in the config | Drag and resize feel; the same editor is reused for the desktop (7.3) | ●●● |
+| Media | Quickshell MPRIS module: any player | Several players at once: pick the active one | ●● |
+| Browser extension | Firefox/Zen extension + a small native helper (Rust) that sends JSON to the shell over a local socket: site, title, full-size cover, like state | Store review and signing for Firefox; each music site needs its own reader; works without it (MPRIS only) | ●●● |
+| Music vs video | Site from the extension, or the player's URL in MPRIS | Unknown sites default to video | ● |
+| Lyrics | LRCLIB (free, synced lyrics) by title, artist and length; cached | Wrong matches; turn off per track | ●● |
+| Notifications | Quickshell notification server; history saved to a file | Actions and inline reply differ per app; images in notifications | ●● |
+| Calendar | Month grid (no data needed); events from a local `.ics` first | Online calendars (Google) need sign-in: later | ●● |
+| System | `/proc` and `/sys` read once a second **only while the page is open**; GPU from `nvidia-smi` or AMD files | Sampling is polling, so it stops the moment the page closes | ●● |
+| Power | `systemctl` suspend, reboot, poweroff; Hyprland exit; own lock | Hold-to-confirm | ● |
+
+### 7.3 Desktop
+| Feature | Source and method | Hard part | |
+|---|---|---|---|
+| Workspace designs | Hyprland workspace events pick the island design; designs stored per workspace in the preset | Switching quickly between workspaces must not stack animations | ●● |
+| Edit desktop | Zoomed-out desktop with a grid, widget drawer, island/dock/wallpaper options | The biggest single feature: drag, snap, resize, undo | ●●● |
+| Widgets | One file per widget, on the bottom layer, hidden in games | Each widget is its own small feature | ●● each |
+| Presets | A preset is one folder: settings file + wallpaper path; apply swaps everything at once | Applying must be atomic (no half-applied desktop) | ●● |
+| Lock screen | Quickshell lock + PAM; `hypridle` locks on idle and before sleep | If the shell crashes while locked, Hyprland's fallback must take over | ●●● |
+| Overview (Super+Tab) | Workspaces as pages with app icons first, live previews later | Previews cost memory and GPU; must always switch (rule 4) | ●● |
+| Workspace badge, tray tab | Hyprland module, Quickshell tray module | Tray menus | ● |
+| Dock | Optional | Pinned apps, drag to reorder | ●● |
+| Installer | Packages, fonts, links with backups, rollback | Fresh machine test | ●● |
+
+## 8. Build order
+
+Each step ends with something that runs and is checked on the desktop. Commits stay local until **base** is done, then everything is pushed.
+
+1. **Hyprland config, fresh.** Keybinds, window rules, look, focus behavior, Super tap. Check the three old bugs are gone (section 6).
+2. **Shell skeleton.** Colors from the wallpaper, Mitr, motion parts, the island window with all states, workspace badge, tray tab.
+3. **Search and power.** Apps, math, commands, `/clip`, `/emoji`, `/wall`; the power page.
+4. **Control, media, notifications.** Tiles in a fixed layout with their detail pages; media through MPRIS; notifications with history.
+
+**→ Base done: push to GitHub.**
+
+5. Browser extension, music layout, lyrics. Calendar and system pages.
+6. Edit desktop: grid editor, widgets, presets, workspace designs, control layout editing.
+7. Lock screen, overview, dock, installer.
+8. Later: GIFs, Quick Share, WARP, capture tools, game overlay, on-screen keyboard.
+
+> [!question] To decide before the steps that need them
+> - Night light: give a city or location for sunset times, or only fixed times?
+> - Calendar: local `.ics` file, or do you use Google Calendar?
+> - Browser extension: Zen only, or Chrome too?
+> - Screen recording: `gpu-screen-recorder` (fast on NVIDIA) or `wf-recorder`?
+> - Dock: keep it, or rely on the island search and the overview?
