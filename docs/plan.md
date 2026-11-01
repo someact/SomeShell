@@ -17,9 +17,9 @@ Written new in `hypr/`; v1 stays live (`~/.config/hypr` → `../SomeShell-v1`) u
 
 Old bugs (section 6 of `SomeShell.md`):
 - [~] Super+2 opening the island and stealing focus: tested on v1 (2026-11-02), Hyprland does not send the Super release after a combo, so not the cause
-- [ ] Blender: v1 consumed the Super press and release (its Super binds had no `non_consuming`), so apps could see Super stuck down. The new binds pass Super through; check in Blender after the switch
-- [ ] Focus lost after a workspace change: reproduce with the user after the switch (keys, mouse, overview?)
-- [ ] Super+Tab not switching: overview is shell work (step 7); check then
+- [x] Blender (user, 2026-11-02): after Super+number into Blender, clicks work but middle-mouse pan/rotate do not until Blender is clicked again. Cause: v1 swallowed the Super release, so Blender still thought Super was held. The new Super binds are non-consuming. Confirm in Blender after the switch
+- [x] Focus lost after Super+number (user: the mouse rests on a window that does not get focus). Cause: Hyprland gives back the workspace's last focused window. `modes/focus.lua` focuses the window under the mouse after every workspace change, without moving the mouse. Reproduced and fixed live on v1 (2026-11-02): mouse over Kitty / Obsidian / Dolphin each got focus, a gap kept Hyprland's choice
+- [ ] Super+Tab (user): in v1's overview a window can't be clicked to switch to its workspace. Overview is shell work, see step 7
 
 ## Step 2: Shell skeleton
 - [ ] matugen config and templates (shell, Hyprland, hyprlock, GTK, KDE, terminals, Zen), `scheme-smart`
@@ -46,7 +46,7 @@ Old bugs (section 6 of `SomeShell.md`):
 ## Later steps
 - Step 5: browser extension, music layout data, lyrics; calendar and system pages
 - Step 6: edit desktop (grid editor without motion while editing, widgets, presets, workspace designs, control layout editing)
-- Step 7: lock screen, overview, dock, settings window, installer
+- Step 7: lock screen, overview, dock, settings window, installer. Overview must: click a window → switch to its workspace, focus that window, close; Enter on a workspace → switch and close; tested by mouse with ydotool
 - Step 8: GIFs, Quick Share, WARP, capture tools, game overlay, on-screen keyboard
 
 ## Notes

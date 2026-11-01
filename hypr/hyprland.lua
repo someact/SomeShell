@@ -22,6 +22,7 @@ require("rules.layers")
 
 require("binds.keybinds")
 require("modes.gamemode")
+require("modes.focus")
 require("core.autostart")
 
 if not require_optional("generated.colors") then
