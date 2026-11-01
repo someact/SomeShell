@@ -12,15 +12,16 @@ PressButton {
     property string subtitle
     property bool compact: false
     property bool titleOnly: false
-    property color activeFg: Theme.fgPrimary
+    property color activeFg: Theme.fgAccentIsland
 
     implicitWidth: 170
     implicitHeight: 52
-    // Off: a pill. On: a squircle (Material 3 Expressive tiles)
-    radius: height / 2
-    activeRadius: Theme.radius.normal
+    // Off: a rounded card. On: it rounds out into a pill (the "state" reaction
+    // of the flat design; the corners morph on a spring)
+    radius: Theme.radius.large * 0.8
+    activeRadius: height / 2
     color: Theme.islandRaised
-    activeColor: Theme.primary
+    activeColor: Theme.accentIsland
 
     Icon {
         visible: root.compact

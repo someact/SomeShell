@@ -14,7 +14,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: height / 2
-        color: root.checked ? Theme.primary : Theme.islandRaisedHover
+        color: root.checked ? Theme.accentIsland : Theme.islandRaisedHover
         Behavior on color {
             ColorAnimation { duration: Motion.fast }
         }
@@ -26,7 +26,7 @@ Item {
         radius: size / 2
         anchors.verticalCenter: parent.verticalCenter
         x: root.checked ? root.width - size - 3 : 5
-        color: root.checked ? Theme.fgPrimary : Theme.fgIslandDim
+        color: root.checked ? Theme.fgAccentIsland : Theme.fgIslandDim
         Behavior on x {
             Spring { preset: "snappy" }
         }

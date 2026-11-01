@@ -62,7 +62,7 @@ Changed 2026-11-01, after the mockup was approved: the redesign is done **in pla
 - [x] Font: Mitr (installer downloads it, `fontconfig/60-someshell-mitr.conf` fixes its names for Qt; faces by `font.styleName`), also on the SDDM theme and hyprlock
 - [x] Flat by default: `island.glass` off, surfaces solid (`surfaceContainer`, no rim or highlight), the island a dark slate tinted from the wallpaper
 - [x] Icons: Material Symbols Rounded filled everywhere (active state shown by the container, not the fill)
-- [ ] Motion in the shared parts (PressButton, IconButton, tiles, sliders, toggles): hover lift, press squeeze, state pulse
+- [x] Motion in the shared parts: PressButton (every button, tile and icon button) lifts 2 px on hover, squeezes on press, pulses one ring when it turns on; tiles are rounded cards that round out into pills when on; island tiles, sliders and switches fill with the wallpaper accent (`accentIsland`)
 - [ ] Fixed-width digits for clocks and percentages (Mitr has no tabular figures)
 - [ ] Bench against the glass look (memory, GPU while idle and while animating)
 

@@ -9,11 +9,11 @@ Item {
     property real value: 0
     property string icon
     property string label
-    property color fillColor: Theme.fgIsland
+    property color fillColor: Theme.accentIsland
     property color trackColor: Theme.islandRaised
     property color contentColor: Theme.fgIsland     // icon (and dimmed value) over the track
     property color contentDim: Theme.fgIslandDim
-    property color contentOnFill: Theme.fgOnIslandFill   // the same over the fill (fixed: the fill stays light in both modes)
+    property color contentOnFill: Theme.fgAccentIsland   // the same over the fill (a fixed tone: the island stays dark in both modes)
     property real step: 0.05
     readonly property bool dragging: mouse.pressed
     // The fill springs only after the first real width, so a slider that is

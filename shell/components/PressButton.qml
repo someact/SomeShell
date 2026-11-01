@@ -47,6 +47,35 @@ Item {
         Spring { preset: "bouncy" }
     }
 
+    // Hover lift: a clickable thing rises a little under the pointer (off while
+    // pressed, so the squash reads as pushing it back down)
+    property bool lift: true
+    transform: Translate {
+        y: root.lift && root.hovered && !root.pressed && root.enabled && !Motion.reduced ? -2 : 0
+        Behavior on y {
+            Spring { preset: "snappy" }
+        }
+    }
+
+    // State pulse: one ring when the button turns on. Plain NumberAnimations
+    // (a Spring inside a ParallelAnimation crashes Qt).
+    onActiveChanged: if (active && !Motion.reduced) pulse.restart()
+    Rectangle {
+        id: ring
+        anchors.fill: parent
+        radius: bg.radius
+        color: "transparent"
+        border.width: 2
+        border.color: root.activeColor
+        opacity: 0
+        visible: pulse.running
+    }
+    ParallelAnimation {
+        id: pulse
+        NumberAnimation { target: ring; property: "opacity"; from: 0.7; to: 0; duration: 700; easing.type: Easing.OutCubic }
+        NumberAnimation { target: ring; property: "scale"; from: 1; to: 1.25; duration: 700; easing.type: Easing.OutCubic }
+    }
+
     Rectangle {
         id: bg
         anchors.fill: parent
