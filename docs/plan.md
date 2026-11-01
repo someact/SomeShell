@@ -67,11 +67,11 @@ Changed 2026-11-01, after the mockup was approved: the redesign is done **in pla
 - [ ] Bench against the glass look (memory, GPU while idle and while animating)
 
 ### 16c Island and pills
-- [ ] Island opens when the pointer reaches the top edge and closes when it leaves; Super and outside clicks keep working
-- [ ] Clean edges: no stepped blur rim (flat fill, or blur shaped by alpha where glass stays)
-- [ ] Corner pills as floating icons without a background, with an outline or soft shadow, phone-style
-- [ ] Workspaces: only the used ones (and the special workspace when it has windows), animated in and out
-- [ ] Icons and fonts in the Android/ChromeOS style of end-4's dots-hyprland, adapted to the new look
+- [x] Hover: the top edge peeks (as before); a click in the peek opens it as a hover island (`UiState.hoverOpened`), which closes 450 ms after the pointer leaves. Super, IPC and shortcuts open a normal one (closes on an outside click); typing in a field turns a hover island into a normal one
+- [~] Clean edges: with glass off there is no blur, so no stepped blur rim; with `island.glass` on it is still the Wayland region limit
+- [~] Corner pills as floating icons with a soft shadow or outline: already there (`pills.<part>: floating`, `pills.halo`); title and tray keep a solid pill, which is flat now
+- [~] Workspaces: only the used ones and the special workspace already (`pills.showEmpty` off)
+- [x] Icons and font: done in 16b (filled Material Symbols Rounded, Mitr)
 
 ### 16d Quick options and audio
 - [ ] Tiles: icon only or with text, show/hide and reorder in place

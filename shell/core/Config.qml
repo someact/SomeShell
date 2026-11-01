@@ -77,11 +77,11 @@ Singleton {
             property JsonObject pills: JsonObject {
                 // Each part of the corner pills: glass (frosted; neighbors share one pill)
                 // or floating (no background, like a phone status bar)
-                property string workspaces: "glass"
+                property string workspaces: "floating"
                 property string title: "glass"
                 property string tray: "glass"
-                property string status: "glass"
-                property string clock: "glass"
+                property string status: "floating"
+                property string clock: "floating"
                 property string halo: "shadow"        // floating text and icons: shadow (soft) | outline
                 property string workspaceShape: "cookie7Sided"   // the active workspace (components/MaterialShape.qml names)
                 property bool showEmpty: false        // also show workspaces without windows

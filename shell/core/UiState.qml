@@ -16,6 +16,9 @@ Singleton {
     // Hover peek: the island shows a view on one screen without keyboard focus;
     // a click or a Super tap promotes it to the full view (expanded)
     property bool peeking: false
+    // Opened by a pointer press in a hover peek: it closes again when the
+    // pointer leaves (Island.qml). Super, a shortcut or typing clear it.
+    property bool hoverOpened: false
     property string peekScreen: ""
     property string view: "search"
     property string searchText: ""       // seed text for the search view, e.g. "/"
@@ -64,6 +67,7 @@ Singleton {
         }
         overview = false;
         peeking = false;
+        hoverOpened = false;
         controlDetail = "";
         expanded = true;
     }
@@ -76,6 +80,7 @@ Singleton {
 
     function close() {
         peeking = false;
+        hoverOpened = false;
         controlDetail = "";
         expanded = false;
     }
@@ -92,11 +97,13 @@ Singleton {
         peeking = false;
     }
 
-    // Keeps the peeked view (no reload), now with focus
-    function promote() {
+    // Keeps the peeked view (no reload), now with focus. `byPointer`: promoted
+    // by a click in the peek, so it stays a hover island (closes on leave).
+    function promote(byPointer) {
         if (!peeking)
             return;
         peeking = false;
+        hoverOpened = byPointer === true;
         expanded = true;
     }
 

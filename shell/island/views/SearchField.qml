@@ -38,6 +38,9 @@ Item {
 
     TextInput {
         id: input
+        // Typing turns a hover-opened island into a normal one: it no longer
+        // closes when the pointer leaves (a password half typed)
+        onTextChanged: if (text !== "") UiState.hoverOpened = false
         anchors.left: lead.right
         anchors.leftMargin: 10
         anchors.right: parent.right

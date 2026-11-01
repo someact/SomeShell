@@ -216,13 +216,23 @@ PanelWindow {
     onHoveredChanged: {
         if (hovered) {
             peekOut.stop();
+            hoverClose.stop();
             if (!shown)
                 peekIn.restart();
         } else {
             peekIn.stop();
             if (peek)
                 peekOut.restart();
+            else if (open && UiState.hoverOpened)
+                hoverClose.restart();
         }
+    }
+    // An island opened from a hover peek closes when the pointer leaves it,
+    // like the peek itself (a little longer grace: it may be on its way back)
+    Timer {
+        id: hoverClose
+        interval: 450
+        onTriggered: if (!win.hovered && win.open && UiState.hoverOpened && !Shelf.draggingOut) UiState.close()
     }
     onPeekAllowedChanged: if (!peekAllowed && peek) UiState.unpeek()
     Timer {
@@ -523,7 +533,7 @@ PanelWindow {
             visible: win.peek
             PointHandler {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                onActiveChanged: if (active && win.peek) UiState.promote()
+                onActiveChanged: if (active && win.peek) UiState.promote(true)
             }
         }
     }

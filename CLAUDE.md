@@ -65,6 +65,7 @@ hyprctl binds -j | jq length              # 201 with no keybinds.json
 timeout 10 qs -p shell/shell.qml 2>&1 | grep -E "WARN|ERROR"    # only notification/polkit clashes with the live shell
 timeout 8 qs -p shell/settings.qml 2>&1 | grep -E "WARN|ERROR"
 ```
+Pointer tests: move the cursor with `ydotool mousemove -x <dx> -y <dy>` (`YDOTOOL_SOCKET=$XDG_RUNTIME_DIR/.ydotool_socket`), not a Hyprland cursor warp: a warp sends no leave event to an open island. `island state` includes `hoverOpened`.
 IPC (`qs -c someshell ipc call …`): `island open <search control media notifications system power clipboard emoji gif keys>` · `island state` · `island control <wifi bluetooth warp nightlight audio>` · `overview toggle` · `capture region <shot ocr lens translate record recordSound>` · `overlay toggle` · `streamer toggle` · `lock preview` · `widgets edit` · `osk toggle` · `shelf add|text|open|clear|state` · `schedule state|at <HH:MM|now>` · `wallpaper slot <name>` · `warp toggle|mode <name>|state` · `quickshare toggle|offer|accept|reject|state|refresh`.
 Never edit `~/.config/hypr.pre-somehypr`, `~/.config/*.pre-someshell` or `~/.config/quickshell/ii` (the rollback).
 

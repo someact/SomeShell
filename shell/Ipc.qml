@@ -28,7 +28,7 @@ Scope {
             UiState.hidden = !UiState.hidden;
         }
         function state(): string {
-            return JSON.stringify({ expanded: UiState.expanded, peeking: UiState.peeking, view: UiState.view, ambient: UiState.ambient });
+            return JSON.stringify({ expanded: UiState.expanded, peeking: UiState.peeking, hoverOpened: UiState.hoverOpened, view: UiState.view, ambient: UiState.ambient });
         }
     }
 
