@@ -81,6 +81,11 @@ Design mockup, **approved** 2026-11-02 (round 2): https://claude.ai/artifact/6Lr
 - **Mouse:** move onto the island and it **peeks** (grows a little and shows more). Click it to open fully, click outside to close. When it was opened by hover, moving away closes it.
 - **Shortcuts to a page:** e.g. Super+V clipboard, Super+. emoji, Super+A control panel.
 
+### 3.1b Answers (2026-11-02)
+- **Two monitors:** the island follows the mouse to the monitor it is on. It can be turned off, or fixed to one monitor, in settings.
+- **Several live things at once:** show them all. Music and recording together are both shown, each in a smaller version than when alone. A notification is short-lived: it shows over them for a few seconds and disappears, then the live things come back.
+- **Motion:** fine as designed, except **nothing moves while you edit**. No wiggling tiles or icons in edit mode (control panel, desktop): you can't place things that move.
+
 ### 3.2 States
 | State | When | Looks like |
 |---|---|---|
