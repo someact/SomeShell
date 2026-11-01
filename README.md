@@ -1,6 +1,6 @@
 # SomeShell
 
-A Hyprland desktop with a dynamic island instead of a bar, glass surfaces, spring motion and colors taken from the wallpaper. It is built on Quickshell and stays light: no polling, no Python, and panels load only while they are open. One config fits desktops and laptops; hardware is detected at start.
+A Hyprland desktop with a dynamic island instead of a bar: flat surfaces in colors taken from the wallpaper, motion on every touch, and the rounded Mitr type. It is built on Quickshell and stays light: no polling, no Python, and panels load only while they are open. One config fits desktops and laptops; hardware is detected at start.
 
 ## Features
 
@@ -10,7 +10,7 @@ A Hyprland desktop with a dynamic island instead of a bar, glass surfaces, sprin
 - **Quick options.** Wi-Fi, Bluetooth, Cloudflare WARP (when `warp-cli` is installed: on/off and mode), do not disturb, game mode, night light, keep awake, microphone, dark mode, streamer mode, record, screenshot and battery bypass, plus volume, microphone and brightness sliders. Show, hide and reorder them with the pencil, and give each one of three sizes (icon, icon and title, or with its state); right-click one for its details.
 - **Quick Share with Android** (optional). Send files to your phone and receive from it: the island asks before anything is accepted and shows the progress. Send with `/share`, from the shelf (drop files on the island), or from the file manager's menu.
 - **Media.** Player controls, the player's own volume, a per-app mixer and synced lyrics.
-- **Pills.** Workspaces, window title, tray, status icons and clock, in the top corners or beside the island, as glass or floating.
+- **Pills.** Workspaces, window title, tray, status icons and clock, in the top corners or beside the island, as a solid pill or floating icons.
 - **Dock and overview.** A bottom dock with pinned and running apps, and a workspace overview on Super+Tab.
 - **Wallpaper and colors.** Images and video wallpapers. Every wallpaper recolors the shell, Hyprland, terminals, GTK, KDE, Zen and Vesktop. A time-of-day schedule can change wallpaper, light or dark mode and night light, and can follow the sun.
 - **Capture.** Region screenshot, copy text (OCR), Google Lens, translate, live translate for game subtitles, and screen recording with or without sound.
@@ -21,7 +21,7 @@ A Hyprland desktop with a dynamic island instead of a bar, glass surfaces, sprin
 - **On-screen keyboard** on Super+K.
 - **Laptops.** Battery in the status pill, battery bypass (charge limit), backlight brightness, touchpad options and gestures. None of it shows on a desktop.
 - **Settings app.** Appearance, island, wallpaper, displays, keybinds, apps, modes, capture, power and Hyprland options, without editing files.
-- **Glass.** The compositor blurs exactly the shapes the shell draws. An optional plugin adds refraction (liquid glass).
+- **Flat or glass.** Flat by default (light on the GPU). Glass is a switch in Settings → Appearance: the compositor blurs exactly the shapes the shell draws, and an optional plugin adds refraction (liquid glass).
 
 ## Install
 

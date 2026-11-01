@@ -93,8 +93,9 @@ Changed 2026-11-01, after the mockup was approved: the redesign is done **in pla
 - [ ] Lock screen: smooth password dots
 
 ### 16h Finish
-- [ ] Every area checked in dark and light mode; leftover hardcoded colors (`Qt.rgba`, hex) and radii moved to Theme
-- [ ] README and CLAUDE.md updated
+- [x] Every area checked (island views, pills, dock, overview, keyboard, overlay, lock, desktop widgets, settings app) in dark mode, and the island and settings in light mode. Overview backdrop and overlay cards made solid (`overlay.style.look` solid, `overlay.blur` off by default)
+- [ ] Leftover hardcoded colors (`Qt.rgba`, hex) and radii moved to Theme (only where they look wrong flat; the rest with Phase 15)
+- [x] README and CLAUDE.md updated
 
 ## Later: code quality
 
