@@ -34,7 +34,7 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 Every new screen is checked on the real desktop (screenshot), in dark and light mode. Never edit `~/.config/hypr.pre-somehypr`, `~/.config/*.pre-someshell` or `~/.config/quickshell/ii` (the rollback).
 
 ## Workflow
-- Commit and push after each verified task: `git push origin main` (public `someact/SomeShell`). Unrelated changes get their own commit.
+- Commit locally after each verified task; do not push until the base of the rebuild is done (user, 2026-11-02). Then `git push origin main` (public `someact/SomeShell`). Unrelated changes get their own commit.
 - Decisions go into `SomeShell.md` first. Never change an agreed approach without asking.
 
 ## Rules for the shell
