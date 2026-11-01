@@ -2,7 +2,7 @@
 
 Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, 1920x1080@100 on DP-1, US/TH keyboard, UGTablet pen) and a laptop (Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Detect laptop features at runtime, never assume them.
 Called SomeHypr until Phase 12; only `install.sh` (`migrate_legacy`) may use the old name.
-Current work: a full rebuild from scratch (2026-11-02): shell, Hyprland config, colors and installer. The design and decisions are in `SomeShell.md` (the user's note, brainstorm stage: no code until they say so).
+Current work: a full rebuild from scratch (2026-11-02): shell, Hyprland config, colors and installer. The design and decisions are in `SomeShell.md`; tasks are tracked in `docs/plan.md` (one step at a time, tick tasks in the commit that finishes them).
 SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.sh someshell|reimagined` relinks this machine between the two.
 
 ## The old version (v1)
