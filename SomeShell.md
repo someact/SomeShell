@@ -69,7 +69,12 @@ Design mockup, **approved** 2026-11-02 (round 2): https://claude.ai/artifact/6Lr
 > - Pages are tabs along the **top** of the open island: icons, and the active one opens to show its number and name. The clock sits at the end of the tab row.
 > - **Every page has its own island size**, shaped by its content, and the island reshapes with a spring when the page changes (Search tall and narrow, Notifications narrowest, System wide and short, Media music wide and short, Media video taller). Sub-pages (a tile's details, music vs video) resize too.
 > - Island shape (tab with ears, plain tab, floating) and island color (always ink, or opposite of the desktop) both become options in Edit desktop. Default: tab with ears, always ink.
-> - The mockup is a design reference, not code to copy: it has bugs of its own.
+> - The mockup is a design reference, not code to copy. Its layouts break (overlap, content outside the island) because every page was drawn at a fixed size and the island was resized around it afterwards.
+
+> [!warning] Lessons from the mockup (2026-11-02)
+> - **The content sizes the island, never the other way round.** Each page lays itself out and reports its size; the island animates to that size. No fixed widths or heights for pages.
+> - Nothing may draw outside the island or overlap; long text wraps or is cut with "…".
+> - **Less motion.** One motion per action, and only where it tells you something changed.
 
 ### 3.1 How to call it
 - **Super key:** press to open the island on the search page. Arrow keys to move, Enter to choose, Super or Esc again to close.
