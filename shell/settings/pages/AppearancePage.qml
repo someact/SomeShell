@@ -238,7 +238,7 @@ Page {
             spacing: 8
             bottomPadding: 12
             Repeater {
-                model: [["tonal-spot", "Tonal spot"], ["content", "Content"], ["expressive", "Expressive"], ["fidelity", "Fidelity"], ["fruit-salad", "Fruit salad"], ["monochrome", "Monochrome"], ["neutral", "Neutral"], ["rainbow", "Rainbow"], ["vibrant", "Vibrant"]]
+                model: [["smart", "Auto"], ["tonal-spot", "Tonal spot"], ["content", "Content"], ["expressive", "Expressive"], ["fidelity", "Fidelity"], ["fruit-salad", "Fruit salad"], ["monochrome", "Monochrome"], ["neutral", "Neutral"], ["rainbow", "Rainbow"], ["vibrant", "Vibrant"]]
                 SButton {
                     required property var modelData
                     readonly property string scheme: "scheme-" + modelData[0]

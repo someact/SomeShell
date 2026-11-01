@@ -59,6 +59,7 @@ Changed 2026-11-01, after the mockup was approved: the redesign is done **in pla
 - [~] Decisions: approved as shown ("look good"); accent from the wallpaper (matugen); glass off by default, `island.glass` keeps it as an option; the island stays dark in light mode
 
 ### 16b Foundation
+- [x] Colors for wallpapers without color (fixed 2026-11-01, user report: gray wallpaper gave blue accents): `theme.scheme` defaults to `scheme-smart` (tonal spot, or monochrome when the image has no hue; "Auto" in Settings → Appearance), and the island accent falls back to near-white when the fixed tone is too dark
 - [x] Font: Mitr (installer downloads it, `fontconfig/60-someshell-mitr.conf` fixes its names for Qt; faces by `font.styleName`), also on the SDDM theme and hyprlock
 - [x] Flat by default: `island.glass` off, surfaces solid (`surfaceContainer`, no rim or highlight), the island a dark slate tinted from the wallpaper
 - [x] Icons: Material Symbols Rounded filled everywhere (active state shown by the container, not the fill)

@@ -206,7 +206,7 @@ Singleton {
             }
             property JsonObject theme: JsonObject {
                 property string mode: "dark"          // dark | light (matugen -m)
-                property string scheme: "scheme-tonal-spot"   // matugen -t
+                property string scheme: "scheme-smart"   // matugen -t; smart = tonal spot, or neutral grays for a wallpaper with no real color
                 property int nightLightTemp: 4500     // hyprsunset temperature (K)
                 // Time-of-day schedule (services/Schedule.qml): five slots (sunrise, noon,
                 // sunset, night, midnight), each { on, start, offset, source (keep | file |

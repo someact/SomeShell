@@ -45,8 +45,12 @@ Singleton {
     readonly property color islandRaisedHover: Qt.rgba(1, 1, 1, 0.14)
     // Accent for surfaces that stay dark in light mode too (island, game overlay,
     // overview, region picker): `primary` turns dark in light mode, the fixed tones do not
-    readonly property color accentIsland: pick("primary_fixed_dim", "#c6c0ff")
-    readonly property color fgAccentIsland: pick("on_primary_fixed", "#1a1452")
+    // A gray wallpaper (scheme-smart picks monochrome) makes the fixed tones
+    // dark, which would vanish on the dark island: then a near-white accent
+    readonly property color fixedAccent: pick("primary_fixed_dim", "#c6c0ff")
+    readonly property bool fixedAccentLight: 0.2126 * fixedAccent.r + 0.7152 * fixedAccent.g + 0.0722 * fixedAccent.b >= 0.35
+    readonly property color accentIsland: fixedAccentLight ? fixedAccent : "#e6e7ea"
+    readonly property color fgAccentIsland: fixedAccentLight ? pick("on_primary_fixed", "#1a1452") : "#16181d"
     readonly property color fgOnIslandFill: "#1b1b21"    // content over a light fill on the island (slider)
     readonly property color pill: blur ? Qt.rgba(surface.r, surface.g, surface.b, glassAlpha) : surfaceContainer
 
