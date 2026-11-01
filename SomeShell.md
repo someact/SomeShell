@@ -260,6 +260,27 @@ Built on Quickshell. It already ships modules for Hyprland, PipeWire audio, medi
 | Dock | Optional | Pinned apps, drag to reorder | ●● |
 | Installer | Packages, fonts, links with backups, rollback | Fresh machine test | ●● |
 
+## 7b. Decisions before code (2026-11-02)
+
+The user answered these; the rest are my proposed defaults, accepted by not changing them. Any can still change.
+
+**From the user**
+- Settings: a **separate window** for the rare options (not an island page).
+- Dock: **keep it**.
+- Keybinds: **keep the same keybinds as v1** (`git show archive/shell-v1:hypr/binds/keybinds.lua`), rewritten fresh in the new config.
+- Testing: build the base, then use it and **replace the current shell**.
+
+**Defaults**
+- Island: follows the mouse only while closed; workspace badge on every monitor; tray with the island. Fullscreen video hides it like a game (back at the top edge). Opened by hover closes when the mouse leaves; opened by Super stays. Size cap 60% width, 70% height, longer pages scroll inside.
+- Several live things: clock in the middle, one on each side; three or more show the two most important plus "+1". Peek or open shows one row per live thing with its own controls.
+- Edit mode: tiles get a dashed outline, a remove button and a resize corner, all still; the dragged tile lifts and follows the mouse; others slide aside on drop.
+- Look: Material Symbols Rounded, thin outline off, filled on. English UI. Windows: rounded like the island, thin wallpaper-colored border on the focused one, small gaps.
+- Hyprland: dwindle tiling; workspaces 1–10 per monitor; Kitty, Zen, Dolphin; touchpad swipe on the laptop; pen mapped to a monitor chosen in settings.
+- Search: apps, math, commands; anything else searches the web (Google). Clipboard on Super+V: text and images, 200 items, kept after reboot. Notifications only on the island, queued.
+- Lock: hypridle locks after 10 minutes and before sleep; hyprlock is the backup if the shell crashes.
+- Night light 20:00–07:00 fixed; calendar from a local `.ics`; extension for Zen/Firefox first; recording with gpu-screen-recorder.
+- Memory target: under 300 MB while idle.
+
 ## 8. Build order
 
 Each step ends with something that runs and is checked on the desktop. Commits stay local until **base** is done, then everything is pushed.
@@ -276,9 +297,3 @@ Each step ends with something that runs and is checked on the desktop. Commits s
 7. Lock screen, overview, dock, installer.
 8. Later: GIFs, Quick Share, WARP, capture tools, game overlay, on-screen keyboard.
 
-> [!question] To decide before the steps that need them
-> - Night light: give a city or location for sunset times, or only fixed times?
-> - Calendar: local `.ics` file, or do you use Google Calendar?
-> - Browser extension: Zen only, or Chrome too?
-> - Screen recording: `gpu-screen-recorder` (fast on NVIDIA) or `wf-recorder`?
-> - Dock: keep it, or rely on the island search and the overview?
