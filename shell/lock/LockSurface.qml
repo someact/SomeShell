@@ -139,9 +139,7 @@ Item {
             text: Qt.formatTime(clock.date, Config.clock.format)
             color: "white"
             font.pixelSize: Math.round(Math.min(root.height * 0.17, 180))
-            font.styleName: Theme.font.styleTitle
-            font.features: ({ "tnum": 1 })
-            style: Text.Normal
+            font.styleName: Theme.font.styleDisplay
         }
     }
 

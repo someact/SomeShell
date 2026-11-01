@@ -22,11 +22,9 @@ Item {
             live: root.live
             size: 9
         }
-        Label {
+        Digits {
             anchors.verticalCenter: parent.verticalCenter
-            mono: true
             text: Recorder.elapsedText
-            font.styleName: Theme.font.styleTitle
         }
         Icon {
             anchors.verticalCenter: parent.verticalCenter

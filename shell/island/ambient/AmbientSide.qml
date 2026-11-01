@@ -37,13 +37,11 @@ Rectangle {
                 live: root.live
                 size: 7
             }
-            Label {
+            Digits {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: Recorder.active
-                mono: true
                 text: Recorder.elapsedText
-                font.pixelSize: Theme.font.small
-                font.styleName: Theme.font.styleTitle
+                pixelSize: Theme.font.small
             }
             Icon {
                 anchors.verticalCenter: parent.verticalCenter

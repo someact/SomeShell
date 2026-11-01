@@ -20,8 +20,7 @@ DesktopWidget {
             text: Qt.formatTime(clock.date, Config.clock.format)
             color: root.fg
             font.pixelSize: 96
-            font.styleName: Theme.font.styleTitle
-            font.features: ({ "tnum": 1 })
+            font.styleName: Theme.font.styleDisplay
             style: Text.Raised
             styleColor: Qt.rgba(0, 0, 0, 0.25)
         }

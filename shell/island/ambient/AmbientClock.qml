@@ -26,12 +26,9 @@ Item {
             size: 15
             color: Theme.fgIslandDim
         }
-        Label {
+        Digits {
             anchors.verticalCenter: parent.verticalCenter
             text: Qt.formatDateTime(clock.date, Config.clock.format)
-            mono: true
-            font.pixelSize: Theme.font.normal
-            font.styleName: Theme.font.styleTitle
         }
         Rectangle {
             anchors.verticalCenter: parent.verticalCenter
