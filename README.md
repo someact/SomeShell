@@ -2,6 +2,8 @@
 
 A Hyprland desktop with a dynamic island instead of a bar: flat surfaces in colors taken from the wallpaper, motion on every touch, and the rounded Mitr type. It is built on Quickshell and stays light: no polling, no Python, and panels load only while they are open. One config fits desktops and laptops; hardware is detected at start.
 
+> **Being rebuilt (November 2026).** The shell is being written again from scratch with a new flat design. Until it is ready, `main` has the Hyprland config, colors and installer but no shell. The previous shell, described below, is the tag [`archive/shell-v1`](https://github.com/someact/SomeShell/tree/archive/shell-v1): install from there (`git checkout archive/shell-v1`).
+
 ## Features
 
 - **Dynamic island.** Collapsed, it shows the clock, the playing track, notifications, volume and brightness changes, recording, and microphone or screen-share use. It can show two things at once: the recording timer or the microphone dot stays at the side while a track or a notification is showing. Tap Super or click it to open search, quick options, media, notifications, system stats and power. Hover it for a peek.
