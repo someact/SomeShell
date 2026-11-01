@@ -1,0 +1,22 @@
+# matugen: the only color engine. The shell runs it on every wallpaper change:
+#   matugen image <wallpaper> -c <this file> -t scheme-smart -m <dark|light> --source-color-index 0
+# Every output below is written from the same palette.
+
+[config]
+version_check = false
+
+# The shell: every color role, in both the dark and the light version, so the
+# island can stay dark while the rest follows the mode.
+[templates.shell]
+input_path = './templates/shell.json'
+output_path = '~/.local/state/someshell/palette.json'
+
+# Hyprland: window borders and the background behind everything
+[templates.hyprland]
+input_path = './templates/hyprland-colors.lua'
+output_path = '~/.config/hypr/generated/colors.lua'
+
+# The backup lock screen (hyprlock)
+[templates.hyprlock]
+input_path = './templates/hyprlock-colors.conf'
+output_path = '~/.config/hypr/generated/hyprlock-palette.conf'

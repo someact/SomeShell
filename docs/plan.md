@@ -22,7 +22,8 @@ Old bugs (section 6 of `SomeShell.md`):
 - [ ] Super+Tab (user): in v1's overview a window can't be clicked to switch to its workspace. Overview is shell work, see step 7
 
 ## Step 2: Shell skeleton
-- [ ] matugen config and templates (shell, Hyprland, hyprlock, GTK, KDE, terminals, Zen), `scheme-smart`
+- [x] matugen config (relative template paths, run with `-c`) and the core templates: the shell palette (every role in dark and light, `~/.local/state/someshell/palette.json`), Hyprland borders and background, hyprlock
+- [ ] App templates: GTK 3/4, KDE, Kitty and other terminals, Zen, Vesktop, Fuzzel (last in step 2: they recolor live apps, so they are written only when the switch is near)
 - [ ] Shell entry, theme from the color file, Mitr faces, motion parts (resize spring, rolling digits, press invert, wipe on open)
 - [ ] Wallpaper layer (screen-sized copy), wallpaper state and IPC
 - [ ] Island window: rest, live (several at once, smaller), alert over them, peek, open, quiet; size from content; follows the mouse while closed
