@@ -42,7 +42,7 @@ Row {
                     anchors.verticalCenter: parent.verticalCenter
                     name: seg.modelData.icon ?? ""
                     size: 18
-                    fill: seg.on ? 1 : 0
+                    fill: 1
                     color: seg.on ? Theme.fgSecondaryContainer : Theme.fgSurfaceVariant
                 }
                 SText {
@@ -50,7 +50,7 @@ Row {
                     anchors.verticalCenter: parent.verticalCenter
                     text: seg.modelData.label
                     color: seg.on ? Theme.fgSecondaryContainer : Theme.fgSurface
-                    font.weight: seg.on ? Theme.font.weightTitle : Theme.font.weight
+                    font.styleName: seg.on ? Theme.font.styleTitle : Theme.font.style
                 }
             }
         }

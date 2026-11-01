@@ -24,7 +24,7 @@ LEGACY="somehypr"
 LEGACY_SUFFIX=".pre-$LEGACY"
 MONITORS="$REPO/hypr/generated/monitors.lua"
 FONT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/someshell"
-SANS_URL="https://raw.githubusercontent.com/google/fonts/main/ofl/googlesansflex/GoogleSansFlex%5BGRAD,ROND,opsz,slnt,wdth,wght%5D.ttf"
+MITR_URL="https://raw.githubusercontent.com/google/fonts/main/ofl/mitr"
 
 YES=0
 DEPS=1
@@ -36,6 +36,7 @@ LINKS=(
     "hypr:$CONFIG/hypr"
     "matugen:$CONFIG/matugen"
     "shell:$CONFIG/quickshell/someshell"
+    "fontconfig/60-someshell-mitr.conf:$CONFIG/fontconfig/conf.d/60-someshell-mitr.conf"
 )
 
 # Packages, as "package:command-or-path that proves it is there"
@@ -137,17 +138,19 @@ install_packages() {
         install_missing "laptop (battery, power profiles)" "${LAPTOP[@]}"
     fi
     install_missing "fonts and cursor" "${FONTS[@]}"
-    # Google Sans Flex is not packaged; it is OFL on google/fonts
-    if present "font:Google Sans Flex"; then
-        ok "Google Sans Flex"
-    elif ask "Download Google Sans Flex (the shell's UI font) to $FONT_DIR?"; then
+    # Mitr (the shell's UI font) is not packaged; it is OFL on google/fonts.
+    # fontconfig/60-someshell-mitr.conf (linked below) fixes its face names for Qt.
+    if [[ -f "$FONT_DIR/Mitr-Light.ttf" ]] || present "font:Mitr"; then
+        ok "Mitr"
+    elif ask "Download Mitr (the shell's UI font) to $FONT_DIR?"; then
         mkdir -p "$FONT_DIR"
-        if curl -fsSL -o "$FONT_DIR/GoogleSansFlex.ttf" "$SANS_URL"; then
-            fc-cache -f "$FONT_DIR" >/dev/null
-            ok "Google Sans Flex"
-        else
-            warn "Download failed; the shell falls back to another font"
-        fi
+        local w failed=0
+        for w in Light Regular Medium SemiBold Bold; do
+            curl -fsSL -o "$FONT_DIR/Mitr-$w.ttf" "$MITR_URL/Mitr-$w.ttf" || failed=1
+        done
+        curl -fsSL -o "$FONT_DIR/Mitr-OFL.txt" "$MITR_URL/OFL.txt" || true
+        fc-cache -f "$FONT_DIR" >/dev/null
+        if ((failed)); then warn "Some Mitr downloads failed; the shell falls back to another font"; else ok "Mitr"; fi
     fi
 }
 
@@ -499,6 +502,8 @@ migrate_legacy
 keep_layout
 say "Links"
 for entry in "${LINKS[@]}"; do link_one "${entry%%:*}" "${entry#*:}"; done
+# The Mitr rule in fontconfig/ only takes effect when the font cache is rebuilt
+if [[ -d "$FONT_DIR" ]]; then fc-cache -f "$FONT_DIR" >/dev/null 2>&1 || true; fi
 screens
 if ! reload_session; then
     warn "Rolling back"

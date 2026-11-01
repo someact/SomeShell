@@ -331,7 +331,7 @@ Item {
                         anchors.centerIn: parent
                         text: chip.modelData.name
                         font.pixelSize: Theme.font.small
-                        font.weight: Theme.font.weightTitle
+                        font.styleName: Theme.font.styleTitle
                         color: chip.active ? Theme.fgAccentIsland : Theme.fgIsland
                     }
                 }

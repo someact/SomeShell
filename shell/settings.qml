@@ -78,7 +78,7 @@ ShellRoot {
                     bottomPadding: 14
                     text: "Settings"
                     font.pixelSize: Theme.font.title
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                 }
 
                 Repeater {
@@ -103,14 +103,14 @@ ShellRoot {
                                 anchors.verticalCenter: parent.verticalCenter
                                 name: nav.modelData.icon
                                 size: 22
-                                fill: nav.current ? 1 : 0
+                                fill: 1
                                 color: nav.current ? Theme.fgSecondaryContainer : Theme.fgSurfaceVariant
                             }
                             SText {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: nav.modelData.name
                                 color: nav.current ? Theme.fgSecondaryContainer : Theme.fgSurface
-                                font.weight: nav.current ? Theme.font.weightTitle : Theme.font.weight
+                                font.styleName: nav.current ? Theme.font.styleTitle : Theme.font.style
                             }
                         }
                     }

@@ -110,7 +110,7 @@ QtObject {
                         visible: opacity > 0
                         text: (ws.wsId - 1) % 10 + 1
                         font.pixelSize: 10
-                        font.weight: Theme.font.weightTitle
+                        font.styleName: Theme.font.styleTitle
                         color: ws.isActive ? Theme.fgPrimary : ws.isOccupied ? Theme.surface : wsPart.fgDim
                         style: !ws.isActive && !ws.isOccupied ? wsPart.textStyle : Text.Normal
                         styleColor: wsPart.halo
@@ -254,7 +254,7 @@ QtObject {
                 text: KbLayout.code
                 visible: text !== ""
                 font.pixelSize: Theme.font.small
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
                 color: statusPart.fg
                 style: statusPart.textStyle
                 styleColor: statusPart.halo
@@ -308,7 +308,7 @@ QtObject {
                     anchors.verticalCenter: parent.verticalCenter
                     text: Battery.percent + "%"
                     font.pixelSize: Theme.font.small
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                     color: Battery.low ? Theme.error : statusPart.fg
                     style: statusPart.textStyle
                     styleColor: statusPart.halo
@@ -327,7 +327,7 @@ QtObject {
                 // The island shows the time while idle; don't repeat it here
                 text: UiState.ambient === "clock" ? Qt.formatDateTime(root.time.date, Config.clock.dateFormat) : Qt.formatDateTime(root.time.date, Config.clock.dateFormat + "  " + Config.clock.format)
                 font.pixelSize: Theme.font.small
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
                 color: clockPart.fg
                 style: clockPart.textStyle
                 styleColor: clockPart.halo

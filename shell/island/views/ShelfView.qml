@@ -146,7 +146,7 @@ FocusScope {
             Label {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Shelf"
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 anchors.verticalCenter: parent.verticalCenter
@@ -292,7 +292,7 @@ FocusScope {
                 Label {
                     width: parent.width
                     text: row.item.name || "Untitled"
-                    font.weight: row.ListView.isCurrentItem ? Theme.font.weightTitle : Theme.font.weight
+                    font.styleName: row.ListView.isCurrentItem ? Theme.font.styleTitle : Theme.font.style
                 }
                 Label {
                     width: parent.width

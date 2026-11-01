@@ -47,14 +47,14 @@ OverlayCard {
                     text: root.game && root.game.state !== "running" ? (root.game.step === "steam" ? "Waiting for Steam" : "Starting") : "Playing"
                     color: root.accent
                     font.pixelSize: Theme.font.small
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                 }
                 Label {
                     width: parent.width
                     elide: Text.ElideRight
                     text: root.game ? root.game.name : ""
                     font.pixelSize: Theme.font.large
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                 }
                 Label {
                     visible: !!root.game && root.game.state === "running"

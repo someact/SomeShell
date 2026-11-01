@@ -26,7 +26,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             mono: true
             text: Recorder.elapsedText
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
         Icon {
             anchors.verticalCenter: parent.verticalCenter

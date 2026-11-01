@@ -43,7 +43,7 @@ Rectangle {
                 mono: true
                 text: Recorder.elapsedText
                 font.pixelSize: Theme.font.small
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
@@ -75,7 +75,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Shelf.count
                 font.pixelSize: Theme.font.small
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
         }
     }

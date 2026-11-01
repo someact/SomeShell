@@ -40,7 +40,7 @@ OverlayCard {
                 Label {
                     width: parent.width
                     text: Media.title
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                 }
                 Label {
                     width: parent.width

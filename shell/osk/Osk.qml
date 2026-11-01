@@ -102,7 +102,7 @@ Scope {
                                 anchors.centerIn: parent
                                 text: KbLayout.code || "US"
                                 color: Theme.primary
-                                font.weight: Theme.font.weightTitle
+                                font.styleName: Theme.font.styleTitle
                             }
                         }
                         IconButton {

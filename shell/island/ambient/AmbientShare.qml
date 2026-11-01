@@ -47,7 +47,7 @@ Item {
             Label {
                 width: parent.width
                 text: root.ask ? root.who + " wants to send " + root.what : (root.t?.direction === "in" ? "Receiving " : "Sending ") + root.what
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 visible: root.ask !== null

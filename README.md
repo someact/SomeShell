@@ -32,7 +32,7 @@ git clone https://github.com/someact/SomeShell && cd SomeShell
 ./install.sh
 ```
 
-The installer asks before each change. It installs the missing packages (pacman, and paru or yay for the AUR), downloads the UI font, links `hypr/`, `shell/` and `matugen/` into `~/.config`, sets up your screens, reloads Hyprland and starts the shell. A directory it replaces is kept as `<name>.pre-someshell`, and a config error rolls the links back.
+The installer asks before each change. It installs the missing packages (pacman, and paru or yay for the AUR), downloads the UI font (Mitr), links `hypr/`, `shell/` and `matugen/` into `~/.config` (and a small fontconfig rule for Mitr), sets up your screens, reloads Hyprland and starts the shell. A directory it replaces is kept as `<name>.pre-someshell`, and a config error rolls the links back.
 
 ```sh
 ./install.sh -y                  # answer yes to every question

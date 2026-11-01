@@ -105,7 +105,7 @@ Page {
                 SText {
                     width: parent.width
                     text: page.current === "" ? "No wallpaper set" : page.current.split("/").pop()
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                 }
                 SText {
                     width: parent.width

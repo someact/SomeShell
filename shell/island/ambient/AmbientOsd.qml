@@ -40,7 +40,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             mono: Osd.value >= 0
             text: Osd.value >= 0 ? Math.round(Osd.value * 100) : Osd.text
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
             width: Osd.value >= 0 ? 28 : implicitWidth
             horizontalAlignment: Text.AlignRight
         }

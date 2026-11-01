@@ -31,7 +31,7 @@ Item {
             text: Qt.formatDateTime(clock.date, Config.clock.format)
             mono: true
             font.pixelSize: Theme.font.normal
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
         Rectangle {
             anchors.verticalCenter: parent.verticalCenter

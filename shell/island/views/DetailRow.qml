@@ -30,7 +30,7 @@ PressButton {
             anchors.verticalCenter: parent.verticalCenter
             name: root.icon
             size: 22
-            fill: root.current ? 1 : 0
+            fill: 1
             color: root.current ? Theme.accentIsland : Theme.fgIsland
             // The pulse drives its own value, so the icon is fully back once busy ends
             property real pulse: 1
@@ -48,7 +48,7 @@ PressButton {
             Label {
                 width: parent.width
                 text: root.title
-                font.weight: root.current ? Theme.font.weightTitle : Theme.font.weight
+                font.styleName: root.current ? Theme.font.styleTitle : Theme.font.style
             }
             Label {
                 width: parent.width

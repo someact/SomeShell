@@ -31,7 +31,7 @@ DesktopWidget {
                 text: Qt.formatDate(root.month, "MMMM yyyy")
                 color: root.fg
                 font.pixelSize: Theme.font.large
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
@@ -97,7 +97,7 @@ DesktopWidget {
                         anchors.centerIn: parent
                         text: day.inMonth ? day.n : ""
                         color: day.isToday ? Theme.fgPrimary : root.fg
-                        font.weight: day.isToday ? Theme.font.weightTitle : Theme.font.weight
+                        font.styleName: day.isToday ? Theme.font.styleTitle : Theme.font.style
                     }
                 }
             }

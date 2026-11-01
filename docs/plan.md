@@ -44,24 +44,27 @@ The task tracker. `[x]` done, `[~]` done differently (with a note), `[ ]` open. 
 
 ## Phase 15: Themes — paused (2026-11-01)
 
-The design is in `docs/themes.md` (look = a theme folder; views use only primitives and roles; pop from SomeShell Reimagined and fresco from SomeRenaiShell come back as themes). Paused for Phase 16: the new front-end is built on primitives and roles from its first file, so 15b–15d (moving the old views onto primitives) are no longer needed. What stays for later, on the new front-end:
+The design is in `docs/themes.md` (look = a theme folder; views use only primitives and roles; pop from SomeShell Reimagined and fresco from SomeRenaiShell come back as themes). Paused for Phase 16 (the flat redesign). What stays for later:
 - [ ] Theme switching (relink + reload or a Loader per primitive; bench both), picker in Settings, `themes/<name>/hypr.lua`, fonts from `meta.json`, IPC `theme set · list · state`
 - [ ] Pop theme from Reimagined; fresco theme from SomeRenaiShell
 
-## Phase 16: New front-end (added 2026-11-01)
+## Phase 16: Flat redesign (added 2026-11-01)
 
-Today's front-end is heavy (compositor blur on every surface) and its look is spread over ~100 files. A new front-end is built beside it, flat with motion, on the same engine (services, IPC, Hyprland config). It runs as its own Quickshell config next to `shell/` until it covers everything, then replaces it. Ideas from the user: `Improvement idea.md` (2026-11-01).
+The look moves from frosted glass (compositor blur on every surface, heavy) to flat color with motion on every interaction. Ideas from the user: `Improvement idea.md` (2026-11-01).
 
-### 16a Design first
-- [ ] Interactive mockup page (artifact): the look (flat surfaces from promptjang.com: slate neutrals, one accent, pill and medium radii, Prompt/Mitr type), the motion language, and the main screens
-- [ ] Decide with the user: where glass or blends stay, accent from the wallpaper or a fixed one, the island's idle "personality"
-- [ ] Write the design down (tokens, roles, motion rules) as the source for 16b
+Changed 2026-11-01, after the mockup was approved: the redesign is done **in place**, area by area, instead of in a second front-end beside `shell/`. It keeps every working service and view, each step goes live at once, and it reaches "everything redesigned" much sooner. The user asked for: colors that follow the wallpaper, Mitr as the default font (like promptjang.com's headings), icons that suit a flat design.
+
+### 16a Design first ✅
+- [x] Interactive mockup page (artifact `claude.ai/artifact/ELqVxExVPZRZ3Fs6JKHL5F`): flat slate surfaces, one accent, pill and medium radii, Mitr type, the motion language (hover lift, press squeeze, open morph, state pulse; 200/400/700 ms, ease-out, spring only for opening shapes), the main screens
+- [~] Decisions: approved as shown ("look good"); accent from the wallpaper (matugen); glass off by default, `island.glass` keeps it as an option; the island stays dark in light mode
 
 ### 16b Foundation
-- [ ] New config beside `shell/` (`qs -c someshell-next`, switch with `scripts/switch.sh`-style relink), sharing `services/` and the core singletons
-- [ ] Tokens and roles (colors from matugen, radii, type, durations, one ease-out curve) and the primitives (Surface, Button, IconButton, Tile, Toggle, Slider, Progress, Label, Icon, Selection), with motion built in: hover lift, press squeeze, open morph from the source, one pulse on state change
-- [ ] Style check: only the theme folder may set colors, radii and fonts
-- [ ] Bench against today's shell (memory, GPU while idle and while animating)
+- [x] Font: Mitr (installer downloads it, `fontconfig/60-someshell-mitr.conf` fixes its names for Qt; faces by `font.styleName`), also on the SDDM theme and hyprlock
+- [x] Flat by default: `island.glass` off, surfaces solid (`surfaceContainer`, no rim or highlight), the island a dark slate tinted from the wallpaper
+- [x] Icons: Material Symbols Rounded filled everywhere (active state shown by the container, not the fill)
+- [ ] Motion in the shared parts (PressButton, IconButton, tiles, sliders, toggles): hover lift, press squeeze, state pulse
+- [ ] Fixed-width digits for clocks and percentages (Mitr has no tabular figures)
+- [ ] Bench against the glass look (memory, GPU while idle and while animating)
 
 ### 16c Island and pills
 - [ ] Island opens when the pointer reaches the top edge and closes when it leaves; Super and outside clicks keep working
@@ -89,8 +92,8 @@ Today's front-end is heavy (compositor blur on every surface) and its look is sp
 - [ ] Translate in the overlay: an area once, or auto (re-read a fixed area every few seconds, show the translation over it)
 - [ ] Lock screen: smooth password dots
 
-### 16h Switch over
-- [ ] Every view of `shell/` exists in the new front-end; it becomes `shell/`, the old one goes to git history
+### 16h Finish
+- [ ] Every area checked in dark and light mode; leftover hardcoded colors (`Qt.rgba`, hex) and radii moved to Theme
 - [ ] README and CLAUDE.md updated
 
 ## Later: code quality

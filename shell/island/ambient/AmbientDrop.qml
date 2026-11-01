@@ -40,7 +40,7 @@ Item {
             spacing: 2
             Label {
                 text: "Drop to keep it on the shelf"
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 visible: root.info.text !== ""

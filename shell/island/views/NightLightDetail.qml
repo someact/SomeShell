@@ -21,7 +21,7 @@ Column {
             anchors.verticalCenter: parent.verticalCenter
             x: 12
             text: "Night light"
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
         PillSwitch {
             anchors.right: parent.right

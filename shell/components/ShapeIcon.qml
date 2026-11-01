@@ -42,7 +42,7 @@ Item {
         anchors.centerIn: parent
         name: root.icon
         size: root.size
-        fill: root.active ? 1 : 0
+        fill: 1
         color: root.active ? root.activeIconColor : root.iconColor
         style: root.halo && !root.active ? Text.Outline : Text.Normal
         styleColor: Qt.rgba(0, 0, 0, 0.35)

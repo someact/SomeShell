@@ -17,7 +17,7 @@ Column {
         leftPadding: 4
         text: section.title
         font.pixelSize: Theme.font.small
-        font.weight: Theme.font.weightTitle
+        font.styleName: Theme.font.styleTitle
         color: Theme.primary
     }
     Rectangle {

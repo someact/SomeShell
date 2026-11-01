@@ -144,7 +144,7 @@ FocusScope {
                         Behavior on scale {
                             Spring { preset: "bouncy" }
                         }
-                        fill: btn.active ? 1 : 0
+                        fill: 1
                         color: btn.active ? Theme.fgPrimary : Theme.fgIsland
                     }
                     Label {

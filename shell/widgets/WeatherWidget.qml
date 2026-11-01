@@ -31,7 +31,7 @@ DesktopWidget {
                     text: Weather.current ? Weather.current.temp + root.unit : "--"
                     color: root.fg
                     font.pixelSize: 34
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                 }
                 Label {
                     text: Weather.current ? Weather.text(Weather.current.code) + " · feels " + Weather.current.feels + "°" : Weather.loading ? "Loading…" : Weather.error

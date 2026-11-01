@@ -83,7 +83,7 @@ Item {
                 elide: Text.ElideNone
                 text: line.modelData.text === "" ? "♪" : line.modelData.text
                 font.pixelSize: root.fontSize
-                font.weight: line.current ? Theme.font.weightTitle : Theme.font.weight
+                font.styleName: line.current ? Theme.font.styleTitle : Theme.font.style
                 color: line.current ? root.fg : root.fgDim
                 style: root.outline ? Text.Outline : Text.Normal
                 styleColor: Qt.rgba(0, 0, 0, 0.7)

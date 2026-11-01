@@ -24,7 +24,7 @@ Column {
             x: 12
             Label {
                 text: "Quick Share"
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 text: QuickShare.enabled ? "Nearby devices can send to this PC" : "Off: this PC cannot be found"
@@ -81,7 +81,7 @@ Column {
                 width: parent.width
                 text: "The firewall (" + QuickShare.blocked + ") blocks phones from sending here"
                 font.pixelSize: Theme.font.small
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 width: parent.width
@@ -117,7 +117,7 @@ Column {
             Label {
                 width: parent.width
                 text: (parent.parent.t?.device ?? "") + " wants to send " + QuickShare.describe(parent.parent.t)
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 width: parent.width
@@ -248,7 +248,7 @@ Column {
             anchors.centerIn: parent
             text: chip.text
             font.pixelSize: Theme.font.small
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
             color: chip.primary ? Theme.fgAccentIsland : Theme.fgIsland
         }
     }

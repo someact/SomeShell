@@ -11,7 +11,7 @@ Button {
     implicitWidth: symbol === "" ? Math.max(64, label.implicitWidth + 28) : 40
     implicitHeight: 40
     hoverEnabled: true
-    font.family: "Google Sans Flex"
+    font.family: "Mitr"
     font.pixelSize: 13
     Accessible.name: text
     background: Rectangle {

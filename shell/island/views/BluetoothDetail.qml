@@ -78,7 +78,7 @@ Column {
             anchors.verticalCenter: parent.verticalCenter
             x: 12
             text: root.adapter?.discovering ? "Bluetooth · searching…" : "Bluetooth"
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
         PillSwitch {
             anchors.right: parent.right

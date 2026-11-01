@@ -261,7 +261,7 @@ Scope {
                                 anchors.verticalCenter: parent.verticalCenter
                                 name: Recorder.active ? "stop_circle" : "screen_record"
                                 size: 19
-                                fill: Recorder.active ? 1 : 0
+                                fill: 1
                             }
                             Label {
                                 id: recLabel

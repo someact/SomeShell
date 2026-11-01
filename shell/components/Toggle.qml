@@ -27,7 +27,7 @@ PressButton {
         anchors.centerIn: parent
         name: root.icon
         size: 22
-        fill: root.active ? 1 : 0
+        fill: 1
         color: root.active ? root.activeFg : Theme.fgIsland
     }
 
@@ -42,7 +42,7 @@ PressButton {
             anchors.verticalCenter: parent.verticalCenter
             name: root.icon
             size: 22
-            fill: root.active ? 1 : 0
+            fill: 1
             color: root.active ? root.activeFg : Theme.fgIsland
         }
         Column {
@@ -51,7 +51,7 @@ PressButton {
             Label {
                 width: parent.width
                 text: root.title
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
                 color: root.active ? root.activeFg : Theme.fgIsland
                 // Narrow tile: "Do not / disturb" on two lines instead of cut off
                 wrapMode: root.titleOnly ? Text.WordWrap : Text.NoWrap

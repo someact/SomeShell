@@ -10,7 +10,7 @@ import qs.core
 Text {
     property string name
     property real size: 20
-    property real fill: 0
+    property real fill: 1
 
     readonly property int _opsz: size >= 44 ? 48 : size >= 32 ? 40 : size >= 22 ? 24 : 20
 

@@ -2,7 +2,7 @@
 
 Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, 1920x1080@100 on DP-1, US/TH keyboard, UGTablet pen) and a laptop (Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Detect laptop features at runtime, never assume them.
 Called SomeHypr until Phase 12; only `install.sh` (`migrate_legacy`) may use the old name.
-Tasks and goals: `docs/plan.md`. Current work: Phase 16, a new flat front-end with motion built beside `shell/` (16a: design mockup first). Open leftovers of Phase 13 and Phase 14 (release) are listed there; Phase 15 (themes, `docs/themes.md`) is paused.
+Tasks and goals: `docs/plan.md`. Current work: Phase 16, the flat redesign with motion, done in place area by area (design: the 16a mockup). Open leftovers of Phase 13 and Phase 14 (release) are listed there; Phase 15 (themes, `docs/themes.md`) is paused.
 SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.sh someshell|reimagined` relinks this machine between the two.
 
 ## Layout
@@ -44,10 +44,10 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - QML: a property named `onX` parses as a signal handler (hence `fgX` names). Bindings are stale inside a change handler; read the source property. `Timer.restart()`/`start()` replaces a `running:` binding for good.
 - Animation: `SpringAnimation`/`Spring` only in a `Behavior` or `on <prop>`; inside `Sequential`/`ParallelAnimation` Qt segfaults (use `NumberAnimation`, see `components/Reveal.qml`).
 - AnimatedImage: never `cache: false` on a network URL (Qt 6.12 stack overflow); download with curl and play local files.
-- Fonts: each distinct `font.variableAxes` value opens another face; `components/Icon.qml` snaps FILL to 0/1 and opsz to 20/24/40/48; never animate an axis. Weights via `font.weight` (`Theme.font.weight`/`weightTitle`).
+- Fonts: the UI font is Mitr (static files in `~/.local/share/fonts/someshell`). Qt maps every numeric weight 300–600 of it to SemiBold, so pick faces with `font.styleName` (`Theme.font.style` Light, `styleTitle` Regular, `styleDisplay` SemiBold), never `font.weight`; `fontconfig/60-someshell-mitr.conf` cleans the face names (rebuild with `fc-cache -f`). Mitr digits are proportional (no `tnum`). Each distinct `font.variableAxes` value opens another face; `components/Icon.qml` snaps FILL (default 1, flat filled icons) and opsz to 20/24/40/48; never animate an axis.
 - Shapes: `components/MaterialShape.qml` (35 M3 shapes from `lib/shapes/`) with QtQuick.Shapes, never Canvas.
 - IPC function names must not be `show`, `call` or `prop` (clash with `qs ipc` subcommands).
-- Hot reload can silently stop applying edits after many quick changes: restart (`killall qs quickshell`, then `hypr/scripts/shell.sh`). After a crash the shell restarts as `quickshell`, not `qs` (`qs list --all`, `qs kill`). Never `pkill -f` a pattern that is in your own command.
+- Hot reload can silently stop applying edits after many quick changes, and new fonts need a restart: `qs kill -c someshell`, then `hyprctl eval 'hl.exec_cmd("<repo>/hypr/scripts/shell.sh")'` (`hyprctl dispatch exec` does nothing under the Lua config). After a crash the shell restarts as `quickshell`, not `qs` (`qs list --all`, `qs kill`). Never `pkill -f` a pattern that is in your own command.
 - Memory: compare with a fresh start, read `Anonymous`/`Pss` in `/proc/<pid>/smaps_rollup`; an empty one-window Quickshell is already ~250 MB RSS / ~55 MB anon here.
 
 ## Hyprland Lua API

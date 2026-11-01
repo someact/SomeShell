@@ -80,7 +80,7 @@ FocusScope {
         visible: rec.recording
         text: "Press keys…"
         color: Theme.fgPrimaryContainer
-        font.weight: Theme.font.weightTitle
+        font.styleName: Theme.font.styleTitle
     }
 
     Item {

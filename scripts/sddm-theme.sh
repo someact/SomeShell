@@ -53,11 +53,11 @@ if [[ -f "$wallpaper" ]]; then
 fi
 font_file=
 icon_file=
-for family in 'Google Sans Flex' 'Material Symbols Rounded'; do
+for family in 'Mitr' 'Material Symbols Rounded'; do
     source_font=$(fc-match -f '%{file}' "$family")
     actual_family=$(fc-match -f '%{family}' "$family")
     if [[ -f "$source_font" && "$actual_family" == *"$family"* ]]; then
-        if [[ "$family" == 'Google Sans Flex' ]]; then
+        if [[ "$family" == 'Mitr' ]]; then
             dest=assets/ui.ttf; font_file=$dest
         else
             dest=assets/icons.ttf; icon_file=$dest

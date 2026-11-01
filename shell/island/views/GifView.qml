@@ -180,7 +180,7 @@ FocusScope {
                         anchors.verticalCenter: parent.verticalCenter
                         name: chip.modelData === "" ? "inbox" : "folder"
                         size: 16
-                        fill: chip.active ? 1 : 0
+                        fill: 1
                         color: chip.active ? Theme.fgOnIslandFill : Theme.fgIslandDim
                     }
                     Label {

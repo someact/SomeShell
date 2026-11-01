@@ -81,7 +81,7 @@ Item {
                 width: parent.width
                 text: root.title
                 mono: root.monoTitle
-                font.weight: root.current ? Theme.font.weightTitle : Theme.font.weight
+                font.styleName: root.current ? Theme.font.styleTitle : Theme.font.style
             }
             Label {
                 width: parent.width

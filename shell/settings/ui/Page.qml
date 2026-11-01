@@ -26,7 +26,7 @@ Flickable {
             SText {
                 text: page.title
                 font.pixelSize: Theme.font.display - 8
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             SText {
                 visible: text !== ""

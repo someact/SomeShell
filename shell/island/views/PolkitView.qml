@@ -62,7 +62,7 @@ FocusScope {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Authentication required"
                 font.pixelSize: Theme.font.large
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
         }
         Label {

@@ -20,7 +20,7 @@ Column {
             x: 12
             Label {
                 text: "Cloudflare WARP"
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 text: Warp.connected ? "Connected" + (root.reason !== "" ? " · " + root.reason : "") : Warp.summary

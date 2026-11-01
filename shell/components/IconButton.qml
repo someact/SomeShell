@@ -13,7 +13,7 @@ PressButton {
         anchors.centerIn: parent
         name: root.icon
         size: root.iconSize
-        fill: root.active ? 1 : 0
+        fill: 1
         color: root.iconColor
     }
 }

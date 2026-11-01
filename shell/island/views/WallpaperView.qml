@@ -92,7 +92,7 @@ FocusScope {
             Label {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Wallpapers"
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 anchors.verticalCenter: parent.verticalCenter

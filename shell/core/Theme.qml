@@ -34,8 +34,11 @@ Singleton {
     readonly property color outlineVariant: pick("outline_variant", "#47464f")
     readonly property color shadow: pick("shadow", "#000000")
 
-    // The island is always near-black so it reads as a hardware notch
-    readonly property color island: islandBlur ? Qt.rgba(0, 0, 0, Config.glass.islandTint) : "#000000"
+    // The island is always dark so it reads as a hardware notch. Flat, it is a
+    // deep slate tinted toward the wallpaper's accent (the fixed tone is the same
+    // in light and dark mode).
+    readonly property color islandFlat: Qt.tint("#0c0f16", Qt.rgba(accentIsland.r, accentIsland.g, accentIsland.b, 0.07))
+    readonly property color island: islandBlur ? Qt.rgba(0, 0, 0, Config.glass.islandTint) : islandFlat
     readonly property color fgIsland: "#f4f2f8"
     readonly property color fgIslandDim: "#a8a6b0"
     readonly property color islandRaised: Qt.rgba(1, 1, 1, 0.08)
@@ -45,7 +48,7 @@ Singleton {
     readonly property color accentIsland: pick("primary_fixed_dim", "#c6c0ff")
     readonly property color fgAccentIsland: pick("on_primary_fixed", "#1a1452")
     readonly property color fgOnIslandFill: "#1b1b21"    // content over a light fill on the island (slider)
-    readonly property color pill: Qt.rgba(surface.r, surface.g, surface.b, blur ? glassAlpha : 0.92)
+    readonly property color pill: blur ? Qt.rgba(surface.r, surface.g, surface.b, glassAlpha) : surfaceContainer
 
     // Glass: a tint over the compositor frost, a 1 px light rim and a soft top
     // highlight (components/Glass.qml). Without frost (glass off, game mode) the
@@ -54,8 +57,9 @@ Singleton {
     readonly property bool blur: glass && !GameMode.active
     readonly property bool islandBlur: blur && Config.glass.island   // off: a solid black notch
     readonly property real glassAlpha: Config.glass.tint
-    readonly property color glassRim: Qt.rgba(1, 1, 1, Config.glass.rim ? 0.14 : 0.05)
-    readonly property color glassHighlight: Qt.rgba(1, 1, 1, Config.glass.rim ? 0.07 : 0)
+    // Flat (no frost): no rim and no highlight, the color alone sets the surface off
+    readonly property color glassRim: blur ? Qt.rgba(1, 1, 1, Config.glass.rim ? 0.14 : 0.05) : "transparent"
+    readonly property color glassHighlight: blur && Config.glass.rim ? Qt.rgba(1, 1, 1, 0.07) : "transparent"
 
 
     // Tokens
@@ -74,12 +78,15 @@ Singleton {
         readonly property int xl: 24
     }
     readonly property QtObject font: QtObject {
-        readonly property string ui: "Google Sans Flex"
+        // Mitr: rounded, single-story a, draws Thai too. Faces are chosen by
+        // style name (font.styleName): with these static files Qt maps every
+        // numeric weight from 300 to 600 to SemiBold.
+        readonly property string ui: "Mitr"
         readonly property string mono: "JetBrainsMono Nerd Font"
         readonly property string icon: "Material Symbols Rounded"
-        // Google Sans Flex is variable: these weights land on its wght axis (ii's look)
-        readonly property int weight: 450       // body text, a touch firmer than Regular on glass
-        readonly property int weightTitle: 550  // titles and labels that were DemiBold
+        readonly property string style: "Light"           // body text (Mitr runs heavy)
+        readonly property string styleTitle: "Regular"    // titles and labels
+        readonly property string styleDisplay: "SemiBold" // clocks and big numbers
         readonly property int small: 11
         readonly property int normal: 13
         readonly property int large: 16

@@ -278,7 +278,7 @@ Scope {
                             anchors.centerIn: parent
                             text: "Done"
                             color: Theme.fgPrimary
-                            font.weight: Theme.font.weightTitle
+                            font.styleName: Theme.font.styleTitle
                         }
                     }
                 }

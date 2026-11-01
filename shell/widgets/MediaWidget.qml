@@ -62,7 +62,7 @@ DesktopWidget {
                     text: Media.active ? Media.title : "Nothing playing"
                     color: root.fg
                     font.pixelSize: Theme.font.large
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                 }
                 Label {
                     width: parent.width

@@ -233,7 +233,7 @@ Scope {
                                     anchors.verticalCenter: parent.verticalCenter
                                     name: modelData.icon
                                     size: 19
-                                    fill: modelData.id === Capture.mode ? 1 : 0
+                                    fill: 1
                                     color: modelData.id === Capture.mode ? Theme.fgPrimary : Theme.fgIsland
                                 }
                                 Label {
@@ -242,7 +242,7 @@ Scope {
                                     visible: modelData.id === Capture.mode
                                     text: modelData.name
                                     color: Theme.fgPrimary
-                                    font.weight: Theme.font.weightTitle
+                                    font.styleName: Theme.font.styleTitle
                                 }
                             }
                         }

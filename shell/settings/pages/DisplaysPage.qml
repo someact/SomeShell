@@ -137,7 +137,7 @@ Page {
             x: 20
             text: `Keep these display settings? Reverting in ${page.countdown} s`
             color: Theme.fgPrimaryContainer
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
         Row {
             anchors.right: parent.right
@@ -194,7 +194,7 @@ Page {
                 SText {
                     anchors.centerIn: parent
                     text: box.modelData.name
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                 }
             }
         }

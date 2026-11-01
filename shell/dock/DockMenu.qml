@@ -62,7 +62,7 @@ Rectangle {
             height: 28
             text: menu.entry?.name ?? menu.key
             font.pixelSize: Theme.font.small
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
             color: Theme.fgIslandDim
         }
 

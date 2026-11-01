@@ -40,7 +40,7 @@ FocusScope {
         Label {
             anchors.verticalCenter: parent.verticalCenter
             text: Notifs.count > 0 ? Notifs.count + " notifications" : "Notifications"
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
         Row {
             anchors.right: parent.right
@@ -112,7 +112,7 @@ FocusScope {
                     Label {
                         width: parent.width
                         text: Notifs.title(card.modelData)
-                        font.weight: Theme.font.weightTitle
+                        font.styleName: Theme.font.styleTitle
                     }
                     Label {
                         width: parent.width

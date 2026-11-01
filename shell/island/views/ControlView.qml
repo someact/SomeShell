@@ -90,7 +90,7 @@ FocusScope {
                 anchors.leftMargin: 8
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.detailTitles[root.detail] ?? ""
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 visible: root.detail === ""

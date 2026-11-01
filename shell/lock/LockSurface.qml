@@ -132,14 +132,14 @@ Item {
             text: Qt.formatDate(clock.date, "dddd, d MMMM")
             color: Qt.rgba(1, 1, 1, 0.9)
             font.pixelSize: 24
-            font.weight: Font.Medium
+            font.styleName: "Medium"
         }
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatTime(clock.date, Config.clock.format)
             color: "white"
             font.pixelSize: Math.round(Math.min(root.height * 0.17, 180))
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
             font.features: ({ "tnum": 1 })
             style: Text.Normal
         }
@@ -168,7 +168,7 @@ Item {
                 text: Lock.userName.charAt(0).toUpperCase()
                 color: "white"
                 font.pixelSize: 30
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Image {
                 anchors.fill: parent
@@ -184,7 +184,7 @@ Item {
             text: Lock.userName
             color: "white"
             font.pixelSize: Theme.font.large
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
 
         // The field: a glass pill with dots for typed characters
@@ -334,7 +334,7 @@ Item {
                 visible: Lock.error !== ""
                 text: Lock.error
                 color: "#ffb4ab"
-                font.weight: Font.Medium
+                font.styleName: "Medium"
             }
             Chip {
                 visible: root.capsLock
@@ -381,7 +381,7 @@ Item {
                 text: chip.text
                 color: "white"
                 font.pixelSize: Theme.font.small
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
         }
     }
@@ -446,7 +446,7 @@ Item {
                         width: parent.width
                         text: Media.title
                         color: "white"
-                        font.weight: Theme.font.weightTitle
+                        font.styleName: Theme.font.styleTitle
                     }
                     Label {
                         id: artistText
@@ -529,7 +529,7 @@ Item {
             anchors.centerIn: parent
             name: lb.icon
             size: 22
-            fill: lb.filled || lb.armed ? 1 : 0
+            fill: 1
             color: lb.armed ? Theme.fgPrimary : "white"
         }
     }

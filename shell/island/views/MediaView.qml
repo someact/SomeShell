@@ -101,7 +101,7 @@ FocusScope {
                     width: parent.width - (tools.width > 0 ? tools.width + 10 : 0)
                     text: Media.title
                     font.pixelSize: Theme.font.large
-                    font.weight: Theme.font.weightTitle
+                    font.styleName: Theme.font.styleTitle
                 }
                 Row {
                     id: tools

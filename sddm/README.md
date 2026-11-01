@@ -27,7 +27,7 @@ ImageMagick and fontconfig. On Arch/CachyOS, the relevant packages are `sddm`,
 `qt6-declarative`, `qt6-svg`, `jq`, `imagemagick` and `fontconfig`.
 
 The script snapshots your current wallpaper (or a video wallpaper's saved
-frame) into a blurred image and copies Google Sans Flex and Material Symbols
+frame) into a blurred image and copies Mitr and Material Symbols
 when available. Those files live under `/usr/share/sddm/themes/someshell`, so the
 greeter does not depend on a readable home directory. Running `--install`
 again refreshes the wallpaper and fonts. Personal images and fonts are not
@@ -56,5 +56,5 @@ longer passwords still reach SDDM in full.
 
 The implementation uses [SDDM's theme API](https://github.com/sddm/sddm/blob/v0.21.0/docs/THEMING.md).
 The theme code is MIT licensed. Material password outlines and Material
-Symbols are Apache-2.0; their licenses are included. Copied Google Sans Flex
+Symbols are Apache-2.0; their licenses are included. Copied Mitr
 fonts keep their local font license.

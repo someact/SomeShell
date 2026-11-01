@@ -55,7 +55,7 @@ DesktopWidget {
                 text: Math.round(ring.value * 100)
                 color: root.fg
                 font.pixelSize: Theme.font.large
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
         }
         Column {
@@ -67,7 +67,7 @@ DesktopWidget {
                 text: ring.name
                 color: root.fg
                 font.pixelSize: Theme.font.small
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
             Label {
                 anchors.horizontalCenter: parent.horizontalCenter

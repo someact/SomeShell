@@ -69,7 +69,7 @@ Column {
             anchors.verticalCenter: parent.verticalCenter
             x: 12
             text: "Wi-Fi"
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
         PillSwitch {
             anchors.right: parent.right

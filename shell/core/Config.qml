@@ -60,7 +60,7 @@ Singleton {
 
             property JsonObject island: JsonObject {
                 property string style: "notch"        // notch (hangs from the edge) | floating (a free pill)
-                property bool glass: true             // compositor blur behind the island
+                property bool glass: false            // compositor blur behind the island and pills (off: flat surfaces)
                 property int peekMs: 4000             // notification peek
                 property int osdMs: 1500              // volume / brightness / layout
                 property bool showMedia: true

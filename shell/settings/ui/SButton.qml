@@ -34,7 +34,7 @@ PressButton {
             anchors.verticalCenter: parent.verticalCenter
             text: b.text
             color: b.fg
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
     }
 }

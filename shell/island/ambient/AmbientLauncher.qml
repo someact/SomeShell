@@ -35,7 +35,7 @@ Item {
             width: Math.min(implicitWidth, 220)
             elide: Text.ElideRight
             text: root.dl ? root.dl.label : root.game ? root.game.name : ""
-            font.weight: Theme.font.weightTitle
+            font.styleName: Theme.font.styleTitle
         }
         // A download: a bar and its percent (and how many more run)
         Rectangle {

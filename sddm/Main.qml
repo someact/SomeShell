@@ -19,7 +19,7 @@ Rectangle {
     property real shown: 0
     readonly property bool reduced: config.ReducedMotion === "true"
     readonly property bool preview: config.PreviewMode === "true"
-    readonly property string uiFont: uiFontLoader.status === FontLoader.Ready ? uiFontLoader.name : (config.Font || "Google Sans Flex")
+    readonly property string uiFont: uiFontLoader.status === FontLoader.Ready ? uiFontLoader.name : (config.Font || "Mitr")
     readonly property string iconFont: iconFontLoader.status === FontLoader.Ready ? iconFontLoader.name : "Material Symbols Rounded"
     readonly property bool haveSymbols: iconFontLoader.status === FontLoader.Ready || Qt.fontFamilies().includes("Material Symbols Rounded")
     readonly property string buttonFont: haveSymbols ? iconFont : uiFont

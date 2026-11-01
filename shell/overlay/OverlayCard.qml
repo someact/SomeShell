@@ -87,7 +87,7 @@ Item {
             Label {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.title
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
                 font.pixelSize: root.compact ? Theme.font.small : Theme.font.normal
                 style: root.minimal ? Text.Outline : Text.Normal
                 styleColor: Qt.rgba(0, 0, 0, 0.7)

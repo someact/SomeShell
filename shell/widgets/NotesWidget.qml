@@ -39,7 +39,7 @@ DesktopWidget {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Notes"
                 color: root.fg
-                font.weight: Theme.font.weightTitle
+                font.styleName: Theme.font.styleTitle
             }
         }
         Flickable {
