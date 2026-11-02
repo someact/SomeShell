@@ -37,10 +37,10 @@ Old bugs (section 6 of `SomeShell.md`):
 - [~] Power page: lock, sleep, log out, restart, shut down; hold 0.8 s to confirm (fills like ink inside the rounded shape), letting go early cancels; tested with `SOMESHELL_DRY_POWER=1`. Lock goes through `loginctl lock-session` → `scripts/lock.sh`, which falls back to hyprlock until the shell has its own lock screen (step 7)
 
 ## Step 4: Control, media, notifications
-- [ ] Control tiles in a fixed layout: Internet, Bluetooth, Sound, Brightness, Night light, Do not disturb, Keep awake, Game mode, Screenshot, Record
-- [ ] Detail pages: Wi-Fi (password, DNS), Bluetooth (pair, rename), Sound (outputs, mixer), Night light
-- [ ] Media through MPRIS: music and video layouts
-- [ ] Notification server, alerts, history
+- [x] Control tiles in a fixed layout (4 columns, Sound 2x2 with the volume): Internet, Bluetooth, Sound, Brightness (DDC on desktops, backlight on laptops; detection takes ~15 s at start), Night light (hyprsunset, schedule 20:00-07:00 by default), Do not disturb, Keep awake (systemd idle block), Game mode, Screenshot, Record (wf-recorder, focused monitor). Tested by mouse and IPC 2026-11-02
+- [~] Detail pages: Internet (Ethernet, Wi-Fi list with password field, DNS edit through nmcli), Bluetooth (on/off, scan, connect/pair/forget, rename this computer), Sound (outputs, mic, per-app mixer), Night light (warmth, schedule). Untested on this machine: Wi-Fi (no Wi-Fi card) and pairing (no devices); DNS edit not run (it changes the live connection)
+- [x] Media through MPRIS: music layout (square cover, big title) and video layout (wide picture), guessed from the player, the page address or an audio file; player chips when several play; seekable progress; live on the resting island (cover and meter) and as a row with controls in the peek. Tested with a silent VLC test track
+- [x] Notification server (alerts unless do not disturb; critical ones always), history grouped by app (`notifications.json`, last 100), dismiss, clear all, default action on click. Recording shows on the resting island next to music (several live things at once)
 
 **Base done → push, switch this machine to the new version, remove the v1 worktree.**
 

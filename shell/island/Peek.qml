@@ -1,38 +1,156 @@
 import QtQuick
 import qs.core
 import qs.components
+import qs.services
 
-// The pointer is on the island: a bigger clock and a preview of what a
-// click opens. Workspace designs fill this in later (step 6).
+// The pointer is on the island: a bigger clock, and one row per live thing
+// with its own controls (pause the music, stop the recording). With nothing
+// live, a hint that a click opens the island.
 Item {
-    implicitWidth: Math.max(col.implicitWidth + 44, 360)
+    id: root
+
+    readonly property bool media: Media.active
+    readonly property bool rec: Recorder.recording
+
+    implicitWidth: Math.max(col.implicitWidth + 44, 400)
     implicitHeight: col.implicitHeight + 30
 
     Column {
         id: col
-        anchors.left: parent.left
-        anchors.leftMargin: 22
+        x: 22
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 6
+        width: root.width - 44
+        spacing: 10
 
-        Digits {
-            text: Clock.time
-            size: Theme.font.headline
+        Item {
+            width: parent.width
+            height: clock.height
+            Digits {
+                id: clock
+                text: Clock.time
+                size: Theme.font.headline
+            }
+            Txt {
+                anchors.left: clock.right
+                anchors.leftMargin: 14
+                anchors.verticalCenter: clock.verticalCenter
+                text: Clock.date
+                caps: true
+                color: Theme.ink.mute
+            }
+            Txt {
+                visible: !root.media && !root.rec
+                anchors.right: parent.right
+                anchors.verticalCenter: clock.verticalCenter
+                text: "Click to open"
+                caps: true
+                color: Theme.ink.mute
+            }
         }
-        Txt {
-            text: Clock.date
-            caps: true
-            color: Theme.ink.mute
-        }
-    }
 
-    Txt {
-        anchors.right: parent.right
-        anchors.rightMargin: 22
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 18
-        text: "Click to open"
-        caps: true
-        color: Theme.ink.mute
+        // Music or video
+        Item {
+            visible: root.media
+            width: parent.width
+            height: 48
+            Rectangle {
+                id: cover
+                width: 48
+                height: 48
+                radius: 10
+                color: Theme.ink.raised
+                clip: true
+                Image {
+                    anchors.fill: parent
+                    source: root.media ? Media.art : ""
+                    sourceSize: Qt.size(96, 96)
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                }
+            }
+            Column {
+                anchors.left: cover.right
+                anchors.leftMargin: 12
+                anchors.right: controls.left
+                anchors.rightMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                Txt {
+                    width: parent.width
+                    text: Media.title
+                    face: Theme.font.medium
+                }
+                Txt {
+                    width: parent.width
+                    text: Media.artist || Media.source
+                    caps: true
+                    color: Theme.ink.mute
+                }
+            }
+            Row {
+                id: controls
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 4
+                Repeater {
+                    model: [{ icon: "skip_previous", run: () => Media.previous() }, { icon: Media.playing ? "pause" : "play_arrow", run: () => Media.toggle(), main: true }, { icon: "skip_next", run: () => Media.next() }]
+                    Tap {
+                        required property var modelData
+                        width: 36
+                        height: 36
+                        radius: 18
+                        active: modelData.main === true
+                        onClicked: modelData.run()
+                        Icon {
+                            anchors.centerIn: parent
+                            name: parent.parent.modelData.icon
+                            filled: true
+                            color: parent.fg
+                        }
+                    }
+                }
+            }
+        }
+
+        // Recording
+        Item {
+            visible: root.rec
+            width: parent.width
+            height: 36
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 10
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 10
+                    height: 10
+                    radius: 5
+                    color: "#ff5a4e"
+                }
+                Digits {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Math.floor(Recorder.seconds / 60) + ":" + String(Recorder.seconds % 60).padStart(2, "0")
+                    size: Theme.font.title
+                }
+                Txt {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Recorder.sound ? "Recording with sound" : "Recording"
+                    caps: true
+                    color: Theme.ink.mute
+                }
+            }
+            Tap {
+                anchors.right: parent.right
+                width: 80
+                height: 34
+                active: true
+                onClicked: Recorder.stop()
+                Txt {
+                    anchors.centerIn: parent
+                    text: "Stop"
+                    caps: true
+                    color: parent.fg
+                }
+            }
+        }
     }
 }

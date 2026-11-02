@@ -131,7 +131,7 @@ FocusScope {
         anchors.topMargin: 16
         x: 26
         // One file per page; pages not built yet show a placeholder
-        readonly property var files: ({ search: "pages/SearchPage.qml", power: "pages/PowerPage.qml" })
+        readonly property var files: ({ search: "pages/SearchPage.qml", control: "pages/ControlPage.qml", media: "pages/MediaPage.qml", notify: "pages/NotifyPage.qml", power: "pages/PowerPage.qml" })
         source: files[root.current.id] ?? ""
         sourceComponent: files[root.current.id] ? undefined : placeholder
         focus: true

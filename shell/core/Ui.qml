@@ -20,6 +20,9 @@ Singleton {
 
     property bool open: false
     property int page: 0
+    // A tile's own page on the control page ("net", "bt", "sound", "night")
+    property string detail: ""
+    onPageChanged: detail = ""
     // Opened by a click after a hover: it closes when the mouse leaves.
     // Opened by Super, a shortcut or IPC: it stays until Esc or a click outside.
     property bool openedByHover: false
@@ -69,6 +72,7 @@ Singleton {
     }
     function close() {
         open = false;
+        detail = "";
         openedByHover = false;
     }
     // Super tap: open on search, or close

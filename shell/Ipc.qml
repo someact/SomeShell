@@ -17,6 +17,8 @@ Scope {
         function page(step: int): void { Ui.nextPage(step); }
         function alert(title: string, body: string): void { Ui.showAlert(title, body, "IPC", "terminal"); }
         function hide(): void { Ui.hidden = !Ui.hidden; }
+        // A control tile's page: net, bt, sound, night
+        function detail(name: string): void { Ui.openPage("control"); Ui.detail = name; }
         function state(): string {
             return JSON.stringify({
                 open: Ui.open,
@@ -38,6 +40,28 @@ Scope {
         function set(path: string): void { Wallpaper.set(path); }
         function get(): string { return Wallpaper.path; }
         function recolor(): void { Wallpaper.recolor(); }
+    }
+
+    IpcHandler {
+        target: "record"
+
+        function toggle(): void { Recorder.toggle(false); }
+        function sound(): void { Recorder.toggle(true); }
+        function state(): string { return JSON.stringify({ recording: Recorder.recording, seconds: Recorder.seconds, file: Recorder.file }); }
+    }
+
+    IpcHandler {
+        target: "control"
+
+        function state(): string {
+            return JSON.stringify({
+                network: Network.label, online: Network.online,
+                volume: Math.round(Audio.volume * 100), muted: Audio.muted, output: Audio.name(Audio.sink), apps: Audio.streams.length,
+                brightness: Brightness.screens, nightLight: NightLight.on, keepAwake: KeepAwake.on, dnd: Notifications.dnd,
+                media: Media.active ? { title: Media.title, kind: Media.kind, playing: Media.playing } : null,
+                notifications: Notifications.history.length
+            });
+        }
     }
 
     IpcHandler {

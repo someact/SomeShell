@@ -107,6 +107,9 @@ Item {
     // shortly after the pointer leaves.
     Item {
         id: hit
+        // Under the content: buttons inside the island take their own clicks,
+        // the rest of the shape opens it
+        z: -1
         anchors.fill: parent
         anchors.leftMargin: root.ears ? -Theme.shape.ear : 0
         anchors.rightMargin: root.ears ? -Theme.shape.ear : 0

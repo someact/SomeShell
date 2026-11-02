@@ -12,6 +12,7 @@ Singleton {
     property alias island: adapter.island
     property alias theme: adapter.theme
     property alias wallpaper: adapter.wallpaper
+    property alias nightLight: adapter.nightLight
     readonly property bool loaded: file.loaded
 
     FileView {
@@ -55,6 +56,13 @@ Singleton {
             property JsonObject wallpaper: JsonObject {
                 // Where /wall looks for images (empty = ~/Pictures/Wallpapers)
                 property string folder: ""
+            }
+
+            property JsonObject nightLight: JsonObject {
+                property bool auto: true          // on between `from` and `to`
+                property string from: "20:00"
+                property string to: "07:00"
+                property int temperature: 4200    // kelvin; lower is warmer
             }
         }
     }

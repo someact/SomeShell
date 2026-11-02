@@ -41,6 +41,8 @@ Item {
     Item {
         id: inner
         anchors.fill: parent
+        // So content can write `color: parent.fg`
+        readonly property color fg: root.fg
     }
 
     MouseArea {
