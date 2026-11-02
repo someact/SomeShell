@@ -130,6 +130,15 @@ Scope {
         function mode(mode: string): void { Config.theme.mode = mode; }
         // notch, plain or dock
         function style(style: string): void { Desktop.island.style = style; }
+        // The separate dock with Notch and Plain: on/off, auto-hide, pin a desktop id
+        function dock(on: bool): void { Desktop.dock.enabled = on; }
+        function dockAutoHide(on: bool): void { Desktop.dock.autoHide = on; }
+        function pin(id: string): void {
+            const p = Desktop.dock.pinned.slice();
+            const at = p.indexOf(id);
+            if (at < 0) p.push(id); else p.splice(at, 1);
+            Desktop.dock.pinned = p;
+        }
         // ink or inverse
         function color(color: string): void { Desktop.island.color = color; }
     }

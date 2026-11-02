@@ -5,9 +5,11 @@ import Quickshell.Io
 import qs.core
 import "../island"
 
-// The island: a dark tab hanging from the top edge. Its size always comes
-// from what it shows; it springs to each new size, and the content is clipped
-// to the shape, so nothing ever draws outside it.
+// The island: a dark tab hanging from the top edge (Notch), a pill below it
+// (Plain), or part of the bottom dock (Dock: it grows upward from
+// `bottomLine`). Its size always comes from what it shows; it springs to each
+// new size, and the content is clipped to the shape, so nothing ever draws
+// outside it.
 Item {
     id: root
 
@@ -16,8 +18,16 @@ Item {
     // The screen of this window, to turn the global pointer into window space
     property var shellScreen: null
 
-    readonly property bool floating: Desktop.style === "plain"
+    readonly property bool docked: Desktop.style === "dock"
+    readonly property bool floating: Desktop.style === "plain" || docked
     readonly property bool ears: Desktop.style === "notch"
+    // Dock: where the island's bottom edge stays while it grows
+    property real bottomLine: 0
+    // The resting size (the dock keeps room for it while the island is bigger)
+    // (written by the Rest content itself: a binding on the loader's item
+    // also caught the next state's size while the content was switching)
+    property real restWidth: 0
+    property real restHeight: 0
 
     property bool hovered: false
     readonly property string mode: !here || (Ui.hidden && !Ui.open) ? "none"
@@ -38,7 +48,7 @@ Item {
 
     width: content.item ? content.item.implicitWidth : 0
     height: mode === "none" ? 0 : content.item ? content.item.implicitHeight : 0
-    y: floating && mode !== "quiet" ? Theme.shape.floatGap : 0
+    y: docked ? bottomLine - height : floating && mode !== "quiet" ? Theme.shape.floatGap : 0
     visible: mode !== "none"
 
     Behavior on width {
@@ -48,6 +58,7 @@ Item {
         SpringAnimation { spring: Motion.springStrength; damping: Motion.springDamping; mass: Motion.springMass; epsilon: 0.25 }
     }
     Behavior on y {
+        enabled: !root.docked
         NumberAnimation { duration: Motion.normal; easing.type: Motion.easing }
     }
 
@@ -64,7 +75,9 @@ Item {
 
         Loader {
             id: content
-            anchors.top: parent.top
+            // Docked, the island grows upward: the content rises with it
+            anchors.top: root.docked ? undefined : parent.top
+            anchors.bottom: root.docked ? parent.bottom : undefined
             anchors.horizontalCenter: parent.horizontalCenter
             focus: root.mode === "open"
             sourceComponent: ({
@@ -207,7 +220,17 @@ Item {
         }
     }
 
-    Component { id: rest; Rest {} }
+    Component {
+        id: rest
+        Rest {
+            onImplicitWidthChanged: root.restWidth = implicitWidth
+            onImplicitHeightChanged: root.restHeight = implicitHeight
+            Component.onCompleted: {
+                root.restWidth = implicitWidth;
+                root.restHeight = implicitHeight;
+            }
+        }
+    }
     Component { id: peek; Peek {} }
     Component { id: alert; Alert {} }
     Component { id: quiet; Quiet {} }

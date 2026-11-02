@@ -6,6 +6,7 @@ import Quickshell
 import "top"
 import "wallpaper"
 import "capture"
+import qs.core
 import qs.services
 
 ShellRoot {
@@ -25,6 +26,15 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
         TopBar {}
+    }
+
+    // The separate dock (Notch and Plain styles), only while it is on
+    LazyLoader {
+        active: Desktop.dock.enabled && Desktop.style !== "dock"
+        Variants {
+            model: Quickshell.screens
+            Dock {}
+        }
     }
 
     // The capture picker, only while picking

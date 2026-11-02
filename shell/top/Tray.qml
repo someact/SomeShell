@@ -17,17 +17,21 @@ Item {
     id: root
 
     property var window
+    // Inside the dock: no tab of its own (the dock is the background)
+    property bool plain: false
 
-    implicitWidth: row.implicitWidth + 34
+    implicitWidth: row.implicitWidth + (plain ? 16 : 34)
     implicitHeight: Theme.shape.band
 
     Rectangle {
+        visible: !root.plain
         anchors.fill: parent
         color: Theme.ink.bg
         bottomLeftRadius: Theme.shape.restRadius
     }
     // Ear where the tab meets the top edge
     Shape {
+        visible: !root.plain
         readonly property real e: Theme.shape.ear
         x: -e
         width: e
