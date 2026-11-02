@@ -4,3 +4,7 @@ hypr/generated/*
 # ii writes video-wallpaper restore scripts and Hyprland overrides here
 hypr/custom/
 hypr/hyprland/shellOverrides/
+
+# Browser helper build and packed extension
+browser/host/target/
+browser/*.xpi

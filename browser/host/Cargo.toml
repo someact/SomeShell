@@ -1,0 +1,11 @@
+[package]
+name = "someshell-browser"
+version = "0.1.0"
+edition = "2021"
+description = "Native messaging helper: passes the SomeShell browser extension's messages to the shell's socket and back"
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+panic = "abort"

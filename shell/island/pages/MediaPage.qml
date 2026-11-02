@@ -171,6 +171,22 @@ Item {
                             }
                         }
                     }
+
+                    // Like on the site (YouTube Music, through the extension)
+                    Tap {
+                        visible: root.music && Media.liked !== null
+                        width: 40
+                        height: 40
+                        radius: 20
+                        outlined: true
+                        onClicked: Media.like()
+                        Icon {
+                            anchors.centerIn: parent
+                            name: "favorite"
+                            filled: Media.liked === true
+                            color: Media.liked === true ? Theme.ink.accent : parent.fg
+                        }
+                    }
                 }
             }
         }

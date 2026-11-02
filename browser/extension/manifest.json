@@ -1,0 +1,14 @@
+{
+  "manifest_version": 2,
+  "name": "SomeShell",
+  "version": "0.1.0",
+  "description": "Tells the SomeShell desktop what a tab plays: site, title, full-size cover, music or video.",
+  "browser_specific_settings": {
+    "gecko": { "id": "browser@someshell", "strict_min_version": "128.0" }
+  },
+  "permissions": ["nativeMessaging", "tabs", "<all_urls>"],
+  "background": { "scripts": ["background.js"], "persistent": true },
+  "content_scripts": [
+    { "matches": ["<all_urls>"], "js": ["page.js"], "run_at": "document_idle" }
+  ]
+}

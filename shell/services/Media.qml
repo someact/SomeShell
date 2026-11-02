@@ -4,8 +4,9 @@ import Quickshell
 import Quickshell.Services.Mpris
 
 // Media players (MPRIS). The active player is the one picked on the media
-// page, else the one playing, else the first. Music or video is guessed from the player and the page
-// address it reports; the browser extension (step 5) will say it exactly.
+// page, else the one playing, else the first. When the browser extension
+// knows the tab (Browser), its site, full-size cover and music or video win;
+// otherwise they are guessed from the player and the address it reports.
 Singleton {
     id: root
 
@@ -25,19 +26,28 @@ Singleton {
     readonly property bool active: player !== null && player.trackTitle !== ""
     readonly property bool playing: player?.isPlaying ?? false
 
+    // The browser tab this player shows, when the extension tells us
+    readonly property var tab: Browser.match(player)
+
     readonly property string title: player?.trackTitle ?? ""
-    readonly property string artist: player?.trackArtist ?? ""
-    readonly property string album: player?.trackAlbum ?? ""
-    readonly property string art: player?.trackArtUrl ?? ""
+    readonly property string artist: player?.trackArtist || tab?.artist || ""
+    readonly property string album: player?.trackAlbum || tab?.album || ""
+    readonly property string art: tab?.cover || player?.trackArtUrl || ""
+    // Liked on the site (YouTube Music); null where the site has no like
+    readonly property var liked: tab?.canLike ? tab.liked === true : null
     readonly property real length: player?.length ?? 0
-    readonly property string url: player?.metadata?.["xesam:url"] ?? ""
+    readonly property string url: tab?.url || player?.metadata?.["xesam:url"] || ""
     readonly property string source: {
+        if (tab)
+            return tab.site;
         const m = /^https?:\/\/(?:www\.)?([^/]+)/.exec(url);
         return m ? m[1] : (player?.identity ?? "");
     }
 
     // "music" or "video"
     readonly property string kind: {
+        if (tab)
+            return tab.kind === "music" ? "music" : "video";
         const id = ((player?.identity ?? "") + " " + (player?.desktopEntry ?? "")).toLowerCase();
         if (/music\.youtube|spotify|soundcloud|bandcamp|tidal|deezer|music\.apple/.test(url) || /\.(mp3|flac|ogg|opus|m4a|wav|aac)(\?|$)/i.test(url) || /spotify|rhythmbox|elisa|strawberry|amberol|cider|tauon|mpd/.test(id))
             return "music";
@@ -53,6 +63,7 @@ Singleton {
     function toggle() { player?.togglePlaying(); }
     function next() { player?.next(); }
     function previous() { player?.previous(); }
+    function like() { Browser.command(tab, "like"); }
     function seek(seconds) {
         if (player?.canSeek)
             player.position = Math.max(0, Math.min(length, seconds));

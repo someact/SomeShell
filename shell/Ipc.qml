@@ -79,6 +79,21 @@ Scope {
     }
 
     IpcHandler {
+        target: "media"
+
+        // The active player and the browser tabs the extension reported
+        function state(): string {
+            return JSON.stringify({
+                player: Media.player?.identity ?? null, title: Media.title, artist: Media.artist, kind: Media.kind,
+                source: Media.source, art: Media.art, liked: Media.liked, fromExtension: Media.tab !== null,
+                tabs: Browser.tabs.map(t => ({ browser: t.browser, tab: t.tab, site: t.site, title: t.title, kind: t.kind, playing: t.playing, cover: t.cover, liked: t.liked }))
+            });
+        }
+        function like(): void { Media.like(); }
+        function toggle(): void { Media.toggle(); }
+    }
+
+    IpcHandler {
         target: "theme"
 
         // dark or light
