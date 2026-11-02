@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Widgets
+import Quickshell.Hyprland
 import qs.core
 import qs.components
 import qs.services
@@ -17,6 +18,7 @@ Item {
     id: root
 
     required property var screen         // ShellScreen
+    readonly property var monitor: Hyprland.monitorFor(screen)
     property bool interactive: true
     // Off while a thumbnail is taken
     property bool showChoice: true
@@ -54,41 +56,18 @@ Item {
             scale: root.s
             transformOrigin: Item.TopLeft
 
-            // Notch / Plain: badge left, tray right, island in the middle
-            Rectangle {
+            // Notch / Plain: badge left, tray right, island in the middle.
+            // The real ones, so the card shows this monitor's workspace and
+            // only the status this machine has (clicks stay with the card)
+            Badge {
                 visible: root.style !== "dock"
+                monitor: root.monitor
                 x: 16
-                y: (Theme.shape.band - 34) / 2
-                width: 34
-                height: 34
-                radius: 17
-                color: Theme.ink.bg
-                Digits {
-                    anchors.centerIn: parent
-                    text: "1"
-                    size: 16
-                }
+                y: (Theme.shape.band - height) / 2
             }
-            Rectangle {
+            Tray {
                 visible: root.style !== "dock"
                 anchors.right: parent.right
-                width: trayRow.implicitWidth + 34
-                height: Theme.shape.band
-                color: Theme.ink.bg
-                bottomLeftRadius: Theme.shape.restRadius
-                Row {
-                    id: trayRow
-                    anchors.centerIn: parent
-                    spacing: 12
-                    Repeater {
-                        model: ["wifi", "bluetooth", "battery_5_bar"]
-                        Icon {
-                            required property string modelData
-                            name: modelData
-                            size: 18
-                        }
-                    }
-                }
             }
 
             Rectangle {
@@ -145,15 +124,9 @@ Item {
                     id: dockRow
                     anchors.centerIn: parent
                     spacing: 8
-                    Item {
+                    Badge {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 34
-                        height: 34
-                        Digits {
-                            anchors.centerIn: parent
-                            text: "1"
-                            size: 16
-                        }
+                        monitor: root.monitor
                     }
                     DockApps {
                         anchors.verticalCenter: parent.verticalCenter
@@ -162,18 +135,9 @@ Item {
                     Rest {
                         anchors.verticalCenter: parent.verticalCenter
                     }
-                    Row {
+                    Tray {
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 12
-                        rightPadding: 8
-                        Repeater {
-                            model: ["wifi", "bluetooth", "battery_5_bar"]
-                            Icon {
-                                required property string modelData
-                                name: modelData
-                                size: 18
-                            }
-                        }
+                        plain: true
                     }
                 }
             }
