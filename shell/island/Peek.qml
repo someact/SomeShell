@@ -12,7 +12,9 @@ Item {
     readonly property bool media: Media.active
     readonly property bool rec: Recorder.recording
 
-    implicitWidth: Math.max(col.implicitWidth + 44, 400)
+    // The top row sets the width: clock, date and (with nothing live) the hint
+    implicitWidth: Math.max(col.implicitWidth + 44, 400,
+        clock.width + 14 + date.implicitWidth + (hint.visible ? 28 + hint.implicitWidth : 0) + 44)
     implicitHeight: col.implicitHeight + 30
 
     Column {
@@ -31,6 +33,7 @@ Item {
                 size: Theme.font.headline
             }
             Txt {
+                id: date
                 anchors.left: clock.right
                 anchors.leftMargin: 14
                 anchors.verticalCenter: clock.verticalCenter
@@ -39,6 +42,7 @@ Item {
                 color: Theme.ink.mute
             }
             Txt {
+                id: hint
                 visible: !root.media && !root.rec
                 anchors.right: parent.right
                 anchors.verticalCenter: clock.verticalCenter
