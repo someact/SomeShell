@@ -310,6 +310,10 @@ Item {
                         anchors.centerIn: parent
                         visible: !cell.wall
                         text: cell.modelData.emoji ?? ""
+                        // fontconfig's emoji alias: the colour emoji font,
+                        // also for text-default ones like ☺ (else a text font
+                        // draws them black on the dark island)
+                        font.family: "emoji"
                         font.pixelSize: 30
                     }
                     Rectangle {
