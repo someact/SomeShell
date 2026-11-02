@@ -8,12 +8,14 @@ import qs.components
 import qs.services
 import "../island"
 import "../top"
+import "../widgets"
 
 // The desktop as a live card in edit mode: the real wallpaper, the island in
 // its style (the real resting content), the dock. Drawn at the screen's own
 // size and scaled down, so it looks exactly like the desktop. A click on a
 // part opens its tab; the chosen part has an outline (still: nothing moves
-// while editing).
+// while editing). Widgets: the grid shows in the Widgets tab; drag a widget
+// to move it, its corner to resize it, drop one from the drawer.
 Item {
     id: root
 
@@ -28,6 +30,7 @@ Item {
     readonly property string style: Desktop.style
     readonly property bool sepDock: Desktop.dock.enabled && style !== "dock"
     // The part the open tab edits, outlined on the card
+    readonly property bool widgetsTab: Ui.editTab === "widgets"
     readonly property Item chosen: !showChoice ? null : Ui.editTab === "island" ? (style === "dock" ? dockBar : islandShape)
         : Ui.editTab === "dock" ? (style === "dock" ? dockBar : sepDock ? dockAlone : null)
         : null
@@ -55,6 +58,77 @@ Item {
             height: root.sh
             scale: root.s
             transformOrigin: Item.TopLeft
+
+            // The grid (Widgets tab): a dot at every cell corner
+            Item {
+                visible: root.widgetsTab && root.showChoice
+                Repeater {
+                    model: (wl.g.cols + 1) * (wl.g.rows + 1)
+                    Rectangle {
+                        required property int index
+                        readonly property real d: 4 / root.s
+                        x: wl.g.ox + (index % (wl.g.cols + 1)) * wl.g.cell - d / 2
+                        y: wl.g.oy + Math.floor(index / (wl.g.cols + 1)) * wl.g.cell - d / 2
+                        width: d
+                        height: d
+                        radius: d / 2
+                        color: Theme.paper.fg
+                        opacity: 0.35
+                    }
+                }
+            }
+
+            WidgetLayer {
+                id: wl
+                screen: root.screen
+                live: false
+            }
+
+            // Where a moved, resized or dropped widget will land
+            Rectangle {
+                id: landing
+                property rect r: Qt.rect(0, 0, 0, 0)
+                visible: r.width > 0
+                x: r.x
+                y: r.y
+                width: r.width
+                height: r.height
+                radius: Math.min(30, wl.g.cell * 0.32)
+                color: Qt.rgba(Theme.ink.accent.r, Theme.ink.accent.g, Theme.ink.accent.b, 0.18)
+                border.width: 2 / root.s
+                border.color: Theme.ink.accent
+            }
+
+            // The chosen widget: an outline and the resize handle
+            Item {
+                id: picked
+                readonly property var entry: root.showChoice && root.widgetsTab && wl.moveId === "" ? wl.list.find(w => w.id === Ui.editWidget) ?? null : null
+                readonly property rect r: entry ? Widgets.rect(wl.g, entry.x, entry.y, wl.sizeId ? wl.sizeW : entry.w, wl.sizeId ? wl.sizeH : entry.h) : Qt.rect(0, 0, 0, 0)
+                visible: entry !== null
+                x: r.x - 5 / root.s
+                y: r.y - 5 / root.s
+                width: r.width + 10 / root.s
+                height: r.height + 10 / root.s
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Math.min(30, wl.g.cell * 0.32) + 5 / root.s
+                    color: "transparent"
+                    border.width: 2 / root.s
+                    border.color: Theme.ink.accent
+                }
+                Rectangle {
+                    id: handle
+                    readonly property real d: 22 / root.s
+                    x: parent.width - d * 0.7
+                    y: parent.height - d * 0.7
+                    width: d
+                    height: d
+                    radius: d / 2
+                    color: Theme.ink.accent
+                    border.width: 2 / root.s
+                    border.color: Theme.ink.onAccent
+                }
+            }
 
             // Notch / Plain: badge left, tray right, island in the middle.
             // The real ones, so the card shows this monitor's workspace and
@@ -203,8 +277,136 @@ Item {
                 Ui.editTab = hit(dockBar, p) && root.style === "dock" && mouse.x < root.width / 2 - 20 ? "dock" : "island";
             else if (hit(dockAlone, p))
                 Ui.editTab = "dock";
+            else if (root.widgetsTab)
+                Ui.editWidget = "";
             else
                 Ui.editTab = "wallpaper";
+        }
+    }
+
+    // Widgets: press on one to choose it, drag to move it, drag the chosen
+    // one's corner to resize it. Presses elsewhere go to the click above.
+    MouseArea {
+        id: wmouse
+        anchors.fill: parent
+        enabled: root.interactive
+        property string wid: ""
+        property string mode: ""         // "move" or "size"
+        property bool dragging: false
+        property point start
+        property var orig: null
+        property var target: null        // { x, y, w, h } in cells
+
+        function deskPoint(m) {
+            return desk.mapFromItem(root, m.x, m.y);
+        }
+        function within(r, p, pad) {
+            return p.x >= r.x - pad && p.y >= r.y - pad && p.x <= r.x + r.width + pad && p.y <= r.y + r.height + pad;
+        }
+        onPressed: m => {
+            const p = deskPoint(m);
+            dragging = false;
+            target = null;
+            // The chosen widget's corner first
+            if (picked.visible && within(handle.mapToItem(desk, 0, 0, handle.width, handle.height), p, 6 / root.s)) {
+                wid = Ui.editWidget;
+                mode = "size";
+            } else {
+                const hitW = wl.list.slice().reverse().find(w => within(Widgets.rect(wl.g, w.x, w.y, w.w, w.h), p, 0));
+                if (!hitW) {
+                    m.accepted = false;
+                    return;
+                }
+                wid = hitW.id;
+                mode = "move";
+                Ui.editTab = "widgets";
+                Ui.editWidget = wid;
+            }
+            orig = Widgets.find(wid);
+            start = p;
+        }
+        onPositionChanged: m => {
+            if (!orig)
+                return;
+            const p = deskPoint(m);
+            const dx = p.x - start.x, dy = p.y - start.y;
+            if (!dragging && Math.abs(dx) + Math.abs(dy) < 6 / root.s)
+                return;
+            dragging = true;
+            const g = wl.g;
+            if (mode === "move") {
+                wl.moveId = wid;
+                wl.moveDx = dx;
+                wl.moveDy = dy;
+                const c = Widgets.cellAt(g, g.ox + orig.x * g.cell + dx, g.oy + orig.y * g.cell + dy);
+                const at = Widgets.nearest(g, wl.list, wid, c.x, c.y, orig.w, orig.h);
+                target = at ? { x: at.x, y: at.y, w: orig.w, h: orig.h } : null;
+            } else {
+                const k = Widgets.kind(orig.kind);
+                const w = Math.max(k.min[0], Math.min(k.max[0], Math.round(orig.w + dx / g.cell)));
+                const h = Math.max(k.min[1], Math.min(k.max[1], Math.round(orig.h + dy / g.cell)));
+                // Keep the last size that fits
+                if (Widgets.fits(g, wl.list, wid, orig.x, orig.y, w, h))
+                    target = { x: orig.x, y: orig.y, w: w, h: h };
+                else if (!target)
+                    target = { x: orig.x, y: orig.y, w: orig.w, h: orig.h };
+                wl.sizeId = wid;
+                wl.sizeW = target.w;
+                wl.sizeH = target.h;
+            }
+            // Moving: where it lands (resizing shows on the widget itself)
+            landing.r = target && mode === "move" ? Widgets.rect(g, target.x, target.y, target.w, target.h) : Qt.rect(0, 0, 0, 0);
+        }
+        onReleased: {
+            if (dragging && target && (target.x !== orig.x || target.y !== orig.y || target.w !== orig.w || target.h !== orig.h || orig.monitor !== root.screen.name)) {
+                Editor.record();
+                Widgets.change(wid, { x: target.x, y: target.y, w: target.w, h: target.h, monitor: root.screen.name });
+            }
+            reset();
+        }
+        onCanceled: reset()
+        function reset() {
+            wl.moveId = "";
+            wl.sizeId = "";
+            landing.r = Qt.rect(0, 0, 0, 0);
+            orig = null;
+            target = null;
+            dragging = false;
+        }
+    }
+
+    // A widget dragged from the drawer: show where it lands, add it on drop
+    function drawerTarget(d) {
+        if (!d || !root.interactive)
+            return null;
+        const q = root.mapFromItem(null, d.x, d.y);
+        if (q.x < 0 || q.y < 0 || q.x > root.width || q.y > root.height)
+            return null;
+        const k = Widgets.kind(d.kind);
+        const g = wl.g;
+        const p = desk.mapFromItem(root, q.x, q.y);
+        const c = Widgets.cellAt(g, p.x - k.size[0] * g.cell / 2, p.y - k.size[1] * g.cell / 2);
+        const at = Widgets.nearest(g, wl.list, "", c.x, c.y, k.size[0], k.size[1]);
+        return at ? { x: at.x, y: at.y, w: k.size[0], h: k.size[1] } : null;
+    }
+    Connections {
+        target: Ui
+        enabled: root.interactive
+        function onDrawerDragChanged() {
+            if (wmouse.orig)
+                return;
+            const t = root.drawerTarget(Ui.drawerDrag);
+            landing.r = t ? Widgets.rect(wl.g, t.x, t.y, t.w, t.h) : Qt.rect(0, 0, 0, 0);
+        }
+        function onDrawerDropped(kind, x, y) {
+            landing.r = Qt.rect(0, 0, 0, 0);
+            const t = root.drawerTarget({ kind: kind, x: x, y: y });
+            if (!t)
+                return;
+            Editor.record();
+            const id = Widgets.add(kind, root.screen.name, wl.g, wl.list, t.x, t.y);
+            if (id)
+                Ui.editWidget = id;
         }
     }
 }

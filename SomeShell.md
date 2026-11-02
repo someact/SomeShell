@@ -225,6 +225,17 @@ One edit mode for the whole desktop, like a phone home screen. Open it with `/ed
 
 Widget ideas: clock (poster style, huge), now playing, calendar, notes, system, weather, photo frame, quote or text (for poster-like typography on the desktop).
 
+> [!check] Decided (user, 2026-11-02, widgets)
+> - **Look: each widget picks bare or card.** Bare is poster type straight on the wallpaper; card is a rounded paper surface. Clock and text start bare; now playing, calendar and system start as cards. Colors from the desktop set (`Theme.paper`), so they follow light and dark.
+> - **Interaction where useful:** now playing has its buttons, calendar has ‹ › and a click on a day opens the island's Calendar page, system opens the System page. Clock and text let clicks through to the desktop. A right click anywhere still opens edit mode (on a widget: with it chosen).
+>
+> Proposed (accepted unless changed):
+> - **Grid:** square cells, 12 rows to the screen's height (90 px at 1080, 75 px on the tablet), as many columns as fit, centred. Widgets never overlap; a drop on a taken place goes to the nearest free one. Positions are saved in cells with the monitor's name; a widget whose monitor is missing (another machine) shows on the first one.
+> - **Where they draw:** inside the wallpaper window (one surface per monitor, no extra full-screen buffer; the tablet's memory is mostly layer buffers). Unloaded while a game or a fullscreen window is on that monitor.
+> - **Edit mode, Widgets tab:** the card shows the grid; drag a widget to move it, its corner to resize (snapped, content follows live), a click chooses it, Delete removes it. With nothing chosen the panel is the drawer: a live preview of each kind, drag one onto the card or click to add it at the first free place. With one chosen, the panel shows its options (card on/off, kind options, remove).
+> - **Bare type on the wallpaper** (found in testing: dark type on a dark poster in light mode): bare widgets take light or dark from the wallpaper's own brightness, measured once per wallpaper; cards follow the theme mode.
+> - **First kinds:** clock (huge rolling time, date line, alignment), text (fits its box; light, regular or bold; alignment), now playing (cover, title, artist, buttons, progress), calendar (month, today circled, event dots), system (CPU, memory, battery where there is one; `sysmon.sh` every 2 s only while the widget is shown).
+
 > [!check] Decided (user, 2026-11-02, start of step 6)
 > - **Order: the engine first.** 1) the desktop store and presets, 2) edit mode itself (zoomed-out desktop, wallpaper, island style, dock, presets), 3) control quick edit, 4) widgets and their drawer, 5) workspace designs.
 > - **Island styles: Notch, Plain, Dock.** Notch is today's tab glued to the top edge, curving into it (the old `ears`; the old `tab` reads as Notch). Plain is a pill floating a little below the top edge (the old `float`). Dock moves the island to the bottom edge: one floating bar with the workspace badge, pinned and running apps, the island (clock and live things) and the tray status; it opens upward. With Notch and Plain the dock is a separate bar (on/off, auto-hide, pinned apps); with Dock the two are one.

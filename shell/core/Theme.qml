@@ -24,6 +24,10 @@ Singleton {
     readonly property var paper: roles(dark ? palette.dark : palette.light, dark)
     readonly property color bg: paper.bg
     readonly property color fg: paper.fg
+    // Type straight on the wallpaper (bare widgets): light on a dark
+    // wallpaper, dark on a light one (set by Wallpaper from its brightness)
+    property bool wallDark: true
+    readonly property var onWall: roles(wallDark ? palette.dark : palette.light, wallDark)
 
     // The roles the shell uses, from one palette set. `raised` is a step
     // lighter (or darker) than bg for hovered rows and pressed states.

@@ -75,11 +75,19 @@ Singleton {
     property string editTab: "wallpaper"
     // Closing: the card zooms back to the full desktop, then edit mode ends
     property bool editClosing: false
-    function edit(tab) {
+    // Widgets tab: the chosen widget's id ("" for none: the drawer shows),
+    // and a widget being dragged from the drawer: { kind, x, y } in the
+    // edit window's coordinates, null when none
+    property string editWidget: ""
+    property var drawerDrag: null
+    signal drawerDropped(string kind, real x, real y)
+    function edit(tab, widget) {
         close();
         alert = null;
         if (tab)
             editTab = tab;
+        editWidget = widget ?? "";
+        drawerDrag = null;
         editClosing = false;
         editing = true;
     }

@@ -171,12 +171,39 @@ PanelWindow {
         height: win.panelHeight
     }
 
-    // Keys: Esc closes, Ctrl+Z undoes
+    // A widget dragged from the drawer: its icon under the mouse (the card
+    // shows where it lands)
+    Rectangle {
+        visible: win.main && Ui.drawerDrag !== null
+        x: (Ui.drawerDrag?.x ?? 0) - width / 2
+        y: (Ui.drawerDrag?.y ?? 0) - height / 2
+        width: 52
+        height: 52
+        radius: 26
+        color: Theme.ink.accent
+        Icon {
+            anchors.centerIn: parent
+            name: Widgets.kind(Ui.drawerDrag?.kind ?? "")?.icon ?? "widgets"
+            filled: true
+            size: 26
+            color: Theme.ink.onAccent
+        }
+    }
+
+    // Keys: Esc closes (first lets go of a chosen widget), Ctrl+Z undoes,
+    // Delete removes the chosen widget
     Item {
         focus: win.main
         Keys.onPressed: event => {
-            if (event.key === Qt.Key_Escape)
+            if (event.key === Qt.Key_Escape && Ui.editWidget !== "")
+                Ui.editWidget = "";
+            else if (event.key === Qt.Key_Escape)
                 win.done();
+            else if ((event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) && Ui.editTab === "widgets" && Ui.editWidget !== "") {
+                Editor.record();
+                Widgets.remove(Ui.editWidget);
+                Ui.editWidget = "";
+            }
             else if (event.key === Qt.Key_Z && (event.modifiers & Qt.ControlModifier))
                 Editor.undo();
             else

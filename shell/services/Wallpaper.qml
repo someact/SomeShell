@@ -13,6 +13,22 @@ Singleton {
     readonly property string path: state.path
     readonly property bool ready: file.loaded
 
+    // How bright the wallpaper is (0..1), measured once per wallpaper: bare
+    // desktop widgets draw light type on a dark wallpaper and dark on a light
+    // one, whatever the theme mode (Theme.onWall)
+    onPathChanged: if (path) tone.running = true
+    Process {
+        id: tone
+        command: ["magick", root.path + "[0]", "-resize", "64x64!", "-colorspace", "gray", "-format", "%[fx:mean]", "info:"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const v = parseFloat(text);
+                if (!isNaN(v))
+                    Theme.wallDark = v < 0.55;
+            }
+        }
+    }
+
     function set(newPath) {
         if (!newPath)
             return;

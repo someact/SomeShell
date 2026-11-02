@@ -9,6 +9,8 @@
 #        "rx":B/s,"tx":B/s,"diskUsed":B,"diskTotal":B,
 #        "batW":tenths of W,"batTemp":tenths of C}
 set -u
+# Seconds between samples (the System page: 1, the desktop widget: 2)
+interval=${1:-1}
 shopt -s nullglob
 
 # --- find the sensors ---------------------------------------------------
@@ -96,7 +98,7 @@ net_bytes; prev_rx=$rx; prev_tx=$tx
 smi_line=""
 
 while :; do
-    read -r -t 1 -u "$tick" _ || true
+    read -r -t "$interval" -u "$tick" _ || true
     cpu_times
     dt=$(( total - prev_total )); di=$(( idle - prev_idle ))
     cpu=0
@@ -104,7 +106,7 @@ while :; do
     prev_total=$total; prev_idle=$idle
 
     net_bytes
-    drx=$(( rx - prev_rx )); dtx=$(( tx - prev_tx ))
+    drx=$(( (rx - prev_rx) / interval )); dtx=$(( (tx - prev_tx) / interval ))
     (( drx < 0 )) && drx=0
     (( dtx < 0 )) && dtx=0
     prev_rx=$rx; prev_tx=$tx

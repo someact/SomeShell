@@ -7,6 +7,8 @@ import qs.services
 // Command line control: qs -c someshell ipc call <target> <function> [args]
 // Every feature can be driven from here, so it can be tested without a mouse.
 Scope {
+    id: root
+
     IpcHandler {
         target: "island"
 
@@ -68,6 +70,26 @@ Scope {
                 notifications: Notifications.history.length
             });
         }
+    }
+
+    IpcHandler {
+        target: "widget"
+
+        // Desktop widgets: every entry; add one of a kind on a monitor ("" for
+        // the island's) at the first free place, or at a cell; change one
+        // (JSON fields, e.g. {"x":2,"card":false}); set one option; remove
+        function list(): string { return JSON.stringify(Desktop.widgets); }
+        function add(kind: string, monitor: string): string { return root.addWidget(kind, monitor, undefined, undefined); }
+        function addAt(kind: string, monitor: string, x: int, y: int): string { return root.addWidget(kind, monitor, x, y); }
+        function change(id: string, json: string): void { Editor.record(); Widgets.change(id, JSON.parse(json)); }
+        function option(id: string, key: string, json: string): void { Editor.record(); Widgets.setOpt(id, key, JSON.parse(json)); }
+        function remove(id: string): void { Editor.record(); Widgets.remove(id); }
+        function clear(): void { Editor.record(); Desktop.widgets = []; }
+        function choose(id: string): void { Ui.edit("widgets", id); }
+    }
+    function addWidget(kind, monitor, x, y) {
+        Editor.record();
+        return Widgets.addOn(kind, Widgets.screenNamed(monitor || Ui.monitor), x, y);
     }
 
     IpcHandler {

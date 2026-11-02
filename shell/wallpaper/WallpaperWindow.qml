@@ -1,12 +1,14 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import qs.core
 import qs.services
+import "../widgets"
 
-// The wallpaper on one monitor. Decoded at the monitor's size (sourceSize),
-// so a big image does not stay in memory at full size. A new wallpaper
-// fades in over the old one.
+// The wallpaper on one monitor, with its desktop widgets on top. Decoded at
+// the monitor's size (sourceSize), so a big image does not stay in memory at
+// full size. A new wallpaper fades in over the old one.
 PanelWindow {
     id: win
 
@@ -58,6 +60,17 @@ PanelWindow {
         onStatusChanged: if (status === Image.Ready && source == win.source) win.showA = true
         Behavior on opacity {
             NumberAnimation { duration: 400 }
+        }
+    }
+
+    // Desktop widgets: drawn here (no extra full-screen surface), unloaded
+    // while a game or a fullscreen window is on this monitor
+    readonly property bool covered: GameMode.active
+        || (Hyprland.monitors.values.find(m => m.name === win.modelData.name)?.activeWorkspace?.hasFullscreen ?? false)
+    Loader {
+        active: Desktop.widgets.length > 0 && !win.covered
+        sourceComponent: WidgetLayer {
+            screen: win.modelData
         }
     }
 }
