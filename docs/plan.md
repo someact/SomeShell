@@ -112,7 +112,7 @@ Decisions in `SomeShell.md` section 4 ("Decided, start of step 6"). Tablet first
   - [ ] Bare type over a busy wallpaper: the brightness is one number for the whole picture; per-widget area could follow later
   - [ ] Notes, weather, photo frame (later)
 - [ ] Workspace designs: a name and a resting island per workspace, the name flashing on a switch
-- [ ] On the PC: two monitors (a card and widgets per monitor), presets with both. Done 2026-11-03 except widgets (not built yet): a card per monitor (the panel on the island's monitor); fixed: the card's badge always said 1 and its tray always showed Wi-Fi, Bluetooth and battery, now the real `Badge` and `Tray` (this monitor's workspace, only the status the machine has). A preset saved, changed to light + Plain, applied back (dark + Notch on both). Dock style: a bar per monitor with its own workspace, the island and tray only on the mouse's monitor
+- [x] On the PC: two monitors (a card and widgets per monitor), presets with both. Checked 2026-11-03: widgets (clock, calendar on HDMI-A-1; clock, system on DP-1) draw on their own monitor, each edit card shows its monitor's widgets, the grid and the chosen widget's outline and handle, dark and light; a card per monitor (the panel on the island's monitor); fixed: the card's badge always said 1 and its tray always showed Wi-Fi, Bluetooth and battery, now the real `Badge` and `Tray` (this monitor's workspace, only the status the machine has). A preset saved, changed to light + Plain, applied back (dark + Notch on both). Dock style: a bar per monitor with its own workspace, the island and tray only on the mouse's monitor
 
 ## Later steps
 - Step 7: lock screen, overview, dock, settings window, installer. Overview must: click a window → switch to its workspace, focus that window, close; Enter on a workspace → switch and close; tested by mouse with ydotool
@@ -121,7 +121,7 @@ Decisions in `SomeShell.md` section 4 ("Decided, start of step 6"). Tablet first
 ## Where each part can be built
 The tablet (one screen, battery, Wi-Fi, backlight, ARM, 8 GB) and the PC (two monitors, DDC, NVIDIA, Ethernet, games, pen) test different things. Build on either; check the "PC" or "tablet" parts on that machine before ticking.
 - Tablet is fine for: step 5 (calendar page, system page with battery detail, music data and lyrics, browser extension in Zen), step 6 on one screen (grid editor, widgets, presets, workspace designs, control layout editing), step 7 lock screen and SDDM (the tablet is the SDDM test machine), overview, dock, settings window, the ARM half of the installer, step 8 on-screen keyboard (the tablet has a touch screen), GIFs, capture tools, Quick Share. Small items: shrink the top window (memory), undo a DNS change that resolves nothing
-- PC only: Blender pan/rotate after Super+number, removing the v1 worktree, DDC brightness, two monitors (widgets per monitor once built), NVIDIA environment, game mode and the game overlay with real games, UGTablet pen, the x86 half of the installer
+- PC only: Blender pan/rotate after Super+number, removing the v1 worktree, DDC brightness, NVIDIA environment, game mode and the game overlay with real games, UGTablet pen, the x86 half of the installer
 - Laptop: touchpad gestures, hybrid graphics, 165 Hz panel
 - Unsure on ARM until tried: WARP (`warp-cli` for aarch64)
 
