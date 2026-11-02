@@ -55,7 +55,7 @@ Scope {
 
         function state(): string {
             return JSON.stringify({
-                network: Network.label, online: Network.online,
+                network: Network.label, online: Network.online, wifiScan: Network.wifi?.scannerEnabled ?? false,
                 volume: Math.round(Audio.volume * 100), muted: Audio.muted, output: Audio.name(Audio.sink), apps: Audio.streams.length,
                 brightness: Brightness.screens, nightLight: NightLight.on, keepAwake: KeepAwake.on, dnd: Notifications.dnd,
                 media: Media.active ? { title: Media.title, kind: Media.kind, playing: Media.playing } : null,

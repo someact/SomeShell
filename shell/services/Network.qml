@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Networking
+import qs.core
 
 // Network state from NetworkManager (Quickshell.Networking, event driven).
 // Joining a new secured Wi-Fi and changing DNS go through nmcli.
@@ -27,6 +28,17 @@ Singleton {
 
     function setWifi(on) {
         Networking.wifiEnabled = on;
+    }
+
+    // Quickshell lists Wi-Fi networks only while the scanner is on: on while
+    // the Internet page shows, off otherwise (a binding, so the order in which
+    // pages are made and destroyed cannot leave it in the wrong state)
+    readonly property bool scanning: Ui.open && Ui.page === Ui.pageIndex("control") && Ui.detail === "net"
+    Binding {
+        when: root.wifi !== null
+        target: root.wifi
+        property: "scannerEnabled"
+        value: root.scanning
     }
 
     // Known or open networks connect directly; a new secured one needs its password
