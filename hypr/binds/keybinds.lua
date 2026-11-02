@@ -24,8 +24,27 @@ hl.bind("CTRL + SUPER + ALT + Slash", hl.dsp.exec_cmd("xdg-open " .. HYPR_DIR ..
 
 shell_bind("XF86MonBrightnessUp", "brightnessUp", { locked = true, repeating = true })
 shell_bind("XF86MonBrightnessDown", "brightnessDown", { locked = true, repeating = true })
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+ -l 1.5"), { locked = true, repeating = true })
+-- Raising the volume unmutes it (a muted speaker would hide the change)
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+ -l 1.5"), { locked = true, repeating = true })
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"), { locked = true, repeating = true })
+
+-- Power key (logind leaves it to us, autostart.lua): lock and screens off;
+-- with a screen off, turn them on (any key already wakes them, so this
+-- press must not turn them off again right away)
+local screens_off_by_key = false
+hl.bind("XF86PowerOff", function()
+    local any_off = false
+    for _, m in ipairs(hl.get_monitors()) do
+        if not m.dpms_status then any_off = true end
+    end
+    if any_off or screens_off_by_key then
+        hl.dispatch(hl.dsp.dpms({ action = "enable" }))
+        screens_off_by_key = false
+        return
+    end
+    screens_off_by_key = true
+    hl.dispatch(hl.dsp.exec_cmd("loginctl lock-session; sleep 1; hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'"))
+end, { locked = true })
 
 --##! Utilities
 shell_bind("SUPER + V", "clipboard", { description = "Utilities: Clipboard history" })

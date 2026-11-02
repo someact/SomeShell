@@ -7,6 +7,9 @@ hl.on("hyprland.start", function()
 
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
     hl.exec_cmd("hypridle")
+
+    -- logind would shut down on the power key: the session takes it (keybinds.lua locks instead)
+    hl.exec_cmd("systemd-inhibit --what=handle-power-key --who=SomeShell --why='The power key locks the screen' --mode=block sleep infinity")
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE")
 
     -- Clipboard history for /clip
