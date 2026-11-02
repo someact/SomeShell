@@ -3,7 +3,7 @@
 Personal Hyprland desktop for three machines. Detect every hardware feature at runtime, never assume one.
 - Desktop: CachyOS x86_64, Hyprland 0.56 Lua config, RTX 3060, DP-1 and HDMI-A-1 1920x1080@100, Ethernet only (no Wi-Fi), US/TH keyboard, UGTablet pen, monitors dimmed over DDC.
 - Laptop: Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery.
-- Tablet (added 2026-11-02): ARM (aarch64, Snapdragon; exact chip still to note here), Arch Linux ARM. Used with keyboard and mouse, so touch is not a priority. It is where battery, Wi-Fi, backlight brightness and SDDM get tested.
+- Tablet (added 2026-11-02): Xiaomi Pad 6 (`pipa`), aarch64 Snapdragon 870 (SM8250), Adreno 650 on Mesa freedreno, 2880x1800 (16:10), Arch Linux ARM (`linux-pipa` kernel). Backlight `ktz8866-backlight`, battery `qcom-battery`. Used with keyboard and mouse, so touch is not a priority. It is where battery, Wi-Fi, backlight brightness and SDDM get tested.
 Called SomeHypr until Phase 12; only the installer may use the old name.
 Current work: a full rebuild from scratch (2026-11-02). Base (steps 1–4) is done and live on the desktop. The design and decisions are in `SomeShell.md`; tasks are tracked in `docs/plan.md` (one step at a time, tick tasks in the commit that finishes them).
 SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.sh someshell|reimagined` relinks a machine between the two.
