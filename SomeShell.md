@@ -94,6 +94,13 @@ Design mockup, **approved** 2026-11-02 (round 2): https://claude.ai/artifact/6Lr
 | Peek | pointer on it | a bit bigger, shows a preview of the page |
 | Open | Super or click | full panel with pages |
 | Quiet | fullscreen game, do not disturb | shrinks to a thin line or hides |
+| Level | a volume, mute, mic or brightness key | one row for a moment, then back |
+
+> [!check] Decided (user, 2026-11-02: "island are not show volume up or down, let design it")
+> - **Level** shows for 1.6 s after the last key press (holding a key keeps it), over rest, peek, quiet and alerts (the key press is the newest thing; an alert's own time keeps running). Not while the island is open (the open page already shows it).
+> - One row, a little taller than rest: the icon (filled; `volume_off` when muted), a spaced-caps label (SOUND with the output's short name, MIC, BRIGHTNESS), the level as a row of thin bars like the media progress, and the percent rolling on the right. Muted: the bars and number turn to the muted color, the label says MUTED. The mic key shows MIC ON / MIC OFF, no bars.
+> - The bars can be dragged or scrolled while it shows; that keeps it up.
+> - Volume, mute and brightness keys go through the shell (global shortcuts), with the plain tools as the fallback while the shell is down. Volume steps by 5%; over 100% the bars stay full and the number keeps counting (max 150%).
 
 ### 3.3 Changes with the workspace (the main idea)
 In the desktop editor (section 4) each workspace can get its own design: a name and what the island shows when resting. This is saved as part of the preset. Examples:
@@ -135,6 +142,12 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
 - **Music design:** peek like a phone lock-screen player (cover, title, artist, progress). Full panel: big cover, synced lyrics, like button, queue, volume for that player.
 - **Video design:** peek with a 16:9 thumbnail and progress. Full panel: thumbnail, chapters if any, skip ±10 s, picture-in-picture maybe.
 - Poster touch: the track title set big, artist in spaced caps, the year and duration as small metadata.
+  > [!check] Decided (user, 2026-11-02: "start build media and extension to fetch metadata"; Rust installed, unsigned install)
+  > - Parts, all in `browser/`: the extension (`extension/`, Manifest V2 for Firefox/Zen: its background stays loaded, so the tab list and the helper connection survive; Firefox keeps V2), the native helper `someshell-browser` (`host/`, Rust, standard library only) and `install.sh` (builds the helper, writes the native-messaging manifest, packs the `.xpi`).
+  > - Installed **unsigned and permanent**: Zen is built without forced signing, so `xpinstall.signatures.required = false` lets the `.xpi` stay installed. Signing through Mozilla can come later for other Firefox builds.
+  > - The path: page script → extension background → native messaging (stdin/stdout) → helper → the shell's socket `$XDG_RUNTIME_DIR/someshell/browser.sock` (a Quickshell `SocketServer`), one JSON object per line. Back the other way for commands (like). The helper connects again when the shell restarts; nothing polls.
+  > - Readers: every site through `navigator.mediaSession` (title, artist, album, the largest artwork); own readers where the site has more: YouTube Music (full-size cover, like state, music), YouTube (the full-size thumbnail, video). Each message says the site, the tab's address, music or video, and whether it plays.
+  > - The shell matches the message to the browser's MPRIS player by title; when it matches, the extension's cover, site and kind win over the guess. Without the extension, nothing changes (MPRIS only).
 
 **Notifications**
 - Grouped by app, swipe or click to dismiss, reply when the app allows.
@@ -163,6 +176,10 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
 **Operation (power)**
 - Lock, sleep, log out, restart, shut down.
 - Hold to confirm, the button fills like ink.
+  > [!check] Decided (user, 2026-11-02: an accidental press of the tablet's power key shut it down; "it should just lock screen and black out light")
+  > - The power key locks and turns the screens off, like a phone; pressed again it turns them back on (the lock screen shows). Shutting down stays on the power page.
+  > - Hyprland holds logind's power-key block (`systemd-inhibit --what=handle-power-key`) for the session; without a session, logind's own setting applies. No system file changes.
+  > - Volume keys: raising the volume also unmutes it.
 
 ---
 
