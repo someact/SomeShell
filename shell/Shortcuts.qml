@@ -37,6 +37,7 @@ Scope {
         wallpaper: () => Ui.openPage("search", false, "/wall "),
         wallpaperRandom: () => Wallpapers.random(),
         screenshot: () => Capture.start("shot"),
+        screenshotScreen: () => Capture.screen(),
         lens: () => later("Google Lens", 8),
         ocr: () => Capture.start("text"),
         translate: () => later("Translate", 8),

@@ -38,7 +38,7 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - A Hyprland release bind (the Super tap) sends a global shortcut as "released" only; `Shortcuts.qml` handles that for `island`.
 - Live reload is not reliable for judging a change: after several edits it keeps running old code (seen 2026-11-02: a fixed bug stayed until a restart). Restart the shell before a screenshot that has to prove a fix.
 - Qt's JavaScript has no `Array.prototype.flatMap`; build arrays with a loop. A property named `top`, `bottom`, `left`, `right` etc. on an Item clashes with its anchor lines ("Cannot override FINAL property").
-- After many live reloads, `qs kill` can segfault in a Wayland destructor, and Quickshell's crash handler relaunches the shell as `quickshell` (a second copy draws over the first). After killing, check `ps -C qs,quickshell` and `kill -9` leftovers by PID. A fresh start stops cleanly.
+- After many live reloads, `qs kill` can segfault in a Wayland destructor, and Quickshell's crash handler relaunches the shell as `quickshell` (a second copy draws over the first). `hypr/scripts/shell.sh` now stops every copy (and leftover crash reporters) before it starts, so always restart through it.
 
 ## Quickshell and Qt gotchas (learned on v1)
 - Focus: a layer with `Exclusive` focus keeps it, so a `HyprlandFocusGrab` never clears on an outside click; switch to `OnDemand` once the grab is active.

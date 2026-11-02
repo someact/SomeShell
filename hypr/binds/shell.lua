@@ -11,6 +11,8 @@ local FALLBACK = {
     power           = "pkill wlogout || wlogout -p layer-shell",
     screenshot      = "pidof slurp || grim -g \"$(slurp)\" - | wl-copy",
     ocr             = "pidof slurp || " .. ocr,
+    screenshotScreen = "d=\"$(xdg-user-dir PICTURES)/Screenshots\" && mkdir -p \"$d\" && f=\"$d/Screenshot_$(LC_ALL=C date '+%Y-%m-%d_%H.%M.%S').png\" && "
+        .. "grim -o \"$(hyprctl activeworkspace -j | jq -r '.monitor')\" \"$f\" && wl-copy < \"$f\"",
     brightnessUp    = "brightnessctl s 5%+",
     brightnessDown  = "brightnessctl s 5%-",
     volumeUp        = "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ -l 1.5",

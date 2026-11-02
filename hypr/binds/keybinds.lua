@@ -61,13 +61,10 @@ shell_bind("SUPER + ALT + R", "recordRegion", { locked = true })
 shell_bind("CTRL + ALT + R", "recordScreen", { locked = true, description = "Utilities: Record the screen" })
 shell_bind("SUPER + SHIFT + ALT + R", "recordScreenSound", { locked = true, description = "Utilities: Record the screen with sound" })
 
---# Full screenshot of the focused monitor
-local grimMonitor = "grim -o \"$(hyprctl activeworkspace -j | jq -r '.monitor')\""
-hl.bind("Print", hl.dsp.exec_cmd(grimMonitor .. " - | wl-copy"), { locked = true, description = "Utilities: Screenshot to clipboard" })
-hl.bind("CTRL + Print", hl.dsp.exec_cmd(
-    "d=\"$(xdg-user-dir PICTURES)/Screenshots\" && mkdir -p \"$d\" && f=\"$d/Screenshot_$(LC_ALL=C date '+%Y-%m-%d_%H.%M.%S').png\" && "
-    .. grimMonitor .. " \"$f\" && wl-copy < \"$f\""
-), { locked = true, description = "Utilities: Screenshot to clipboard and file" })
+--# Whole screen: PrtSc (Fn+PrtSc on compact keyboards) saves, copies and
+--# alerts like a picked shot; Ctrl+PrtSc only copies
+shell_bind("Print", "screenshotScreen", { description = "Utilities: Screenshot the screen (save and copy)" })
+hl.bind("CTRL + Print", hl.dsp.exec_cmd("grim -o \"$(hyprctl activeworkspace -j | jq -r '.monitor')\" - | wl-copy"), { locked = true, description = "Utilities: Screenshot the screen to the clipboard" })
 
 --##! Screen
 local function zoom(delta)

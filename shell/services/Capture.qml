@@ -2,11 +2,13 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import qs.core
 
 // Capture tools: freeze the screens, let the picker (capture/Picker.qml) choose
 // a box, then cut it out (lib/capture.sh). Modes: "shot" (save and copy the
-// picture), "text" (copy the text in it). `session` is set while picking.
+// picture), "text" (copy the text in it). `screen()` takes the whole monitor
+// at once, with no picker (PrtSc). `session` is set while picking.
 Singleton {
     id: root
 
@@ -20,6 +22,7 @@ Singleton {
         if (picking || freezer.running || worker.running)
             return;
         mode = m;
+        delay.interval = 350;
         // The open island would be in the picture: close it and wait for it to go
         if (Ui.open) {
             Ui.close();
@@ -31,7 +34,32 @@ Singleton {
     Timer {
         id: delay
         interval: 350
-        onTriggered: freezer.running = true
+        onTriggered: root.mode === "screen" ? root.takeScreen() : freezer.running = true
+    }
+
+    // The whole monitor the mouse is on, saved and copied
+    function screen() {
+        if (picking || freezer.running || worker.running)
+            return;
+        mode = "screen";
+        // The open island or the last shot's alert would be in the picture
+        if (Ui.open || Ui.alert) {
+            // The island springs back from an alert more slowly than it closes
+            delay.interval = Ui.alert ? 800 : 350;
+            Ui.close();
+            Ui.alert = null;
+            delay.restart();
+        } else {
+            takeScreen();
+        }
+    }
+    function takeScreen() {
+        const name = Hyprland.focusedMonitor?.name ?? "";
+        if (!name)
+            return;
+        worker.kind = "shot";
+        worker.command = [script, "screen", name];
+        worker.running = true;
     }
     Process {
         id: freezer
@@ -81,7 +109,7 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: root.done(worker.kind, text)
         }
-        onExited: cleaner.running = true
+        onExited: if (root.mode !== "screen") cleaner.running = true
     }
     Process {
         id: cleaner

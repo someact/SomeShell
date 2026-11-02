@@ -7,6 +7,8 @@
 #   capture.sh shot <picture> <x> <y> <w> <h>
 #       Cuts the box (picture pixels), saves it to ~/Pictures/Screenshots,
 #       copies it and prints the saved path.
+#   capture.sh screen <monitor>
+#       Takes the whole monitor (PrtSc), saves, copies and prints the path.
 #   capture.sh text <picture> <x> <y> <w> <h>
 #       Reads the text in the box (English and Thai), copies it and prints it.
 #   capture.sh clean
@@ -47,6 +49,14 @@ shot)
     mkdir -p "$out_dir"
     out="$out_dir/Screenshot_$(LC_ALL=C date '+%Y-%m-%d_%H.%M.%S').png"
     magick "$src" -crop "${w}x${h}+${x}+${y}" +repage "$out" || exit 1
+    wl-copy --type image/png < "$out"
+    printf '%s\n' "$out"
+    ;;
+screen)
+    out_dir="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots"
+    mkdir -p "$out_dir"
+    out="$out_dir/Screenshot_$(LC_ALL=C date '+%Y-%m-%d_%H.%M.%S').png"
+    grim -o "$2" "$out" || exit 1
     wl-copy --type image/png < "$out"
     printf '%s\n' "$out"
     ;;
