@@ -73,9 +73,9 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
 - [ ] Test what the desktop cannot: Wi-Fi (join, password, DNS), backlight brightness, battery (once the battery part exists), SDDM (step 7)
   - [x] Wi-Fi join: enterprise (802.1X, PEAP + MSCHAPv2) joined @NU-WiFi with the user's login through the Internet page (2026-11-02). Join, Edit and failure path built in `394e01b`; a failed new network leaves no profile (tested with a missing SSID)
   - [x] Right-click no longer forgets a saved network at once (the user lost @NU-WiFi that way): Edit and Forget buttons
-  - [ ] Wi-Fi join with a home (WPA personal) password, and a wrong password showing its message
-  - [ ] DNS edit (changes the live connection: note the old value, set, check, set back to automatic)
-  - [ ] Backlight brightness (`ktz8866-backlight`): the Brightness tile and slider
+  - [ ] Wi-Fi join with a home (WPA personal) password (later, away from college). The wrong-password message itself was seen: a mistyped join showed "Could not connect: wrong password or username" and left no profile
+  - [x] DNS edit: 1.1.1.1 1.0.0.1 applied from the page, back to automatic from the page (`nmcli` save and reconnect now run in order). The college network blocks outside DNS: with 1.1.1.1 no name resolved, so a wrong DNS can cut the internet (idea: undo a DNS change that resolves nothing)
+  - [x] Backlight brightness (`ktz8866-backlight`, through logind): click, drag, brightness key and a change from another tool all show on the tile (keys now go through the service, the backlight is reread when Control opens, `410563d`)
   - [x] Battery: tray, alerts (simulated 15% and 8%)
   - [ ] SDDM (step 7)
 
