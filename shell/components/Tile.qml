@@ -25,6 +25,7 @@ Item {
 
     signal clicked
     signal opened
+    signal held      // a long press (the control page starts quick edit)
 
     opacity: enabled ? 1 : 0.45
 
@@ -50,6 +51,8 @@ Item {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: event => event.button === Qt.RightButton && root.more ? root.opened() : root.clicked()
+        pressAndHoldInterval: 600
+        onPressAndHold: root.held()
     }
 
     Icon {

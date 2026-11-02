@@ -31,6 +31,8 @@ Singleton {
     readonly property var pageInfo: extraPages.find(p => p.id === extra) ?? pages[page]
     // A tile's own page on the control page ("net", "bt", "sound", "night")
     property string detail: ""
+    // Quick edit of the control page's tiles
+    property bool controlEdit: false
     // Which way the last switch went (1: right, -1: left), for the page
     // motion. Tab wraps around but still counts as its own direction.
     property int direction: 1
@@ -38,6 +40,7 @@ Singleton {
     property int step: 0
     onPageChanged: {
         detail = "";
+        controlEdit = false;
         direction = step !== 0 ? step : page >= previousPage ? 1 : -1;
         step = 0;
         previousPage = page;
@@ -147,6 +150,7 @@ Singleton {
         open = false;
         extra = "";
         detail = "";
+        controlEdit = false;
         openedByHover = false;
     }
     // Super tap: open on search, or close

@@ -38,6 +38,7 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - Testing: the live shell is `qs -c someshell` (this repo). Restart it with `qs kill -c someshell`, then `hyprctl eval 'hl.exec_cmd("~/.config/hypr/scripts/shell.sh")'`; drive it with `qs -c someshell ipc call …` and real keys through ydotool. `SOMESHELL_DRY_POWER=1` makes the power page only say what it would run.
 - A Hyprland release bind (the Super tap) sends a global shortcut as "released" only; `Shortcuts.qml` handles that for `island`.
 - Live reload is not reliable for judging a change: after several edits it keeps running old code (seen 2026-11-02: a fixed bug stayed until a restart). Restart the shell before a screenshot that has to prove a fix.
+- Island pages are loaded by URL, so a type in a folder under `island/pages/` (or next to a page) is "not a type" there: put a shared type in `components/` (`ControlTile`). The page's own sub-pages load by `source`.
 - Qt's JavaScript has no `Array.prototype.flatMap`; build arrays with a loop. A property named `top`, `bottom`, `left`, `right` etc. on an Item clashes with its anchor lines ("Cannot override FINAL property").
 - After many live reloads, `qs kill` can segfault in a Wayland destructor, and Quickshell's crash handler relaunches the shell as `quickshell` (a second copy draws over the first). `hypr/scripts/shell.sh` now stops every copy (and leftover crash reporters) before it starts, so always restart through it.
 

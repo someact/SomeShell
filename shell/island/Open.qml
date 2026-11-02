@@ -22,7 +22,9 @@ FocusScope {
     }
 
     Keys.onPressed: event => {
-        if (event.key === Qt.Key_Escape) {
+        if (event.key === Qt.Key_Escape && Ui.controlEdit) {
+            Ui.controlEdit = false;
+        } else if (event.key === Qt.Key_Escape) {
             Ui.close();
         } else if (event.key === Qt.Key_Tab) {
             Ui.nextPage(1);
@@ -145,6 +147,18 @@ FocusScope {
             face: Theme.font.bold
             font.letterSpacing: 1
         }
+    }
+
+    // Control: quick edit of its tiles (also a long press on a tile)
+    Chip {
+        visible: root.current.id === "control" && !Ui.detail
+        anchors.right: parent.right
+        anchors.rightMargin: 26
+        anchors.verticalCenter: head.verticalCenter
+        icon: Ui.controlEdit ? "check" : "edit"
+        label: Ui.controlEdit ? "Done" : "Edit"
+        active: Ui.controlEdit
+        onClicked: Ui.controlEdit = !Ui.controlEdit
     }
 
     // Pages live in two slots: on a switch the new page loads into the free

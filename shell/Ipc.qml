@@ -23,6 +23,7 @@ Scope {
             return JSON.stringify({
                 open: Ui.open,
                 page: Ui.pageId,
+                controlEdit: Ui.controlEdit,
                 openedByHover: Ui.openedByHover,
                 monitor: Ui.monitor,
                 quiet: Ui.quiet,
@@ -52,6 +53,11 @@ Scope {
 
     IpcHandler {
         target: "control"
+
+        // Quick edit on/off; the tiles as they are now (id and size, in order)
+        function edit(on: bool): void { Ui.openPage("control"); Ui.controlEdit = on; }
+        function layout(): string { return JSON.stringify(Desktop.control.length ? ControlTiles.clean(Desktop.control) : ControlTiles.defaultLayout); }
+        function reset(): void { Desktop.control = []; }
 
         function state(): string {
             return JSON.stringify({
