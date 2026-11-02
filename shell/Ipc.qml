@@ -87,11 +87,13 @@ Scope {
                 player: Media.player?.identity ?? null, title: Media.title, artist: Media.artist, kind: Media.kind,
                 source: Media.source, art: Media.art, liked: Media.liked, fromExtension: Media.tab !== null,
                 position: Math.round(Media.position), length: Math.round(Media.length), progress: Media.progress, watchers: Media.watchers,
-                lyrics: { status: Lyrics.status, lines: Lyrics.lines.length, wanted: Lyrics.wanted, key: Lyrics.key },
+                lyrics: { status: Lyrics.status, lines: Lyrics.lines.length, wanted: Lyrics.wanted, shown: Lyrics.shown, off: Lyrics.off, key: Lyrics.key },
                 tabs: Browser.tabs.map(t => ({ browser: t.browser, tab: t.tab, site: t.site, title: t.title, kind: t.kind, playing: t.playing, cover: t.cover, liked: t.liked }))
             });
         }
         function like(): void { Media.like(); }
+        // Lyrics off or on again for the playing song
+        function lyrics(): void { Lyrics.toggleOff(); }
         function toggle(): void { Media.toggle(); }
     }
 

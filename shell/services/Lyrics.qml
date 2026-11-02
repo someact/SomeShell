@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.core
 
 // Lyrics of the playing song, from LRCLIB through lib/lyrics.sh (which
 // caches them). Only looked up while `wanted` (a media page is open).
@@ -86,6 +87,36 @@ Singleton {
             status = "plain";
         } else {
             status = "none";
+        }
+    }
+
+    // Lyrics found for this song (shown or not)
+    readonly property bool found: ["synced", "plain", "instrumental"].includes(status)
+
+    // Songs whose lyrics were turned off (a wrong match), by title and artist
+    readonly property string song: title + "\n" + artist
+    readonly property bool off: offFile.loaded && (offList.songs ?? []).includes(song)
+    // Found and not turned off
+    readonly property bool shown: found && offFile.loaded && !off
+    function toggleOff() {
+        if (!found)
+            return;
+        const songs = (offList.songs ?? []).filter(s => s !== song);
+        if (!off)
+            songs.push(song);
+        offList.songs = songs;
+        offFile.writeAdapter();
+    }
+    FileView {
+        id: offFile
+        path: Paths.state + "/lyrics-off.json"
+        property bool loaded: false
+        onLoaded: loaded = true
+        // A missing file is an empty list
+        onLoadFailed: loaded = true
+        JsonAdapter {
+            id: offList
+            property var songs: []
         }
     }
 

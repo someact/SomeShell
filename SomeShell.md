@@ -159,6 +159,9 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   > - Titles are cleaned before the search ("(Official Video)", "[MV]", "(Lyrics)"; " - Topic" from the artist).
   > - Cached in `~/.cache/someshell/lyrics/` per track: found lyrics forever, "not found" for a day; offline keeps nothing.
   > - Line changes are timed to the line's start (a one-shot timer to the next line), not to the once-a-second position read.
+  > [!check] Decided (user, 2026-11-02: "let build the turn off for wrong match")
+  > - A lyrics button (icon `lyrics`) joins the music controls whenever lyrics were found for the song. Lit while they show; a click hides them for this song (the page goes back to its narrow width), a click again brings them back.
+  > - Remembered per song (cleaned title and artist, any length) in `~/.local/state/someshell/lyrics-off.json`.
 
 **Notifications**
 - Grouped by app, swipe or click to dismiss, reply when the app allows.

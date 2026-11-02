@@ -12,7 +12,7 @@ Item {
     readonly property bool music: Media.kind === "music"
     readonly property int coverSize: music ? 200 : 0
     // Lyrics column beside the player (music only), once lyrics are found
-    readonly property bool lyrics: music && Media.active && ["synced", "plain", "instrumental"].includes(Lyrics.status)
+    readonly property bool lyrics: music && Media.active && Lyrics.shown
     readonly property int lyricsWidth: 340
 
     implicitWidth: !Media.active ? 420 : music ? 640 + (lyrics ? 49 + lyricsWidth : 0) : 700
@@ -184,6 +184,23 @@ Item {
                             name: "favorite"
                             filled: Media.liked === true
                             color: Media.liked === true ? Theme.ink.accent : parent.fg
+                        }
+                    }
+
+                    // Lyrics on or off for this song (a wrong match stays off)
+                    Tap {
+                        visible: root.music && Lyrics.found
+                        width: 40
+                        height: 40
+                        radius: 20
+                        outlined: true
+                        active: Lyrics.shown
+                        onClicked: Lyrics.toggleOff()
+                        Icon {
+                            anchors.centerIn: parent
+                            name: "lyrics"
+                            filled: Lyrics.shown
+                            color: parent.fg
                         }
                     }
                 }
