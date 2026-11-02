@@ -101,15 +101,16 @@ Singleton {
         if (!connectionName)
             return;
         const auto = servers.trim() === "";
-        run(["nmcli", "connection", "modify", connectionName,
-            "ipv4.dns", servers.trim(), "ipv4.ignore-auto-dns", auto ? "no" : "yes"]);
-        run(["nmcli", "connection", "up", connectionName]);
-        readDns.running = true;
+        // In order: save, reconnect, then read back what is in use
+        dnsWriter.command = ["sh", "-c", 'nmcli connection modify "$1" ipv4.dns "$2" ipv4.ignore-auto-dns "$3" && nmcli --wait 40 connection up "$1"',
+            "sh", connectionName, servers.trim(), auto ? "no" : "yes"];
+        dnsWriter.running = true;
+    }
+    Process {
+        id: dnsWriter
+        onExited: root.refresh()
     }
 
-    function run(cmd) {
-        Quickshell.execDetached(cmd);
-    }
 
     // Name and DNS of the connection in use, read when asked (detail page)
     function refresh() {
