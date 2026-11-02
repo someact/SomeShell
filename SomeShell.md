@@ -225,6 +225,15 @@ One edit mode for the whole desktop, like a phone home screen. Open it with `/ed
 
 Widget ideas: clock (poster style, huge), now playing, calendar, notes, system, weather, photo frame, quote or text (for poster-like typography on the desktop).
 
+> [!check] Decided (user, 2026-11-02, start of step 6)
+> - **Order: the engine first.** 1) the desktop store and presets, 2) edit mode itself (zoomed-out desktop, wallpaper, island style, dock, presets), 3) control quick edit, 4) widgets and their drawer, 5) workspace designs.
+> - **Island styles: Notch, Plain, Dock.** Notch is today's tab glued to the top edge, curving into it (the old `ears`; the old `tab` reads as Notch). Plain is a pill floating a little below the top edge (the old `float`). Dock moves the island to the bottom edge: one floating bar with the workspace badge, pinned and running apps, the island (clock and live things) and the tray status; it opens upward. With Notch and Plain the dock is a separate bar (on/off, auto-hide, pinned apps); with Dock the two are one.
+> - **Control quick edit, like a phone:** an Edit button on the control page (or a long press on a tile). In edit, tiles hold still with a dashed outline, a remove button and a size button; drag a tile to a new place (it lifts and follows the mouse, the others move once on drop); sizes 1x1, 2x1, 2x2 where the tile allows them; removed tiles wait in an "Add tiles" tray below the grid (click or drag back). Done saves. New tiles to pick from: Dark mode, Microphone, Color picker, Clipboard, Next wallpaper, Preset, Lock.
+>
+> Proposed (accepted unless changed):
+> - **Store:** the desktop's look lives in `~/.config/someshell/desktop.json` (island style and color, dock, control layout, widgets, workspace designs). A preset is a folder `~/.config/someshell/presets/<name>/` with `preset.json` (desktop.json + wallpaper path + theme mode and scheme) and `thumb.png`. Applying one writes every file through a temporary file and a rename, so the desktop never shows half a preset. `/preset` in search lists them; IPC `preset list|apply|save|saveAs`.
+> - **Edit mode:** a full-screen overlay on every monitor (only while editing). The desktop shows as a card at ~86% size with rounded corners (windows hidden behind), a grid over it; a strip on top (preset name, Undo, Save, Save as new, Done) and a drawer below with tabs: Wallpaper (a row of thumbnails; a click applies it and recolors live), Island (style and color), Dock, Widgets, Workspaces, Presets. Opened by `/edit`, a right click on an empty desktop, or Ctrl+Super+E (Super+E is the file manager). Esc or Done closes; changes apply live and Undo steps back.
+
 ---
 
 ## 5. Other parts (smaller)

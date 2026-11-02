@@ -102,8 +102,17 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
 - [x] Whole screen on PrtSc (user, 2026-11-02: "Fn+PrtSc to print the entire screen"): saves, copies and alerts like a picked shot (the monitor the mouse is on; the island and an old alert are cleared first); Ctrl+PrtSc only copies; a plain-tool fallback while the shell is down. Tested with key codes 99 and 210 (ydotool). The tablet's BT5.2 keyboard sent nothing for Fn+PrtSc during a 2-minute listen: to check with the real key
 - [ ] Later: Lens, translate, region recording, editing a shot
 
+## Step 6: Edit desktop
+Decisions in `SomeShell.md` section 4 ("Decided, start of step 6"). Tablet first (one screen); per-monitor parts are checked on the PC.
+- [ ] Desktop store and presets: `desktop.json`, preset folders, apply all at once (temp file + rename), `/preset` in search, IPC `preset`
+- [ ] Island styles: Notch, Plain, Dock (bottom bar with badge, apps, island, tray; opens upward); separate dock bar for Notch and Plain (on/off, auto-hide, pinned apps)
+- [ ] Edit mode: overlay per monitor, desktop card with grid, top strip (Undo, Save, Save as new, Done), drawer tabs Wallpaper, Island, Dock, Presets; `/edit`, right click on the desktop, Ctrl+Super+E
+- [ ] Control quick edit: Edit button, drag to reorder, remove, sizes 1x1/2x1/2x2, "Add tiles" tray, new tiles (Dark mode, Microphone, Color picker, Clipboard, Next wallpaper, Preset, Lock)
+- [ ] Widgets: bottom layer per monitor, snapped to the grid, drawer in edit mode; clock, text, now playing, calendar, system first (notes, weather, photo later)
+- [ ] Workspace designs: a name and a resting island per workspace, the name flashing on a switch
+- [ ] On the PC: two monitors (a card and widgets per monitor), presets with both
+
 ## Later steps
-- Step 6: edit desktop (grid editor without motion while editing, widgets, presets, workspace designs, control layout editing)
 - Step 7: lock screen, overview, dock, settings window, installer. Overview must: click a window → switch to its workspace, focus that window, close; Enter on a workspace → switch and close; tested by mouse with ydotool
 - Step 8: GIFs, Quick Share, WARP, capture tools, game overlay, on-screen keyboard
 
