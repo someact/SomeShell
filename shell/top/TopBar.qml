@@ -59,6 +59,7 @@ PanelWindow {
     Island {
         id: island
         here: win.islandHere
+        shellScreen: win.modelData
         anchors.horizontalCenter: parent.horizontalCenter
     }
 }

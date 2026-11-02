@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
+import Quickshell.Io
 import qs.core
 import "../island"
 
@@ -11,6 +12,8 @@ Item {
 
     // False on monitors the island is not on
     property bool here: true
+    // The screen of this window, to turn the global pointer into window space
+    property var shellScreen: null
 
     readonly property bool floating: Config.island.shape === "float"
     readonly property bool ears: Config.island.shape === "ears" && !floating
@@ -125,8 +128,10 @@ Item {
                 } else {
                     peekTimer.stop();
                     root.hovered = false;
-                    if (Ui.open && Ui.openedByHover)
+                    if (Ui.open && Ui.openedByHover) {
+                        pointerAtLeave.running = true;
                         leaveTimer.restart();
+                    }
                 }
             }
         }
@@ -141,10 +146,48 @@ Item {
         interval: 120
         onTriggered: if (hover.hovered && !Ui.open) root.hovered = true
     }
+    // A leave is only trusted when the pointer really moved away. Hyprland
+    // can send a leave when the shape changes (opening, a page of another
+    // size: the centred island slides the clicked tab away), and sends no
+    // enter until the pointer moves. So the pointer is asked for once at the
+    // leave and once when the timer ends.
     Timer {
         id: leaveTimer
         interval: 450
-        onTriggered: if (!hover.hovered && Ui.openedByHover) Ui.close()
+        onTriggered: if (!hover.hovered && Ui.openedByHover) pointerNow.running = true
+    }
+    property point leftAt: Qt.point(-1, -1)
+    Process {
+        id: pointerAtLeave
+        command: ["hyprctl", "cursorpos", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const p = JSON.parse(text);
+                root.leftAt = Qt.point(p.x, p.y);
+            }
+        }
+    }
+    Process {
+        id: pointerNow
+        command: ["hyprctl", "cursorpos", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: root.checkLeave(JSON.parse(text))
+        }
+    }
+    function checkLeave(p) {
+        if (hover.hovered || !Ui.open || !Ui.openedByHover)
+            return;
+        const local = hit.mapFromItem(null, p.x - (shellScreen?.x ?? 0), p.y - (shellScreen?.y ?? 0));
+        // Still over the island: the leave was stale
+        if (hit.contains(local))
+            return;
+        // Not moved since the leave: the shape moved, not the pointer. It
+        // stays open like a clicked-open island (Esc or a click outside)
+        if (Math.abs(p.x - leftAt.x) + Math.abs(p.y - leftAt.y) < 2) {
+            Ui.openedByHover = false;
+            return;
+        }
+        Ui.close();
     }
     Connections {
         target: Ui

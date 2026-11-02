@@ -51,6 +51,7 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - IPC function names must not be `show`, `call` or `prop` (clash with `qs ipc` subcommands).
 - Hot reload can silently stop applying edits after many quick changes, and new fonts need a restart: `qs kill -c someshell`, then `hyprctl eval 'hl.exec_cmd("<repo>/hypr/scripts/shell.sh")'` (`hyprctl dispatch exec` does nothing under the Lua config). After a crash the shell restarts as `quickshell`, not `qs` (`qs list --all`, `qs kill`). Never `pkill -f` a pattern that is in your own command.
 - Memory: compare with a fresh start, read `Anonymous`/`Pss` in `/proc/<pid>/smaps_rollup`; an empty one-window Quickshell is already ~250 MB RSS / ~55 MB anon on the desktop.
+- Hover: when a layer's shape or input region changes under a still pointer, Hyprland can send a leave and no enter until the pointer moves, so a `HoverHandler` reads "outside". Before acting on a leave, ask `hyprctl cursorpos -j` (the island does).
 - Pointer tests: move the cursor with `ydotool mousemove -x <dx> -y <dy>` (`YDOTOOL_SOCKET=$XDG_RUNTIME_DIR/.ydotool_socket`), not a Hyprland cursor warp: a warp sends no leave event. Screenshots: `grim -o <monitor>` (names from `hyprctl monitors`).
 
 ## Hyprland Lua API
