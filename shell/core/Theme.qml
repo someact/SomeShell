@@ -17,7 +17,7 @@ Singleton {
     property bool paletteRead: false
 
     // The island's colors: always the dark set, or the opposite of the desktop
-    readonly property bool inkDark: Config.island.color === "inverse" ? !dark : true
+    readonly property bool inkDark: Desktop.island.color === "inverse" ? !dark : true
     readonly property var ink: roles(inkDark ? palette.dark : palette.light, inkDark)
 
     // Desktop surfaces

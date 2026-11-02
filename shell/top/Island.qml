@@ -16,8 +16,8 @@ Item {
     // The screen of this window, to turn the global pointer into window space
     property var shellScreen: null
 
-    readonly property bool floating: Config.island.shape === "float"
-    readonly property bool ears: Config.island.shape === "ears" && !floating
+    readonly property bool floating: Desktop.style === "plain"
+    readonly property bool ears: Desktop.style === "notch"
 
     property bool hovered: false
     readonly property string mode: !here || (Ui.hidden && !Ui.open) ? "none"

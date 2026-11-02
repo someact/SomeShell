@@ -5,7 +5,7 @@ import Quickshell.Io
 
 // The shell's settings (~/.config/someshell/shell.json). Missing keys take the
 // defaults below; a change from anywhere (here, the settings window, an
-// editor) is picked up live. `Config.island.shape = "float"` saves at once.
+// editor) is picked up live. `Config.theme.mode = "light"` saves at once.
 Singleton {
     id: root
 
@@ -43,10 +43,7 @@ Singleton {
                 // stay on `monitor` (a monitor name; empty = the first one)
                 property bool follow: true
                 property string monitor: ""
-                // "ears" (tab curving into the edge), "tab", or "float"
-                property string shape: "ears"
-                // "ink": always dark. "inverse": the opposite of the desktop
-                property string color: "ink"
+                // The island's style and color are part of the look: desktop.json (Desktop)
             }
 
             property JsonObject theme: JsonObject {

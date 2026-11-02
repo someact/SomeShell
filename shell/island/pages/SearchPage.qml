@@ -8,7 +8,8 @@ import "../../lib/calc.js" as Calc
 // 01 Search. Type to find apps, do math, or search the web; "/" lists the
 // commands. The page is as tall as its results, so the island grows and
 // shrinks while you type.
-//   /emoji  emoji (Super+.)    /wall  wallpapers    /settings  the settings window
+//   /emoji  emoji (Super+.)    /wall  wallpapers    /preset  presets
+//   /settings  the settings window
 // The clipboard history has its own page (Super+V), not a command here.
 Item {
     id: root
@@ -19,6 +20,7 @@ Item {
     function modeOf(text) {
         return text.startsWith("/emoji") ? "emoji"
             : text.startsWith("/wall") ? "wall"
+            : text.startsWith("/preset") ? "preset"
             : text.startsWith("/") ? "commands"
             : "apps";
     }
@@ -33,6 +35,7 @@ Item {
     readonly property var commands: [
         { cmd: "/emoji", title: "Emoji", icon: "mood", keys: "Super+." },
         { cmd: "/wall", title: "Wallpaper", icon: "wallpaper", keys: "" },
+        { cmd: "/preset", title: "Presets", icon: "dashboard_customize", keys: "" },
         { cmd: "/settings", title: "Settings", icon: "settings", keys: "Super+I" }
     ]
 
@@ -48,6 +51,10 @@ Item {
             results = Emojis.search(rest, 45).map(e => ({ kind: "emoji", title: e.name, emoji: e.emoji, data: e }));
         } else if (mode === "wall") {
             results = Wallpapers.search(rest, 12).map(f => ({ kind: "wall", title: f.name, thumb: f.thumb, data: f }));
+        } else if (mode === "preset") {
+            const q = rest.trim().toLowerCase();
+            results = Presets.list.filter(p => !q || p.name.toLowerCase().includes(q)).slice(0, 8)
+                .map(p => ({ kind: "preset", title: p.name, image: p.thumb, icon: "dashboard_customize", tag: p.name === Presets.current ? "In use" : "Apply", data: p }));
         } else if (mode === "commands") {
             const word = query.split(" ")[0];
             results = commands.filter(c => c.cmd.startsWith(word)).map(c => ({ kind: "command", title: c.title, icon: c.icon, tag: c.cmd, data: c }));
@@ -96,6 +103,10 @@ Item {
         case "wall":
             Wallpaper.set(r.data.path);
             break;
+        case "preset":
+            Presets.apply(r.data.slug);
+            Ui.close();
+            break;
         }
     }
 
@@ -107,6 +118,7 @@ Item {
     onModeChanged: {
         if (mode === "emoji") Emojis.load();
         if (mode === "wall") Wallpapers.refresh();
+        if (mode === "preset") Presets.refresh();
     }
     Connections {
         target: Emojis
@@ -115,6 +127,10 @@ Item {
     Connections {
         target: Wallpapers
         function onFilesChanged() { if (root.mode === "wall") root.update(); }
+    }
+    Connections {
+        target: Presets
+        function onListChanged() { if (root.mode === "preset") root.update(); }
     }
     Connections {
         target: Apps
@@ -344,6 +360,7 @@ Item {
             topPadding: 8
             bottomPadding: 8
             text: root.mode === "wall" ? "No images in " + Wallpapers.folder
+                : root.mode === "preset" ? "No presets yet: save one in edit mode"
                 : root.mode === "emoji" ? "No emoji found"
                 : "Type to search"
             caps: true

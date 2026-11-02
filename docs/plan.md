@@ -104,7 +104,7 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
 
 ## Step 6: Edit desktop
 Decisions in `SomeShell.md` section 4 ("Decided, start of step 6"). Tablet first (one screen); per-monitor parts are checked on the PC.
-- [ ] Desktop store and presets: `desktop.json`, preset folders, apply all at once (temp file + rename), `/preset` in search, IPC `preset`
+- [x] Desktop store and presets: `core/Desktop.qml` (`desktop.json`; the island style and color moved there from `shell.json`, carried over on first start: ears/tab → notch, float → plain), `services/Presets.qml` + `lib/preset.sh` (folders with `preset.json` and a quarter-size `thumb.png`), apply = one change of every property plus one matugen run (`Wallpaper.applyLook`), `/preset` in search, IPC `preset list|current|apply|save|saveAs|remove`, `theme style`. Tested on the tablet: saved Moon (dark, notch, poster) and Day (light, plain, a photo), applied each by IPC and from `/preset`
 - [ ] Island styles: Notch, Plain, Dock (bottom bar with badge, apps, island, tray; opens upward); separate dock bar for Notch and Plain (on/off, auto-hide, pinned apps)
 - [ ] Edit mode: overlay per monitor, desktop card with grid, top strip (Undo, Save, Save as new, Done), drawer tabs Wallpaper, Island, Dock, Presets; `/edit`, right click on the desktop, Ctrl+Super+E
 - [ ] Control quick edit: Edit button, drag to reorder, remove, sizes 1x1/2x1/2x2, "Add tiles" tray, new tiles (Dark mode, Microphone, Color picker, Clipboard, Next wallpaper, Preset, Lock)

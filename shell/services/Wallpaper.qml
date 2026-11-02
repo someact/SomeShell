@@ -21,6 +21,21 @@ Singleton {
         root.recolor();
     }
 
+    // Wallpaper, light/dark and scheme together (a preset): one matugen run
+    function applyLook(newPath, mode, scheme) {
+        holding = true;
+        if (newPath)
+            state.path = newPath.replace(/^file:\/\//, "");
+        if (mode)
+            Config.theme.mode = mode;
+        if (scheme)
+            Config.theme.scheme = scheme;
+        holding = false;
+        file.writeAdapter();
+        recolor();
+    }
+    property bool holding: false
+
     // Run matugen for the current wallpaper, mode and scheme. A run already
     // going is replaced, so only the last change counts.
     function recolor() {
@@ -64,8 +79,8 @@ Singleton {
     // Light/dark and the scheme recolor everything
     Connections {
         target: Config.theme
-        function onModeChanged() { root.recolor(); }
-        function onSchemeChanged() { root.recolor(); }
+        function onModeChanged() { if (!root.holding) root.recolor(); }
+        function onSchemeChanged() { if (!root.holding) root.recolor(); }
     }
 
     FileView {

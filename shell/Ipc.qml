@@ -29,7 +29,7 @@ Scope {
                 hidden: Ui.hidden,
                 alert: Ui.alert ? Ui.alert.title : null,
                 gameMode: GameMode.active,
-                theme: { dark: Theme.dark, inkDark: Theme.inkDark, islandColor: String(Theme.ink.bg), shape: Config.island.shape, color: Config.island.color }
+                theme: { dark: Theme.dark, inkDark: Theme.inkDark, islandColor: String(Theme.ink.bg), style: Desktop.style, color: Desktop.island.color, preset: Desktop.preset }
             });
         }
     }
@@ -111,13 +111,26 @@ Scope {
     }
 
     IpcHandler {
+        target: "preset"
+
+        function list(): string { return JSON.stringify(Presets.list.map(p => p.name)); }
+        function current(): string { return Desktop.preset; }
+        function apply(name: string): void { Presets.apply(name); }
+        // Save over the current preset (or "Preset"); saveAs makes a new one
+        function save(): void { Presets.save("", Ui.monitor); }
+        function saveAs(name: string): void { Presets.save(name, Ui.monitor); }
+        function remove(name: string): void { Presets.remove(name); }
+        function refresh(): void { Presets.refresh(); }
+    }
+
+    IpcHandler {
         target: "theme"
 
         // dark or light
         function mode(mode: string): void { Config.theme.mode = mode; }
-        // ears, tab or float
-        function shape(shape: string): void { Config.island.shape = shape; }
+        // notch, plain or dock
+        function style(style: string): void { Desktop.island.style = style; }
         // ink or inverse
-        function color(color: string): void { Config.island.color = color; }
+        function color(color: string): void { Desktop.island.color = color; }
     }
 }
