@@ -42,6 +42,7 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - Focus: a layer with `Exclusive` focus keeps it, so a `HyprlandFocusGrab` never clears on an outside click; switch to `OnDemand` once the grab is active.
 - Blur: compositor blur (`BackgroundEffect`) only. An empty `blurRegion` blurs the whole surface; set it to `null` when the shape is off-surface. Wayland regions have stepped corners, so keep a region 1 px inside a rounded shape.
 - Config files: ignore file changes for a moment after the shell's own write, else several writes in one handler get lost.
+- Loader: never bind both `source` and `sourceComponent`; writing `sourceComponent` (even `undefined`) clears `source`, and the binding order differs between machines (the tablet showed empty pages after a switch). Set one of them imperatively.
 - QML: a property named `onX` parses as a signal handler (use `fgX`-style names). Bindings are stale inside a change handler; read the source property. `Timer.restart()`/`start()` replaces a `running:` binding for good.
 - Animation: `SpringAnimation`/`Spring` only in a `Behavior` or `on <prop>`; inside `Sequential`/`ParallelAnimation` Qt segfaults (use `NumberAnimation`).
 - AnimatedImage: never `cache: false` on a network URL (Qt 6.12 stack overflow); download with curl and play local files.
