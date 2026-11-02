@@ -1,9 +1,25 @@
 # SomeShell
 
-Personal Hyprland desktop for two machines: a desktop (CachyOS, Hyprland 0.56 Lua config, RTX 3060, 1920x1080@100 on DP-1, US/TH keyboard, UGTablet pen) and a laptop (Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery). Detect laptop features at runtime, never assume them.
-Called SomeHypr until Phase 12; only `install.sh` (`migrate_legacy`) may use the old name.
-Current work: a full rebuild from scratch (2026-11-02): shell, Hyprland config, colors and installer. The design and decisions are in `SomeShell.md`; tasks are tracked in `docs/plan.md` (one step at a time, tick tasks in the commit that finishes them).
-SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.sh someshell|reimagined` relinks this machine between the two.
+Personal Hyprland desktop for three machines. Detect every hardware feature at runtime, never assume one.
+- Desktop: CachyOS x86_64, Hyprland 0.56 Lua config, RTX 3060, DP-1 and HDMI-A-1 1920x1080@100, Ethernet only (no Wi-Fi), US/TH keyboard, UGTablet pen, monitors dimmed over DDC.
+- Laptop: Legion 5, RTX 3060 Mobile, eDP-1 2560x1440@165, touchpad, battery.
+- Tablet (added 2026-11-02): ARM (aarch64, Snapdragon; exact chip still to note here), Arch Linux ARM. Used with keyboard and mouse, so touch is not a priority. It is where battery, Wi-Fi, backlight brightness and SDDM get tested.
+Called SomeHypr until Phase 12; only the installer may use the old name.
+Current work: a full rebuild from scratch (2026-11-02). Base (steps 1–4) is done and live on the desktop. The design and decisions are in `SomeShell.md`; tasks are tracked in `docs/plan.md` (one step at a time, tick tasks in the commit that finishes them).
+SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.sh someshell|reimagined` relinks a machine between the two.
+
+## Working on several machines
+- One repo for all three. Run `git pull` before starting and push after each verified task, so the machines never diverge. Work on one machine at a time.
+- Machine-specific things never go into the repo: they live in `~/.config/someshell/` (`hypr.json`: layouts, `devices` such as the UGTablet pen area, overrides; `shell.json`: shell options) and `hypr/generated/` (gitignored: matugen colors, monitors).
+- Code must work on x86_64 and aarch64, NVIDIA, AMD, Intel and Adreno. The NVIDIA-only parts (`hypr/core/env.lua`, `hypr/scripts/shell.sh`) switch off when NVIDIA is not the only GPU; on an ARM SoC there is no PCI vendor file, so they stay off. Check `uname -m` and the hardware before assuming a tool exists (`ddcutil`, `nvidia-smi`, a backlight, a battery, Wi-Fi).
+- Write down what each machine lacks in `docs/plan.md` when a test cannot run there (e.g. Wi-Fi on the desktop).
+
+### Setting up a machine (until the new installer, step 7)
+1. Packages (on Arch Linux ARM some may have to be built from the AUR or source; Hyprland must be 0.56+ for the Lua config): `hyprland quickshell matugen hypridle hyprlock hyprsunset grim slurp wl-clipboard cliphist imagemagick jq curl playerctl wireplumber brightnessctl gnome-keyring fuzzel ydotool libnotify xdg-utils wf-recorder networkmanager bluez bluez-utils`, plus `ddcutil` for desktop monitors and `upower` on battery machines. Fonts: Material Symbols Rounded (`ttf-material-symbols-variable`), Mitr (below).
+2. `git clone https://github.com/someact/SomeShell` and link: `ln -sfn <repo>/hypr ~/.config/hypr`, `ln -sfn <repo>/matugen ~/.config/matugen`, `ln -sfn <repo>/shell ~/.config/quickshell/someshell`, `ln -sfn <repo>/fontconfig/60-someshell-mitr.conf ~/.config/fontconfig/conf.d/` (move any existing config away first, never delete it).
+3. Mitr: download `Mitr-{Light,Regular,Medium,SemiBold,Bold}.ttf` from `https://raw.githubusercontent.com/google/fonts/main/ofl/mitr/` into `~/.local/share/fonts/someshell/`, then `fc-cache -f`.
+4. Log in to Hyprland; autostart runs `hypr/scripts/shell.sh`. With no wallpaper set, the shell uses the bundled poster (`shell/assets/wallpapers/poster-moon.png`) and runs matugen. Redraw the posters at the screen's size with `scripts/poster-wallpaper.sh <w> <h>` if it is not 16:9.
+5. Check: `hyprctl configerrors` (empty), `qs -c someshell ipc call island state`, `qs -c someshell ipc call control state`.
 
 ## The old version (v1)
 - Archived as tag `archive/shell-v1`. Since 2026-11-02 this machine runs the new version (links point at this repo); the detached worktree `../SomeShell-v1` stays as the rollback for now. Never edit or commit in that worktree.
@@ -14,6 +30,7 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - `core/` singletons: `Paths`, `Config` (`~/.config/someshell/shell.json`), `Theme` (palette from matugen: `Theme.ink.*` for the island, `Theme.bg/fg/paper.*` for desktop surfaces; fonts by style name), `Motion`, `Ui` (island state), `Clock`, `GameMode`. `core` never imports `qs.services` (no import loops).
 - `services/`: one singleton per system source (`Wallpaper` runs matugen). `components/`: `Txt`, `Icon`, `Digits` (rolling digits), `Tap` (press inverts).
 - `top/`: `TopBar` (one layer window per screen, namespace `someshell:island`, input mask = badge + tray + island, keyboard only while open, `HyprlandFocusGrab` closes on an outside click), `Island` (shape, state choice, hover/click, size spring), `Badge`, `Tray`. `island/`: one file per island state (`Rest`, `Peek`, `Alert`, `Quiet`, `Open`). Every state and page sets its own implicit size; the island never has a fixed size.
+- `assets/wallpapers/`: the poster wallpapers (moon is the default), drawn by `scripts/poster-wallpaper.sh`. `lib/`: `calc.js` (math), `emoji.tsv` (built by `scripts/emoji-data.sh`).
 - State files: `~/.local/state/someshell/palette.json` (matugen), `wall.json`. v1 used `colors.json`, `wallpaper.json` and `config.json`; the new names avoid clashes while both exist.
 - Testing: the live shell is `qs -c someshell` (this repo). Restart it with `qs kill -c someshell`, then `hyprctl eval 'hl.exec_cmd("~/.config/hypr/scripts/shell.sh")'`; drive it with `qs -c someshell ipc call …` and real keys through ydotool. `SOMESHELL_DRY_POWER=1` makes the power page only say what it would run.
 - A Hyprland release bind (the Super tap) sends a global shortcut as "released" only; `Shortcuts.qml` handles that for `island`.
@@ -32,8 +49,8 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - Shapes: QtQuick.Shapes, never Canvas. Images: show a screen-sized copy of a big wallpaper (Qt keeps a large decode in memory).
 - IPC function names must not be `show`, `call` or `prop` (clash with `qs ipc` subcommands).
 - Hot reload can silently stop applying edits after many quick changes, and new fonts need a restart: `qs kill -c someshell`, then `hyprctl eval 'hl.exec_cmd("<repo>/hypr/scripts/shell.sh")'` (`hyprctl dispatch exec` does nothing under the Lua config). After a crash the shell restarts as `quickshell`, not `qs` (`qs list --all`, `qs kill`). Never `pkill -f` a pattern that is in your own command.
-- Memory: compare with a fresh start, read `Anonymous`/`Pss` in `/proc/<pid>/smaps_rollup`; an empty one-window Quickshell is already ~250 MB RSS / ~55 MB anon here.
-- Pointer tests: move the cursor with `ydotool mousemove -x <dx> -y <dy>` (`YDOTOOL_SOCKET=$XDG_RUNTIME_DIR/.ydotool_socket`), not a Hyprland cursor warp: a warp sends no leave event. Screenshots: `grim -o DP-1`.
+- Memory: compare with a fresh start, read `Anonymous`/`Pss` in `/proc/<pid>/smaps_rollup`; an empty one-window Quickshell is already ~250 MB RSS / ~55 MB anon on the desktop.
+- Pointer tests: move the cursor with `ydotool mousemove -x <dx> -y <dy>` (`YDOTOOL_SOCKET=$XDG_RUNTIME_DIR/.ydotool_socket`), not a Hyprland cursor warp: a warp sends no leave event. Screenshots: `grim -o <monitor>` (names from `hyprctl monitors`).
 
 ## Hyprland Lua API
 - Authoritative stub: `/usr/share/hypr/stubs/hl.meta.lua`; example `/usr/share/hypr/hyprland.lua`.
@@ -46,7 +63,7 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 Every new screen is checked on the real desktop (screenshot), in dark and light mode. Never edit `~/.config/hypr.pre-somehypr`, `~/.config/*.pre-someshell` or `~/.config/quickshell/ii` (the rollback).
 
 ## Workflow
-- Commit locally after each verified task; do not push until the base of the rebuild is done (user, 2026-11-02). Then `git push origin main` (public `someact/SomeShell`). Unrelated changes get their own commit.
+- Commit and push after each verified task (`git push origin main`, public `someact/SomeShell`; base is done, so pushing is on again). Unrelated changes get their own commit. Never commit images or other files that are not ours to publish.
 - Decisions go into `SomeShell.md` first. Never change an agreed approach without asking.
 
 ## Rules for the shell

@@ -87,21 +87,26 @@ Singleton {
         }
     }
 
-    // First start: take the wallpaper v1 used, if there was one
+    // The poster that ships with the shell (scripts/poster-wallpaper.sh)
+    readonly property string defaultPath: Quickshell.shellDir + "/assets/wallpapers/poster-moon.png"
+
+    // First start: the wallpaper v1 used if there was one, else the default
     property bool firstStart: false
+    property bool v1Read: false
     function takeV1() {
-        if (!firstStart || !v1.loaded)
+        if (!firstStart || !v1Read)
             return;
         firstStart = false;
+        let old = "";
         try {
-            const old = JSON.parse(v1.text());
-            if (old.path)
-                root.set(old.path);
+            old = v1.loaded ? JSON.parse(v1.text()).path ?? "" : "";
         } catch (e) {}
+        root.set(old || defaultPath);
     }
     FileView {
         id: v1
         path: Paths.state + "/wallpaper.json"
-        onLoaded: root.takeV1()
+        onLoaded: { root.v1Read = true; root.takeV1(); }
+        onLoadFailed: { root.v1Read = true; root.takeV1(); }
     }
 }

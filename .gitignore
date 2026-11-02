@@ -4,9 +4,3 @@ hypr/generated/*
 # ii writes video-wallpaper restore scripts and Hyprland overrides here
 hypr/custom/
 hypr/hyprland/shellOverrides/
-
-# Design reference images for SomeShell.md (kept locally, not published)
-Desktop - 1.png
-34c9c50bafd3346d2da96fa647d64e4d.jpg
-d86c52d8d7c6c3f4043ed6eab1779724.jpg
-ef227bd714c9fd1866ddb2c18e217872.jpg

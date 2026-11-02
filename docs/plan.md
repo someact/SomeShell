@@ -51,6 +51,13 @@ Switch notes:
 - [ ] Blender: check that pan/rotate keep working after Super+number (the user)
 - [ ] Live for a day, then remove the v1 worktree
 
+## Tablet (added 2026-11-02)
+An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard and mouse, touch is not a priority. Setup steps are in CLAUDE.md ("Setting up a machine").
+- [ ] Note the exact chip and how Arch was installed in CLAUDE.md
+- [ ] Packages on aarch64: Hyprland 0.56+ (Lua config), Quickshell, matugen (build from the AUR or source where Arch Linux ARM has none)
+- [ ] Set up, log in, check the base works (island, search, control, media, notifications)
+- [ ] Test what the desktop cannot: Wi-Fi (join, password, DNS), backlight brightness, battery (once the battery part exists), SDDM (step 7)
+
 ## Later steps
 - Step 5: browser extension, music layout data, lyrics; calendar and system pages
 - Step 6: edit desktop (grid editor without motion while editing, widgets, presets, workspace designs, control layout editing)

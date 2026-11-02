@@ -23,13 +23,11 @@ The new shell starts from the rules in section 6 (System), so these bugs can't c
 
 Not just flat color. It should feel like a printed poster or a magazine page: ink on paper, made by hand.
 
-References:
-![[Desktop - 1.png]]
-![[34c9c50bafd3346d2da96fa647d64e4d.jpg]]
-![[d86c52d8d7c6c3f4043ed6eab1779724.jpg]]
-![[ef227bd714c9fd1866ddb2c18e217872.jpg]]
+The references were engraved, black-and-white posters (a moon with a vertical headline, "Memento mori" layouts, editorial collages) and a white desktop with black tabs hanging from the top edge. The default wallpaper is drawn in that style:
 
-What these images have in common, and how it could become the shell:
+![Poster wallpaper, Moon](shell/assets/wallpapers/poster-moon.png)
+
+What the references have in common, and how it became the shell:
 
 | In the posters | In the shell |
 |---|---|

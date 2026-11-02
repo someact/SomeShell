@@ -12,6 +12,8 @@ Singleton {
     id: root
 
     readonly property string folder: Config.wallpaper.folder || Paths.home + "/Pictures/Wallpapers"
+    // The posters that ship with the shell are listed too
+    readonly property string bundled: Quickshell.shellDir + "/assets/wallpapers"
     readonly property string thumbDir: Paths.cache + "/thumbs"
     // { path, name, thumb }
     property var files: []
@@ -49,7 +51,7 @@ Singleton {
 
     Process {
         id: find
-        command: ["find", "-L", root.folder, "-maxdepth", "3", "-type", "f",
+        command: ["find", "-L", root.folder, root.bundled, "-maxdepth", "3", "-type", "f",
             "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.webp", ")"]
         stdout: StdioCollector {
             onStreamFinished: {
