@@ -53,8 +53,8 @@ Switch notes:
 
 ## Tablet (added 2026-11-02)
 An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard and mouse, touch is not a priority. Setup steps are in CLAUDE.md ("Setting up a machine").
-- [ ] Note the exact chip and how Arch was installed in CLAUDE.md
-- [ ] Packages on aarch64: Hyprland 0.56+ (Lua config), Quickshell, matugen (build from the AUR or source where Arch Linux ARM has none)
+- [x] Note the exact chip and how Arch was installed in CLAUDE.md (Xiaomi Pad 6 8/256, A/B slot dual boot with Android, 128/128)
+- [x] Packages on aarch64: Hyprland 0.56+ (Lua config), Quickshell, matugen (build from the AUR or source where Arch Linux ARM has none). All installed; Hyprland is 0.57.0
 - [ ] Set up, log in, check the base works (island, search, control, media, notifications)
 - [ ] Test what the desktop cannot: Wi-Fi (join, password, DNS), backlight brightness, battery (once the battery part exists), SDDM (step 7)
 
