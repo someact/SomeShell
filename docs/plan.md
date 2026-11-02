@@ -55,7 +55,19 @@ Switch notes:
 An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard and mouse, touch is not a priority. Setup steps are in CLAUDE.md ("Setting up a machine").
 - [x] Note the exact chip and how Arch was installed in CLAUDE.md (Xiaomi Pad 6 8/256, A/B slot dual boot with Android, 128/128)
 - [x] Packages on aarch64: Hyprland 0.56+ (Lua config), Quickshell, matugen (build from the AUR or source where Arch Linux ARM has none). All installed; Hyprland is 0.57.0
-- [ ] Set up, log in, check the base works (island, search, control, media, notifications)
+- [~] Set up, log in, check the base works (island, search, control, media, notifications). Set up and running; checked so far (2026-11-02): resting island, all seven pages by IPC and by mouse, alert and notification history, light mode, Control finds Wi-Fi, Bluetooth, speaker and the backlight. Still open below
+  - [x] Pages stayed empty after a switch while open: the page Loader bound both `source` and `sourceComponent` (binding order differs per machine). Fixed, `017dc33`
+  - [x] A hover-opened island closed on a page switch: Hyprland sends a leave when the shape changes under a still pointer. The leave timer now asks `hyprctl cursorpos`. Fixed, `648ea04`
+  - [x] Peek: the date ran into "Click to open". Fixed, `558a261`
+  - [x] Super+Space did nothing: the tablet had no `hypr.json`, so only `us` loaded. Written with `us,th`; setup step added to CLAUDE.md, `8da33e0`
+  - [x] Page switch motion (user): slide + wipe, sliding tab underline, size spring without bounce (decision in `SomeShell.md`), `9428b5f`
+  - [x] ydotool: user added to `input`, `ydotool.service` enabled (works from the next login)
+  - [ ] Search by real keys: apps, math, web fallback, `/clip`, `/emoji`, `/wall`
+  - [ ] Control detail pages by mouse: Internet, Bluetooth, Sound, Night light
+  - [ ] Media with a real player (music and video layouts, peek row, resting island)
+  - [ ] Power page with `SOMESHELL_DRY_POWER=1` (hold to confirm)
+  - [ ] Super tap on the tablet keyboard (tap opens, Super+N does not)
+  - [ ] Memory and idle CPU on the tablet (8 GB, ARM), compared with the desktop
 - [ ] Test what the desktop cannot: Wi-Fi (join, password, DNS), backlight brightness, battery (once the battery part exists), SDDM (step 7)
 
 ## Later steps
