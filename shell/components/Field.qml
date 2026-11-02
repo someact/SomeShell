@@ -10,6 +10,8 @@ Rectangle {
     property string placeholder
     property bool secret: false
     signal accepted(string text)
+    // Typed by the user (not set from code)
+    signal edited(string text)
 
     function focusField() { input.forceActiveFocus(); }
 
@@ -35,6 +37,7 @@ Rectangle {
         echoMode: root.secret ? TextInput.Password : TextInput.Normal
         clip: true
         onAccepted: root.accepted(text)
+        onTextEdited: root.edited(text)
         Keys.onEscapePressed: event => { event.accepted = false; }
 
         Txt {

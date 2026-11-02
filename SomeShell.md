@@ -112,6 +112,18 @@ In the desktop editor (section 4) each workspace can get its own design: a name 
 
 Switching workspace animates the island to the new layout, and the workspace name flashes big for a moment like a poster headline.
 
+> [!check] Decided (user, 2026-11-03, workspace designs)
+> - **The name flashes in the island**, not on the screen: on a switch to a named workspace the island stretches to show its number and name big (Mitr SemiBold, `02  CODE`) for about 1.2 s, then settles into that workspace's resting layout. No extra window.
+> - **What rest shows, for now:** Clock (as today, the default) or Media large. Media large: while something plays, a wider row with the cover ring, the title and the artist; with nothing playing it is the clock. Next event and focused window may come later.
+> - **No actions yet** (do not disturb, game mode, dock hidden come later).
+> - **By number:** a design belongs to the workspace number 1–10 (the badge's number), the same on every monitor.
+>
+> Proposed (accepted unless changed):
+> - **Store:** `Desktop.workspaces` = `[{ slot, name, rest }]`, only numbers that have a design; it is in presets with the rest of the look. A number without a design: no flash, the clock.
+> - **When it flashes:** a workspace change on the island's monitor (key, scroll, click), not when the island only moves to the other monitor with the mouse. A quick run of switches shows only the newest (the timer restarts, nothing stacks). Not while the island is open or quiet (game, fullscreen); a level or an alert shows over it.
+> - **Edit mode, Workspaces tab:** the numbers 01–10 as a row of chips (the current workspace marked, named ones show their name); the chosen number has a name field (shown in caps, up to 12 letters) and the rest choice as two small pictures (Clock, Media large). The card's island shows the chosen number's rest; a Flash button plays its name on the real island. Every change goes through Undo.
+> - IPC `workspace list|set <slot> <name> <rest>|clear <slot>|flash`.
+
 ### 3.4 Pages
 Pages in the open island, tabs along the top, switched with Tab or arrows, numbered `01 / 07`:
 

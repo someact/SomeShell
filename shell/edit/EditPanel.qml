@@ -17,7 +17,7 @@ Rectangle {
     ]
     readonly property var files: ({
         wallpaper: "tabs/WallpaperTab.qml", island: "tabs/IslandTab.qml", dock: "tabs/DockTab.qml",
-        presets: "tabs/PresetsTab.qml", widgets: "tabs/WidgetsTab.qml", workspaces: "tabs/LaterTab.qml"
+        presets: "tabs/PresetsTab.qml", widgets: "tabs/WidgetsTab.qml", workspaces: "tabs/WorkspacesTab.qml"
     })
 
     radius: 24

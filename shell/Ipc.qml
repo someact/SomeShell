@@ -163,6 +163,18 @@ Scope {
     }
 
     IpcHandler {
+        target: "workspace"
+
+        // Designs per workspace number 1-10: list, set <slot> <name> <clock|media>, clear <slot>
+        function list(): string { return JSON.stringify(Desktop.workspaces); }
+        function set(slot: int, name: string, rest: string): void { Editor.record(); Spaces.set(slot, name, rest); }
+        function clear(slot: int): void { Editor.record(); Spaces.clear(slot); }
+        // Flash a number's name now (the current one with 0)
+        function flash(slot: int): void { Spaces.flashNow(slot || Spaces.slot); }
+        function state(): string { return JSON.stringify({ slot: Spaces.slot, rest: Spaces.rest, flash: Spaces.flash, editSlot: Spaces.editSlot }); }
+    }
+
+    IpcHandler {
         target: "theme"
 
         // dark or light

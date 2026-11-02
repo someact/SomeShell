@@ -31,7 +31,11 @@ Item {
     readonly property bool sepDock: Desktop.dock.enabled && style !== "dock"
     // The part the open tab edits, outlined on the card
     readonly property bool widgetsTab: Ui.editTab === "widgets"
-    readonly property Item chosen: !showChoice ? null : Ui.editTab === "island" ? (style === "dock" ? dockBar : islandShape)
+    // Workspaces tab: the island shows the chosen number's design
+    readonly property bool spacesTab: Ui.editTab === "workspaces"
+    readonly property string restKind: spacesTab ? (Spaces.design(Spaces.editSlot)?.rest ?? "clock") : Spaces.rest
+    readonly property var flash: spacesTab ? Spaces.cardFlash : null
+    readonly property Item chosen: !showChoice ? null : Ui.editTab === "island" || spacesTab ? (style === "dock" ? dockBar : islandShape)
         : Ui.editTab === "dock" ? (style === "dock" ? dockBar : sepDock ? dockAlone : null)
         : null
 
@@ -149,8 +153,8 @@ Item {
                 visible: root.style !== "dock"
                 x: (root.sw - width) / 2
                 y: root.style === "plain" ? Theme.shape.floatGap : 0
-                width: rest.implicitWidth
-                height: rest.implicitHeight
+                width: root.flash ? cardFlash.implicitWidth : rest.implicitWidth
+                height: root.flash ? cardFlash.implicitHeight : rest.implicitHeight
                 color: Theme.ink.bg
                 topLeftRadius: root.style === "plain" ? height / 2 : 0
                 topRightRadius: root.style === "plain" ? height / 2 : 0
@@ -158,7 +162,15 @@ Item {
                 bottomRightRadius: root.style === "plain" ? height / 2 : Theme.shape.restRadius
                 Rest {
                     id: rest
+                    visible: !root.flash
                     anchors.fill: parent
+                    kind: root.restKind
+                }
+                Flash {
+                    id: cardFlash
+                    visible: root.flash !== null
+                    anchors.fill: parent
+                    f: root.flash
                 }
                 // Notch: the tab curves into the top edge
                 Repeater {
@@ -208,6 +220,7 @@ Item {
                     }
                     Rest {
                         anchors.verticalCenter: parent.verticalCenter
+                        kind: root.restKind
                     }
                     Tray {
                         anchors.verticalCenter: parent.verticalCenter

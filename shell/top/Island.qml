@@ -34,13 +34,14 @@ Item {
         : Ui.open ? "open"
         : Ui.level !== "" ? "level"
         : Ui.alert ? "alert"
+        : Spaces.flash ? "flash"
         : hovered ? "peek"
         : Ui.quiet ? "quiet"
         : "rest"
 
     readonly property real radius: mode === "open" ? Theme.shape.openRadius
         : mode === "quiet" ? 3
-        : floating && mode === "rest" ? height / 2
+        : floating && (mode === "rest" || mode === "flash") ? height / 2
         : Theme.shape.restRadius
 
     // The area that takes the pointer (the window's input region)
@@ -81,7 +82,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             focus: root.mode === "open"
             sourceComponent: ({
-                rest: rest, peek: peek, alert: alert, quiet: quiet, open: open, level: level
+                rest: rest, peek: peek, alert: alert, quiet: quiet, open: open, level: level, flash: flash
             })[root.mode] ?? null
             // New content fades in while the shape springs to its size
             onLoaded: if (root.mode !== "open") fade.restart()
@@ -236,4 +237,5 @@ Item {
     Component { id: quiet; Quiet {} }
     Component { id: open; Open {} }
     Component { id: level; Level {} }
+    Component { id: flash; Flash {} }
 }
