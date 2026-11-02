@@ -13,6 +13,9 @@ Singleton {
     readonly property string dir: Paths.config + "/presets"
     readonly property string script: Quickshell.shellPath("lib/preset.sh")
 
+    // A save finished (dir: the preset's folder), so the editor can add the thumbnail
+    signal saved(string name, string dir)
+
     // [{ slug, name, saved, thumb }] newest first; read on refresh()
     property var list: []
     readonly property string current: Desktop.preset
@@ -55,15 +58,19 @@ Singleton {
             desktop: Desktop.snapshot()
         };
         saver.name = name;
+        saver.dir = dir + "/" + slug;
         saver.command = [script, "save", dir, slug, JSON.stringify(preset), monitor ?? ""];
         saver.running = true;
     }
     Process {
         id: saver
         property string name: ""
+        property string dir: ""
         onExited: code => {
             if (code === 0) {
                 Desktop.preset = saver.name;
+                Editor.matched();
+                root.saved(saver.name, saver.dir);
                 Ui.showAlert("Preset saved", saver.name, "Presets", "bookmark_added");
             } else {
                 Ui.showAlert("Could not save the preset", saver.name, "Presets", "error");
@@ -90,9 +97,25 @@ Singleton {
             if (!p)
                 return Ui.showAlert("Preset not readable", path, "Presets", "error");
             Desktop.load(p.desktop ?? {}, p.name ?? "");
+            Editor.matched();
             Wallpaper.applyLook(p.wallpaper ?? "", p.theme?.mode ?? "", p.theme?.scheme ?? "");
         }
         onLoadFailed: if (path) Ui.showAlert("No such preset", path.split("/").slice(-2, -1)[0], "Presets", "error")
+    }
+
+    // A new name (the folder keeps its slug)
+    function rename(nameOrSlug, name) {
+        const p = find(nameOrSlug);
+        if (!p || !name)
+            return;
+        if (Desktop.preset === p.name)
+            Desktop.preset = name;
+        renamer.command = [script, "rename", dir, p.slug, name];
+        renamer.running = true;
+    }
+    Process {
+        id: renamer
+        onExited: root.refresh()
     }
 
     function remove(nameOrSlug) {

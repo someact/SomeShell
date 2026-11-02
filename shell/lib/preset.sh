@@ -6,6 +6,7 @@
 #   preset.sh save <presets> <slug> <json> [monitor]
 #       Writes preset.json (temporary file + rename) and a small picture of
 #       the monitor (default: the focused one; "none": no picture) as thumb.png.
+#   preset.sh rename <presets> <slug> <name>
 #   preset.sh remove <presets> <slug>
 set -u
 root=${2:-}
@@ -35,6 +36,12 @@ save)
         grim -o "$monitor" -s 0.25 "$d/.thumb.png" 2>/dev/null && mv "$d/.thumb.png" "$d/thumb.png"
     fi
     echo "$d"
+    ;;
+rename)
+    slug=$3 name=$4
+    f="$root/$slug/preset.json"
+    [[ "$slug" =~ ^[a-z0-9-]+$ && -f "$f" ]] || exit 2
+    jq --arg n "$name" '.name = $n' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
     ;;
 remove)
     slug=$3

@@ -111,6 +111,17 @@ Scope {
     }
 
     IpcHandler {
+        target: "edit"
+
+        // open [wallpaper|island|dock|widgets|workspaces|presets]
+        function open(tab: string): void { Ui.edit(tab || ""); }
+        function close(): void { Ui.endEdit(); }
+        function tab(tab: string): void { Ui.editTab = tab; }
+        function undo(): void { Editor.undo(); }
+        function state(): string { return JSON.stringify({ editing: Ui.editing, tab: Ui.editTab, edited: Editor.edited, undo: Editor.history.length, preset: Desktop.preset }); }
+    }
+
+    IpcHandler {
         target: "preset"
 
         function list(): string { return JSON.stringify(Presets.list.map(p => p.name)); }

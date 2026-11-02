@@ -10,6 +10,7 @@ local KEYPAD_CODES = { 87, 88, 89, 83, 84, 85, 79, 80, 81, 90 } -- keypad 1..9, 
 --##! Shell
 shell_bind("SUPER + Tab", "overview", { description = "Shell: Overview" })
 shell_bind("SUPER + N", "control", { description = "Shell: Control panel" })
+shell_bind("CTRL + SUPER + E", "edit", { description = "Shell: Edit desktop" })
 shell_bind("SUPER + Slash", "keys", { description = "Shell: Keybind list" })
 shell_bind("SUPER + K", "osk", { description = "Shell: On-screen keyboard" })
 shell_bind("SUPER + M", "media", { description = "Shell: Media" })

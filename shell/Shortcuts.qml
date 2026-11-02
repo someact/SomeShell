@@ -22,6 +22,7 @@ Scope {
         clipboard: () => Ui.toggle("clipboard"),
         emoji: () => Ui.openPage("search", false, "/emoji "),
         islandHide: () => Ui.hidden = !Ui.hidden,
+        edit: () => Ui.editing ? Ui.endEdit() : Ui.edit(),
         lightDark: () => Config.theme.mode = Config.theme.mode === "dark" ? "light" : "dark",
         brightnessUp: () => root.brightnessStep(5),
         brightnessDown: () => root.brightnessStep(-5),

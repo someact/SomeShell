@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import qs.core
 import qs.services
 
 // The wallpaper on one monitor. Decoded at the monitor's size (sourceSize),
@@ -27,6 +28,15 @@ PanelWindow {
     readonly property string source: Wallpaper.path ? "file://" + Wallpaper.path : ""
     onSourceChanged: (showA ? b : a).source = source
     Component.onCompleted: a.source = source
+
+    // A right click or a long press on the empty desktop opens edit mode
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        pressAndHoldInterval: 700
+        onClicked: mouse => { if (mouse.button === Qt.RightButton) Ui.edit(); }
+        onPressAndHold: Ui.edit()
+    }
 
     Image {
         id: b

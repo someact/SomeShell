@@ -6,6 +6,7 @@ import Quickshell
 import "top"
 import "wallpaper"
 import "capture"
+import "edit"
 import qs.core
 import qs.services
 
@@ -34,6 +35,15 @@ ShellRoot {
         Variants {
             model: Quickshell.screens
             Dock {}
+        }
+    }
+
+    // Edit mode, only while editing
+    LazyLoader {
+        active: Ui.editing
+        Variants {
+            model: Quickshell.screens
+            EditWindow {}
         }
     }
 

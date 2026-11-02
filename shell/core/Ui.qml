@@ -65,6 +65,36 @@ Singleton {
     readonly property bool fullscreen: monitorObject?.activeWorkspace?.hasFullscreen ?? false
     readonly property bool quiet: !open && (GameMode.active || fullscreen)
 
+    // Edit mode (edit/EditWindow.qml): the desktop as a card with the
+    // editing panel below. `editTab`: wallpaper, island, dock, widgets,
+    // workspaces, presets.
+    property bool editing: false
+    property string editTab: "wallpaper"
+    // Closing: the card zooms back to the full desktop, then edit mode ends
+    property bool editClosing: false
+    function edit(tab) {
+        close();
+        alert = null;
+        if (tab)
+            editTab = tab;
+        editClosing = false;
+        editing = true;
+    }
+    function endEdit() {
+        if (!editing || editClosing)
+            return;
+        editClosing = true;
+        editTimer.restart();
+    }
+    Timer {
+        id: editTimer
+        interval: Motion.slow
+        onTriggered: {
+            root.editing = false;
+            root.editClosing = false;
+        }
+    }
+
     // A short alert shown over everything else, then gone
     property var alert: null
     // extra: { image: a picture shown instead of the icon, open: a file a click opens }

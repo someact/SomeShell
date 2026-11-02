@@ -8,7 +8,7 @@ import "../../lib/calc.js" as Calc
 // 01 Search. Type to find apps, do math, or search the web; "/" lists the
 // commands. The page is as tall as its results, so the island grows and
 // shrinks while you type.
-//   /emoji  emoji (Super+.)    /wall  wallpapers    /preset  presets
+//   /emoji  emoji (Super+.)    /wall  wallpapers    /preset  presets    /edit  edit mode
 //   /settings  the settings window
 // The clipboard history has its own page (Super+V), not a command here.
 Item {
@@ -36,6 +36,7 @@ Item {
         { cmd: "/emoji", title: "Emoji", icon: "mood", keys: "Super+." },
         { cmd: "/wall", title: "Wallpaper", icon: "wallpaper", keys: "" },
         { cmd: "/preset", title: "Presets", icon: "dashboard_customize", keys: "" },
+        { cmd: "/edit", title: "Edit desktop", icon: "edit", keys: "Ctrl+Super+E" },
         { cmd: "/settings", title: "Settings", icon: "settings", keys: "Super+I" }
     ]
 
@@ -89,7 +90,9 @@ Item {
             Ui.close();
             break;
         case "command":
-            if (r.data.cmd === "/settings") {
+            if (r.data.cmd === "/edit") {
+                Ui.edit();
+            } else if (r.data.cmd === "/settings") {
                 Ui.close();
                 Ui.showAlert("Settings", "The settings window comes in step 7.", "SomeShell", "settings");
             } else {
