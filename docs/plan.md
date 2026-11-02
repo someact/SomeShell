@@ -78,12 +78,20 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
   - [x] Backlight brightness (`ktz8866-backlight`, through logind): click, drag, brightness key and a change from another tool all show on the tile (keys now go through the service, the backlight is reread when Control opens, `410563d`)
   - [x] Battery: tray, alerts (simulated 15% and 8%)
   - [ ] SDDM (step 7)
+- [ ] Blender on the tablet (later, when working on the PC): no aarch64 package (Arch Linux ARM has none, Flathub is x86_64 only); the GPU is enough for light work (OpenGL 4.6 freedreno, Vulkan 1.3 Turnip; Cycles CPU only). Build from source, or check whether blender.org has Linux ARM64 builds
 
 ## Later steps
 - Step 5: browser extension, music layout data, lyrics; calendar and system pages
 - Step 6: edit desktop (grid editor without motion while editing, widgets, presets, workspace designs, control layout editing)
 - Step 7: lock screen, overview, dock, settings window, installer. Overview must: click a window → switch to its workspace, focus that window, close; Enter on a workspace → switch and close; tested by mouse with ydotool
 - Step 8: GIFs, Quick Share, WARP, capture tools, game overlay, on-screen keyboard
+
+## Where each part can be built
+The tablet (one screen, battery, Wi-Fi, backlight, ARM, 8 GB) and the PC (two monitors, DDC, NVIDIA, Ethernet, games, pen) test different things. Build on either; check the "PC" or "tablet" parts on that machine before ticking.
+- Tablet is fine for: step 5 (calendar page, system page with battery detail, music data and lyrics, browser extension in Zen), step 6 on one screen (grid editor, widgets, presets, workspace designs, control layout editing), step 7 lock screen and SDDM (the tablet is the SDDM test machine), overview, dock, settings window, the ARM half of the installer, step 8 on-screen keyboard (the tablet has a touch screen), GIFs, capture tools, Quick Share. Small items: shrink the top window (memory), undo a DNS change that resolves nothing, `shell.sh` killing leftover shells before a start
+- PC only: Blender pan/rotate after Super+number, removing the v1 worktree, battery hidden and Ethernet icon, memory numbers to compare, DDC brightness, two monitors (island follows the mouse, a badge per monitor, presets per monitor), NVIDIA environment, game mode and the game overlay with real games, UGTablet pen, the x86 half of the installer
+- Laptop: touchpad gestures, hybrid graphics, 165 Hz panel
+- Unsure on ARM until tried: WARP (`warp-cli` for aarch64)
 
 ## Notes
 - Hypridle times and the tablet area: the UGTablet trim lived in v1's config; in the new one devices come from `hypr.json` (`devices`), added to this machine's file at the switch.
