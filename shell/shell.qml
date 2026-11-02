@@ -5,6 +5,7 @@ import QtQuick
 import Quickshell
 import "top"
 import "wallpaper"
+import "capture"
 import qs.services
 
 ShellRoot {
@@ -24,6 +25,15 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
         TopBar {}
+    }
+
+    // The capture picker, only while picking
+    LazyLoader {
+        active: Capture.picking
+        Variants {
+            model: Quickshell.screens
+            Picker {}
+        }
     }
 
     Shortcuts {}

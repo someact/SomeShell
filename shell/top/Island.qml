@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
+import Quickshell
 import Quickshell.Io
 import qs.core
 import "../island"
@@ -138,7 +139,15 @@ Item {
         }
         TapHandler {
             enabled: root.mode !== "open"
-            onTapped: Ui.openPage("search", root.hovered)
+            onTapped: {
+                // An alert about a file (a screenshot) opens it
+                if (root.mode === "alert" && Ui.alert?.open) {
+                    Quickshell.execDetached(["xdg-open", Ui.alert.open]);
+                    Ui.alert = null;
+                    return;
+                }
+                Ui.openPage("search", root.hovered);
+            }
         }
     }
 

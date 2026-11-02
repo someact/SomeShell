@@ -134,6 +134,15 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   - **Do not disturb:** no notifications and no island alerts. Until a time, or while a game or screen share runs.
   - Also: sound output and mixer, mic, brightness, dark mode, game mode, screenshot, screen record, color picker, VPN/WARP, Quick Share, battery (laptop).
 
+**Capture (screenshot and text)**
+  > [!check] Decided (user, 2026-11-02: "build screen shot engine, can screen shot, text extract, other feature will later"; frozen screen, copy and save, Tesseract with English and Thai)
+  > - One picker for every capture tool (screenshot now; text, then Lens, translate and region recording later). Super+Shift+S screenshots, Super+Shift+X copies text, the Control tile screenshots. Print and Ctrl+Print stay whole-monitor shots without the picker.
+  > - **Frozen:** the key takes a picture of every monitor at once (`grim`), and a full-screen layer per monitor shows it, dimmed. Hover lights a window's box; a click takes that window, a drag draws a box (its size in spaced caps beside it), Enter takes the whole monitor, Esc or a right click cancels. A box stays on the monitor it started on.
+  > - The picture is cut from the frozen copy at full pixel size (ImageMagick), so it is what you saw.
+  > - **Screenshot:** copied to the clipboard and saved to `~/Pictures/Screenshots/Screenshot_<date>_<time>.png` (the XDG pictures folder). The island alerts with a small preview; a click on it opens the file.
+  > - **Text:** Tesseract reads the box (English and Thai; small boxes are enlarged first), the text is copied and the island shows its start. Nothing read: the island says so and copies nothing.
+  > - The picker is loaded only while picking; the frozen pictures live in `$XDG_RUNTIME_DIR` and are deleted after. While the shell is down the keys fall back to `slurp` (as now).
+
 **Media**
 - A browser extension (Zen/Firefox, later Chrome) sends the page info to the shell: site, title, full-size cover, and whether it's music.
   - music.youtube.com, Spotify web, SoundCloud → **music**

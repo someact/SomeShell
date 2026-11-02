@@ -7,25 +7,36 @@ import qs.components
 Item {
     id: root
 
-    readonly property var alert: Ui.alert ?? { title: "", body: "", app: "", icon: "notifications" }
+    readonly property var alert: Ui.alert ?? { title: "", body: "", app: "", icon: "notifications", image: "" }
     readonly property int textWidth: Math.min(380, Math.max(title.implicitWidth, body.implicitWidth, app.implicitWidth))
 
-    implicitWidth: 20 + 44 + 14 + textWidth + 22
+    implicitWidth: 20 + badge.width + 14 + textWidth + 22
     implicitHeight: Math.max(44, col.implicitHeight) + 34
 
     Rectangle {
         id: badge
         x: 20
         anchors.verticalCenter: parent.verticalCenter
-        width: 44
+        // A picture (a screenshot) is shown wide; otherwise the icon
+        width: root.alert.image ? 78 : 44
         height: 44
         radius: 12
         color: "transparent"
         border.width: 1
         border.color: Theme.ink.line
         Icon {
+            visible: !root.alert.image
             anchors.centerIn: parent
             name: root.alert.icon
+        }
+        Image {
+            visible: !!root.alert.image
+            anchors.fill: parent
+            anchors.margins: 1
+            source: root.alert.image ? "file://" + root.alert.image : ""
+            sourceSize: Qt.size(156, 88)
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
         }
     }
 

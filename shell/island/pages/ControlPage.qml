@@ -153,10 +153,7 @@ Item {
             icon: "screenshot_region"
             label: "Screenshot"
             sub: "Region"
-            onClicked: {
-                Ui.close();
-                Quickshell.execDetached(["sh", "-c", "sleep 0.3; grim -g \"$(slurp)\" - | wl-copy"]);
-            }
+            onClicked: Capture.start("shot")
         }
         Tile {
             x: 3 * (root.cell + root.gap); y: 3 * (root.row + root.gap)

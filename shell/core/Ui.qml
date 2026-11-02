@@ -58,8 +58,9 @@ Singleton {
 
     // A short alert shown over everything else, then gone
     property var alert: null
-    function showAlert(title, body, app, icon) {
-        alert = { title: title ?? "", body: body ?? "", app: app ?? "", icon: icon || "notifications" };
+    // extra: { image: a picture shown instead of the icon, open: a file a click opens }
+    function showAlert(title, body, app, icon, extra) {
+        alert = { title: title ?? "", body: body ?? "", app: app ?? "", icon: icon || "notifications", image: extra?.image ?? "", open: extra?.open ?? "" };
         alertTimer.restart();
     }
     Timer {

@@ -98,6 +98,17 @@ Scope {
     }
 
     IpcHandler {
+        target: "capture"
+
+        // shot or text: freeze the screens and open the picker
+        function start(mode: string): void { Capture.start(mode || "shot"); }
+        function cancel(): void { Capture.cancel(); }
+        // Take a box (layout pixels on that monitor) without the mouse
+        function box(monitor: string, x: int, y: int, w: int, h: int): void { Capture.finish(monitor, { x: x, y: y, w: w, h: h }); }
+        function state(): string { return JSON.stringify({ picking: Capture.picking, mode: Capture.session?.mode ?? null, monitors: (Capture.session?.monitors ?? []).map(m => m.name), windows: (Capture.session?.windows ?? []).length }); }
+    }
+
+    IpcHandler {
         target: "theme"
 
         // dark or light
