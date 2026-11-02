@@ -153,6 +153,12 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   > - Peek: under the playing row, the elapsed time, a thin progress line and the length (like a phone lock screen); a click on the line seeks. Left out when the length is unknown (live streams).
   > - The position is read once a second only while something plays and one of these is on screen (MPRIS does not push it), like the clock.
   > - Lyrics come from LRCLIB (not from the site), so songs without lyrics on YouTube still get them.
+  > [!check] Decided (user, 2026-11-02: lyrics beside the player, the page grows)
+  > - Music page: the cover and controls stay on the left; synced lyrics in a column on the right. The current line is big and bright and sits a third of the way down; the lines before and after are dimmed and scroll up as the song plays. No lyrics found: the page keeps its old width.
+  > - Source: LRCLIB search by title and artist, the match whose length is within 3 s of the track, synced lyrics first, plain lyrics (shown as a still, scrollable column marked NOT SYNCED) after. Instrumental tracks say so. Only for music, only while the media page is open.
+  > - Titles are cleaned before the search ("(Official Video)", "[MV]", "(Lyrics)"; " - Topic" from the artist).
+  > - Cached in `~/.cache/someshell/lyrics/` per track: found lyrics forever, "not found" for a day; offline keeps nothing.
+  > - Line changes are timed to the line's start (a one-shot timer to the next line), not to the once-a-second position read.
 
 **Notifications**
 - Grouped by app, swipe or click to dismiss, reply when the app allows.

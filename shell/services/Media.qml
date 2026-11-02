@@ -60,8 +60,15 @@ Singleton {
     property real position: 0
     readonly property real progress: length > 0 ? Math.min(1, position / length) : 0
     property int watchers: 0
+    // When `position` was read (ms), to estimate it in between
+    property real positionAt: 0
     function readPosition() {
         position = player?.position ?? 0;
+        positionAt = Date.now();
+    }
+    // The position now, between reads
+    function positionNow() {
+        return playing ? position + (Date.now() - positionAt) / 1000 * (player?.rate || 1) : position;
     }
     Timer {
         running: root.playing && root.watchers > 0

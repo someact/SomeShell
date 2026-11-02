@@ -11,8 +11,11 @@ Item {
 
     readonly property bool music: Media.kind === "music"
     readonly property int coverSize: music ? 200 : 0
+    // Lyrics column beside the player (music only), once lyrics are found
+    readonly property bool lyrics: music && Media.active && ["synced", "plain", "instrumental"].includes(Lyrics.status)
+    readonly property int lyricsWidth: 340
 
-    implicitWidth: !Media.active ? 420 : music ? 640 : 700
+    implicitWidth: !Media.active ? 420 : music ? 640 + (lyrics ? 49 + lyricsWidth : 0) : 700
     implicitHeight: col.implicitHeight
 
     function time(s) {
@@ -20,8 +23,8 @@ Item {
         return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
     }
 
-    Component.onCompleted: Media.watchers++
-    Component.onDestruction: Media.watchers--
+    Component.onCompleted: { Media.watchers++; Lyrics.viewers++; }
+    Component.onDestruction: { Media.watchers--; Lyrics.viewers--; }
 
     Column {
         id: col
@@ -89,6 +92,7 @@ Item {
             }
 
             Column {
+                id: info
                 width: (root.music ? 640 - root.coverSize : 700 - 300) - 24
                 spacing: 6
 
@@ -183,6 +187,19 @@ Item {
                         }
                     }
                 }
+            }
+
+            // Lyrics, beside the player; a thin rule between
+            Rectangle {
+                visible: root.lyrics
+                width: 1
+                height: Math.max(root.coverSize, info.height)
+                color: Theme.ink.line
+            }
+            LyricsView {
+                visible: root.lyrics
+                width: root.lyricsWidth
+                height: Math.max(root.coverSize, info.height)
             }
         }
     }
