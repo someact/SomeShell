@@ -19,7 +19,7 @@ Scope {
         control: () => Ui.toggle("control"),
         media: () => Ui.toggle("media"),
         power: () => Ui.toggle("power"),
-        clipboard: () => Ui.openPage("search", false, "/clip "),
+        clipboard: () => Ui.toggle("clipboard"),
         emoji: () => Ui.openPage("search", false, "/emoji "),
         islandHide: () => Ui.hidden = !Ui.hidden,
         lightDark: () => Config.theme.mode = Config.theme.mode === "dark" ? "light" : "dark",

@@ -5,7 +5,7 @@ import Quickshell.Io
 import qs.core
 
 // Clipboard history from cliphist (Hyprland's autostart stores every copy).
-// Read when /clip opens, never watched. Images are decoded once into
+// Read when the clipboard page (Super+V) opens, never watched. Images are decoded once into
 // ~/.cache/someshell/clipboard/<id>.png for their thumbnail.
 Singleton {
     id: root
@@ -29,6 +29,37 @@ Singleton {
         Quickshell.execDetached(["sh", "-c", "cliphist decode \"$1\" | wl-copy", "sh", entry.raw]);
     }
 
+    // Drop one entry from the history (and its thumbnail)
+    function remove(entry) {
+        entries = entries.filter(e => e.id !== entry.id);
+        removal.command = ["sh", "-c", "printf '%s\\n' \"$1\" | cliphist delete; rm -f \"$2\"", "sh", entry.raw, entry.image || "/nonexistent"];
+        removal.running = true;
+    }
+    Process {
+        id: removal
+    }
+
+    // The whole text of one entry (the list only has its start), for a preview
+    property string fullId: ""
+    property string fullText: ""
+    function readFull(entry) {
+        if (!entry || entry.image || entry.id === fullId)
+            return;
+        fullId = entry.id;
+        fullText = entry.text;
+        full.running = false;
+        full.command = ["sh", "-c", "cliphist decode \"$1\" | head -c 6000", "sh", entry.raw];
+        full.running = true;
+    }
+    Process {
+        id: full
+        property string forId: ""
+        onCommandChanged: forId = root.fullId
+        stdout: StdioCollector {
+            onStreamFinished: if (full.forId === root.fullId) root.fullText = text
+        }
+    }
+
     Process {
         id: list
         command: ["cliphist", "list"]
@@ -46,7 +77,8 @@ Singleton {
                     const e = { id: id, raw: line, text: body, image: "" };
                     if (img) {
                         e.image = Paths.cache + "/clipboard/" + id + ".png";
-                        e.text = "Image";
+                        const dims = /(\d+)x(\d+)/.exec(body);
+                        e.text = dims ? "Image " + dims[1] + " × " + dims[2] : "Image";
                         images.push(id);
                     }
                     out.push(e);

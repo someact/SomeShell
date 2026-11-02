@@ -8,7 +8,7 @@ import qs.components
 FocusScope {
     id: root
 
-    readonly property var current: Ui.pages[Ui.page]
+    readonly property var current: Ui.pageInfo
 
     // Wide enough for the page, and for the tabs plus the clock at the end
     implicitWidth: Math.max(tabs.x + tabs.implicitWidth + 24 + clock.width + 24, page.implicitWidth + 52)
@@ -53,11 +53,11 @@ FocusScope {
                 id: tab
                 required property var modelData
                 required property int index
-                readonly property bool on: index === Ui.page
+                readonly property bool on: index === Ui.page && Ui.extra === ""
                 implicitHeight: 36
                 implicitWidth: tabRow.implicitWidth + 20
                 radius: Theme.shape.small
-                onClicked: Ui.page = index
+                onClicked: Ui.goTo(index)
 
                 Row {
                     id: tabRow
@@ -88,6 +88,11 @@ FocusScope {
         property bool ready: false   // no slide on the first layout
         readonly property Item tab: tabRepeater.count > Ui.page ? tabRepeater.itemAt(Ui.page) : null
         x: tabs.x + (tab ? tab.x + 10 : 0)
+        // No tab is lit on a tabless page
+        opacity: Ui.extra === "" ? 1 : 0
+        Behavior on opacity {
+            NumberAnimation { duration: Motion.fast }
+        }
         y: tabs.y + tabs.height - height
         width: tab ? tab.width - 20 : 0
         height: 2
@@ -128,7 +133,7 @@ FocusScope {
         spacing: 14
         Txt {
             anchors.baseline: title.baseline
-            text: String(Ui.page + 1).padStart(2, "0") + " / " + String(Ui.pages.length).padStart(2, "0")
+            text: root.current.keys ?? String(Ui.page + 1).padStart(2, "0") + " / " + String(Ui.pages.length).padStart(2, "0")
             caps: true
             color: Theme.ink.accent
         }
@@ -145,7 +150,7 @@ FocusScope {
     // Pages live in two slots: on a switch the new page loads into the free
     // slot and slides in (from the side you moved toward) while it is wiped
     // in top to bottom; the old one fades out fast and is unloaded.
-    readonly property var files: ({ search: "pages/SearchPage.qml", control: "pages/ControlPage.qml", media: "pages/MediaPage.qml", notify: "pages/NotifyPage.qml", calendar: "pages/CalendarPage.qml", system: "pages/SystemPage.qml", power: "pages/PowerPage.qml" })
+    readonly property var files: ({ search: "pages/SearchPage.qml", control: "pages/ControlPage.qml", media: "pages/MediaPage.qml", notify: "pages/NotifyPage.qml", calendar: "pages/CalendarPage.qml", system: "pages/SystemPage.qml", power: "pages/PowerPage.qml", clipboard: "pages/ClipboardPage.qml" })
     readonly property int slide: 24
     property int slot: 0
     readonly property Item page: slot === 0 ? slotA : slotB

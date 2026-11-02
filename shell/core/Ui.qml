@@ -17,9 +17,18 @@ Singleton {
         { id: "system", label: "System", icon: "monitoring" },
         { id: "power", label: "Power", icon: "power_settings_new" }
     ]
+    // Pages with no tab: only their shortcut opens them, and Tab or a tab
+    // click leaves them for the tab row
+    readonly property var extraPages: [
+        { id: "clipboard", label: "Clipboard", icon: "content_paste", keys: "Super+V" }
+    ]
 
     property bool open: false
     property int page: 0
+    // The tabless page shown instead of `page` ("" for none)
+    property string extra: ""
+    readonly property string pageId: extra || pages[page].id
+    readonly property var pageInfo: extraPages.find(p => p.id === extra) ?? pages[page]
     // A tile's own page on the control page ("net", "bt", "sound", "night")
     property string detail: ""
     // Which way the last switch went (1: right, -1: left), for the page
@@ -38,7 +47,7 @@ Singleton {
     property bool openedByHover: false
     // Hidden by Super+J until shown again
     property bool hidden: false
-    // Text for the search box when it opens (Super+V opens it on "/clip ")
+    // Text for the search box when it opens (Super+. opens it on "/emoji ")
     property string query: ""
 
     // The monitor the island is on. It follows the mouse only while closed,
@@ -93,25 +102,45 @@ Singleton {
 
     function openPage(id, byHover, query) {
         root.query = query ?? "";
-        page = pageIndex(id);
+        if (extraPages.some(p => p.id === id)) {
+            direction = 1;
+            extra = id;
+        } else {
+            extra = "";
+            page = pageIndex(id);
+        }
         openedByHover = byHover === true;
         hidden = false;
         open = true;
     }
     function close() {
         open = false;
+        extra = "";
         detail = "";
         openedByHover = false;
     }
     // Super tap: open on search, or close
     function toggle(id) {
-        if (open && (id === undefined || pages[page].id === id))
+        if (open && (id === undefined || pageId === id))
             close();
         else
             openPage(id ?? "search");
     }
     function nextPage(by) {
         step = by > 0 ? 1 : -1;
+        // From a tabless page, Tab goes back to the tab you were on
+        if (extra !== "") {
+            direction = step;
+            step = 0;
+            extra = "";
+            return;
+        }
         page = (page + by + pages.length) % pages.length;
+    }
+    function goTo(index) {
+        if (extra !== "" && index === page)
+            direction = -1;
+        extra = "";
+        page = index;
     }
 }

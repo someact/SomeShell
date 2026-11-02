@@ -33,7 +33,7 @@ Singleton {
     // Quickshell lists Wi-Fi networks only while the scanner is on: on while
     // the Internet page shows, off otherwise (a binding, so the order in which
     // pages are made and destroyed cannot leave it in the wrong state)
-    readonly property bool scanning: Ui.open && Ui.page === Ui.pageIndex("control") && Ui.detail === "net"
+    readonly property bool scanning: Ui.open && Ui.pageId === "control" && Ui.detail === "net"
     Binding {
         when: root.wifi !== null
         target: root.wifi

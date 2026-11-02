@@ -117,8 +117,13 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
 
 **Search (first page)**
 - Apps, quick math, files maybe later.
-- `/` for commands: `/clip` clipboard history, `/gif`, `/emoji`, `/wall` quick wallpaper change, `/preset` switch preset, `/edit` edit desktop, `/settings`.
+- `/` for commands: `/gif`, `/emoji`, `/wall` quick wallpaper change, `/preset` switch preset, `/edit` edit desktop, `/settings`.
 - Results as a clean list with big type for the top match.
+
+**Clipboard (Super+V only, no tab)**
+  > Decision (user, 2026-11-02): the clipboard history is its own island page, not `/clip` in search. It has no tab and no number (the header shows `Super+V`); only Super+V opens it, Super+V again closes it, Tab or a tab click goes back to the tab row.
+  > - A filter field (text only; images show while it is empty), the history newest first (scrolls, up to 200), and the chosen entry in full beside it: the whole text (read with `cliphist decode`) or the picture. Images list their size.
+  > - Enter or a click copies it back and closes; Delete or a right click removes it from the history.
 
 **Control panel** (like Android and iOS)
 - A snap grid with block sizes **1×1, 2×1, 1×2, 2×2**. Long-press or the pencil enters edit mode: blocks wiggle, drag to move, pull a corner to resize, remove or add from a drawer. The same editor arranges the island and the desktop (section 4).
@@ -282,7 +287,7 @@ Built on Quickshell. It already ships modules for Hyprland, PipeWire audio, medi
 |---|---|---|---|
 | Search apps | Quickshell app list (desktop files), fuzzy match, recent apps first | Good ranking | ● |
 | Quick math | Own small parser (never `eval`) | Units and currency later | ● |
-| `/clip` clipboard | cliphist (stores in the background); read when opened | Image previews: decode once and cache | ●● |
+| Clipboard page (Super+V) | cliphist (stores in the background); read when opened | Image previews: decode once and cache | ●● |
 | `/emoji` | Bundled emoji list with names and skin tones | — | ● |
 | `/gif` | Klipy API with the user's key; files downloaded, played locally | Network errors, saved GIF folders | ●● |
 | `/wall` | Wallpaper folder, cached thumbnails | — | ● |

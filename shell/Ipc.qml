@@ -10,7 +10,7 @@ Scope {
     IpcHandler {
         target: "island"
 
-        // open search|control|media|notify|calendar|system|power
+        // open search|control|media|notify|calendar|system|power|clipboard
         function open(page: string): void { Ui.openPage(page || "search"); }
         function close(): void { Ui.close(); }
         function toggle(): void { Ui.toggle(); }
@@ -22,7 +22,7 @@ Scope {
         function state(): string {
             return JSON.stringify({
                 open: Ui.open,
-                page: Ui.pages[Ui.page].id,
+                page: Ui.pageId,
                 openedByHover: Ui.openedByHover,
                 monitor: Ui.monitor,
                 quiet: Ui.quiet,

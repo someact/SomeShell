@@ -8,8 +8,8 @@ import "../../lib/calc.js" as Calc
 // 01 Search. Type to find apps, do math, or search the web; "/" lists the
 // commands. The page is as tall as its results, so the island grows and
 // shrinks while you type.
-//   /clip   clipboard history (Super+V)    /emoji  emoji (Super+.)
-//   /wall   wallpapers                     /settings  the settings window
+//   /emoji  emoji (Super+.)    /wall  wallpapers    /settings  the settings window
+// The clipboard history has its own page (Super+V), not a command here.
 Item {
     id: root
 
@@ -17,8 +17,7 @@ Item {
     readonly property string query: input.text
     readonly property string mode: modeOf(query)
     function modeOf(text) {
-        return text.startsWith("/clip") ? "clip"
-            : text.startsWith("/emoji") ? "emoji"
+        return text.startsWith("/emoji") ? "emoji"
             : text.startsWith("/wall") ? "wall"
             : text.startsWith("/") ? "commands"
             : "apps";
@@ -32,7 +31,6 @@ Item {
     implicitHeight: col.implicitHeight
 
     readonly property var commands: [
-        { cmd: "/clip", title: "Clipboard history", icon: "content_paste", keys: "Super+V" },
         { cmd: "/emoji", title: "Emoji", icon: "mood", keys: "Super+." },
         { cmd: "/wall", title: "Wallpaper", icon: "wallpaper", keys: "" },
         { cmd: "/settings", title: "Settings", icon: "settings", keys: "Super+I" }
@@ -46,9 +44,7 @@ Item {
         const mode = modeOf(query);
         // The text after the command word
         const rest = mode === "apps" || mode === "commands" ? query : query.replace(/^\/\S+\s*/, "");
-        if (mode === "clip") {
-            results = Clipboard.search(rest, 8).map(e => ({ kind: "clip", title: e.text, image: e.image, icon: e.image ? "image" : "content_paste", data: e }));
-        } else if (mode === "emoji") {
+        if (mode === "emoji") {
             results = Emojis.search(rest, 45).map(e => ({ kind: "emoji", title: e.name, emoji: e.emoji, data: e }));
         } else if (mode === "wall") {
             results = Wallpapers.search(rest, 12).map(f => ({ kind: "wall", title: f.name, thumb: f.thumb, data: f }));
@@ -93,10 +89,6 @@ Item {
                 input.text = r.data.cmd + " ";
             }
             break;
-        case "clip":
-            Clipboard.copy(r.data);
-            Ui.close();
-            break;
         case "emoji":
             Emojis.copy(r.data.emoji);
             Ui.close();
@@ -113,13 +105,8 @@ Item {
     }
 
     onModeChanged: {
-        if (mode === "clip") Clipboard.refresh();
         if (mode === "emoji") Emojis.load();
         if (mode === "wall") Wallpapers.refresh();
-    }
-    Connections {
-        target: Clipboard
-        function onEntriesChanged() { if (root.mode === "clip") root.update(); }
     }
     Connections {
         target: Emojis
@@ -203,7 +190,7 @@ Item {
             color: Theme.ink.line
         }
 
-        // Rows: apps, math, web, commands, clipboard
+        // Rows: apps, math, web, commands
         Column {
             visible: root.columns === 1
             width: parent.width
@@ -356,8 +343,7 @@ Item {
             width: parent.width
             topPadding: 8
             bottomPadding: 8
-            text: root.mode === "clip" ? (Clipboard.loading ? "Reading the clipboard…" : "Nothing copied yet")
-                : root.mode === "wall" ? "No images in " + Wallpapers.folder
+            text: root.mode === "wall" ? "No images in " + Wallpapers.folder
                 : root.mode === "emoji" ? "No emoji found"
                 : "Type to search"
             caps: true
