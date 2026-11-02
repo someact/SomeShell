@@ -9,7 +9,16 @@ import Quickshell.Services.Mpris
 Singleton {
     id: root
 
-    readonly property var players: Mpris.players.values
+    // Some apps register twice (VLC: `vlc` and `vlc.instance<pid>`): the same
+    // app with the same track in the same state counts once
+    readonly property var players: {
+        const out = [];
+        for (const p of Mpris.players.values) {
+            if (!out.some(q => q.identity === p.identity && q.trackTitle === p.trackTitle && q.playbackState === p.playbackState))
+                out.push(p);
+        }
+        return out;
+    }
     // Picked by hand on the media page; otherwise the one playing, or the first
     property var chosen: null
     readonly property var player: (chosen && players.includes(chosen)) ? chosen : players.find(p => p.isPlaying) ?? players[0] ?? null
