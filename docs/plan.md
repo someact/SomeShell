@@ -55,7 +55,7 @@ Switch notes:
 An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard and mouse, touch is not a priority. Setup steps are in CLAUDE.md ("Setting up a machine").
 - [x] Note the exact chip and how Arch was installed in CLAUDE.md (Xiaomi Pad 6 8/256, A/B slot dual boot with Android, 128/128)
 - [x] Packages on aarch64: Hyprland 0.56+ (Lua config), Quickshell, matugen (build from the AUR or source where Arch Linux ARM has none). All installed; Hyprland is 0.57.0
-- [~] Set up, log in, check the base works (island, search, control, media, notifications). Set up and running; checked so far (2026-11-02): resting island, all seven pages by IPC and by mouse, alert and notification history, light mode, Control finds Wi-Fi, Bluetooth, speaker and the backlight. Still open below
+- [x] Set up, log in, check the base works (island, search, control, media, notifications). Checked 2026-11-02 by IPC, real keys and mouse (ydotool), dark and light; fixes below
   - [x] Pages stayed empty after a switch while open: the page Loader bound both `source` and `sourceComponent` (binding order differs per machine). Fixed, `017dc33`
   - [x] A hover-opened island closed on a page switch: Hyprland sends a leave when the shape changes under a still pointer. The leave timer now asks `hyprctl cursorpos`. Fixed, `648ea04`
   - [x] Peek: the date ran into "Click to open". Fixed, `558a261`
@@ -64,12 +64,12 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
   - [x] ydotool: user added to `input`, `ydotool.service` enabled (works from the next login)
   - [x] Tray status (user, decision in `SomeShell.md`): layout (click switches), network (signal bars; click opens Internet), Bluetooth (connected icon; click opens Bluetooth), battery (UPower: icon, rolling percentage, error color at 20%); alerts at 20% and 10% once per discharge (10% even with Do not disturb). `ipc call battery simulate <percent> <charging>` for tests. Tested on the tablet by mouse, dark and light. App tray icons (Discord) still untested: none installed
   - [ ] Desktop: battery hidden (no laptop battery), Ethernet icon
-  - [ ] Search by real keys: apps, math, web fallback, `/clip`, `/emoji`, `/wall`
-  - [ ] Control detail pages by mouse: Internet, Bluetooth, Sound, Night light
-  - [ ] Media with a real player (music and video layouts, peek row, resting island)
-  - [ ] Power page with `SOMESHELL_DRY_POWER=1` (hold to confirm)
-  - [ ] Super tap on the tablet keyboard (tap opens, Super+N does not)
-  - [ ] Memory and idle CPU on the tablet (8 GB, ARM), compared with the desktop
+  - [x] Search by real keys: apps, math, web fallback, letters-in-order, `/clip` (Thai text), `/emoji` (arrows + Enter copies), `/wall`, `/`. Fixed: ☺-style emoji drew as black text glyphs (emoji cells now use fontconfig's `emoji` font)
+  - [x] Control detail pages: Internet, Bluetooth, Sound, Night light. Fixed: the Wi-Fi list showed only the connected network (the Quickshell scanner was never on; now on only while the Internet page shows, `37af1cd`); two Bluetooth devices with one name now show the end of their address
+  - [x] Media with VLC (silent test track and video): music and video layouts, peek row, resting island, play/pause and seek by mouse. Fixed: VLC registers twice on D-Bus and showed two player chips
+  - [x] Power page with `SOMESHELL_DRY_POWER=1`: a short press cancels, a hold fills and confirms ("Would run: systemctl reboot")
+  - [x] Super tap (ydotool): tap opens on Search, tap closes, Super+1/2 only switch, a 0.7 s hold does nothing. Once, right after a restart, a tap seemed to land before the shortcuts were registered (not reproduced; the user was also using the tablet)
+  - [x] Memory and idle CPU: fresh 268 MB RSS / 177 MB anon, after every page 286 / 182 (pages unload); idle ~0.4% of one core. Anon is high next to an empty Quickshell (~55 MB on the desktop): likely the layer buffers (Adreno shares system memory; the top window is 80% of a 2880x1800 screen). Desktop numbers still to take for comparison
 - [ ] Test what the desktop cannot: Wi-Fi (join, password, DNS), backlight brightness, battery (once the battery part exists), SDDM (step 7)
 
 ## Later steps
