@@ -13,6 +13,7 @@ Singleton {
     property alias theme: adapter.theme
     property alias wallpaper: adapter.wallpaper
     property alias nightLight: adapter.nightLight
+    property alias calendar: adapter.calendar
     readonly property bool loaded: file.loaded
 
     FileView {
@@ -56,6 +57,14 @@ Singleton {
             property JsonObject wallpaper: JsonObject {
                 // Where /wall looks for images (empty = ~/Pictures/Wallpapers)
                 property string folder: ""
+            }
+
+            property JsonObject calendar: JsonObject {
+                // Private iCal (ICS) links of online calendars (Google,
+                // Outlook, Apple); .ics files in ~/.config/someshell/calendar
+                // are read as well
+                property var feeds: []
+                property string weekStart: "sunday"  // sunday or monday
             }
 
             property JsonObject nightLight: JsonObject {

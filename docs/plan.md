@@ -83,7 +83,7 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
 ## Step 5: Media data, calendar, system
 - [x] System page (decision in `SomeShell.md`): CPU, Memory, GPU, Network, Disk, Battery as label, rolling number, a minute's thin line (Disk and Battery: a bar), one line of detail. `lib/sysmon.sh` samples once a second only while the page is open (sensors found once; no `sleep` or command substitution per sample: ~0.9% of one core on the tablet, was 1.9%). GPU: NVIDIA (one `nvidia-smi -l 1`), AMD busy file, else the devfreq clock (Adreno: shown as "GPU clock"). Battery power from UPower or the battery's own current x voltage (UPower says 0 W on the tablet). The tray's battery opens the page. Tested on the tablet, dark and light
 - [ ] System page on the PC: NVIDIA load and temperature, coretemp/k10temp, Ethernet traffic, no battery column
-- [ ] Calendar page
+- [x] Calendar page (decision in `SomeShell.md`): printed month grid (Sunday first, `calendar.weekStart`), today circled, chosen day filled, a dot under days with events; the chosen day's events beside it (all day first, time, place). Events from calendar links (`calendar.feeds` in `shell.json`, downloaded by `lib/calendar.sh` when the page opens and the copy is 15 min old; a failed link keeps the copy and the page says "Offline") and `.ics` files in `~/.config/someshell/calendar/`. `lib/ics.js` expands repeats (daily/weekly/monthly/yearly, interval, count, until, BYDAY incl. "-1FR", BYMONTHDAY, EXDATE, moved occurrences); tested with node and on the tablet with Google's public Thai holiday calendar (322 events, Thai titles). ‹ › and the wheel change the month
 - [ ] Browser extension, music layout data, lyrics
 
 ## Later steps

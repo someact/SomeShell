@@ -143,6 +143,12 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
 **Calendar**
 - Month grid like a printed calendar, today circled.
 - Events from a local `.ics` or online calendar (decide later).
+  > [!check] Decided (user, 2026-11-02)
+  > - Events come from **calendar links**: the private iCal (ICS) address of a Google, Outlook or Apple calendar, listed in `shell.json` (`calendar.feeds`), plus any `.ics` files in `~/.config/someshell/calendar/`. Read only.
+  > - A link is downloaded when the page opens and its copy is older than 15 minutes; the copy (`~/.cache/someshell/calendar/`) keeps the page working offline. Nothing runs while the page is closed.
+  > - Repeating events: daily, weekly (with weekdays), monthly, yearly, with interval, count, until and skipped dates. Times in a calendar's own zone are shown as local time.
+  > - The week starts on **Sunday** (`calendar.weekStart`, "sunday" or "monday").
+  > - Layout: the month as a printed grid (month name big, weekday initials, today circled, a dot under days with events), and the chosen day's events beside it (time, title, place). Today is chosen when the page opens; a click picks another day; the mouse wheel, or the ‹ › buttons, change the month.
 
 **Resources**
 - CPU, GPU, RAM, temperature, disk, network.
