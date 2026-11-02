@@ -58,7 +58,11 @@ Column {
                 : modelData.icon?.includes("mouse") ? "mouse" : modelData.icon?.includes("keyboard") ? "keyboard"
                 : modelData.icon?.includes("phone") ? "smartphone" : modelData.icon?.includes("audio") ? "speaker" : "bluetooth"
             title: modelData.name
-            sub: modelData.pairing ? "Pairing…" : modelData.connected ? "Connected" : modelData.paired ? "Paired" : "Found nearby"
+            // Two devices with one name (a keyboard paired on two channels):
+            // the end of the address tells them apart
+            readonly property bool twin: root.devices.filter(d => d.name === modelData.name).length > 1
+            sub: (modelData.pairing ? "Pairing…" : modelData.connected ? "Connected" : modelData.paired ? "Paired" : "Found nearby")
+                + (twin ? "  ·  " + modelData.address.slice(-5) : "")
             onClicked: modelData.connected ? modelData.disconnect() : modelData.paired ? modelData.connect() : modelData.pair()
             onRightClicked: if (modelData.paired) modelData.forget()
 
