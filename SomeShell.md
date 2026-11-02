@@ -147,6 +147,12 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
 **Resources**
 - CPU, GPU, RAM, temperature, disk, network.
 - Drawn as editorial charts: thin lines, big numbers, no gauges.
+  > [!check] Decided (user, 2026-11-02: "start step 5 with the system page")
+  > - One row of columns, wide and short: **CPU, Memory, GPU, Network, Disk, Battery**. Each column: a spaced-caps label, a big rolling number, a thin line of the last 60 seconds (Disk: a thin bar), and one small line of detail.
+  > - CPU: load, temperature, core count. Memory: used, of total. GPU: load where the driver gives it (NVIDIA, AMD); on others (Adreno) the clock against its maximum, labelled as clock; temperature. Network: download speed (line), upload in the detail. Disk: the root disk used, free. Battery (only with one): percent, charging or not, power draw and health when UPower knows them.
+  > - A column whose source is missing is left out (no GPU column without a readable GPU, no battery on a desktop).
+  > - Sampled once a second by one small script that runs only while the page is open (no process per sample).
+  > - The tray's battery opens this page.
 
 **Operation (power)**
 - Lock, sleep, log out, restart, shut down.
@@ -176,7 +182,7 @@ Widget ideas: clock (poster style, huge), now playing, calendar, notes, system, 
   > [!check] Decided (user, 2026-11-02): the tray carries the status
   > - Left to right: app tray icons (Discord and the like, Quickshell `SystemTray`), keyboard layout, network, Bluetooth, battery. Each status icon shows only where the hardware is there (no battery on the desktop, no Bluetooth without an adapter).
   > - Network: Ethernet, Wi-Fi with signal bars, searching, off. Bluetooth: on, connected (with a device), hidden when off. Battery: icon and percentage (rolling digits), a bolt while charging, the error color at 20% and below while discharging.
-  > - Click: network → Internet page, Bluetooth → Bluetooth page, layout → next layout. Battery: no page yet (the system page comes in step 5).
+  > - Click: network → Internet page, Bluetooth → Bluetooth page, layout → next layout, battery → System page.
   > - Battery alerts on the island at 20% and 10% while discharging, once each until it charges again; 10% shows even with Do not disturb.
 - **Overview** (Super+Tab): workspaces as a row of "pages" with their names big. It must always switch (see section 6).
 - **Lock screen:** big clock in poster style, password dots that pop in and shake when wrong.

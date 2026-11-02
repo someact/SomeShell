@@ -80,8 +80,13 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
   - [ ] SDDM (step 7)
 - [ ] Blender on the tablet (later, when working on the PC): no aarch64 package (Arch Linux ARM has none, Flathub is x86_64 only); the GPU is enough for light work (OpenGL 4.6 freedreno, Vulkan 1.3 Turnip; Cycles CPU only). Build from source, or check whether blender.org has Linux ARM64 builds
 
+## Step 5: Media data, calendar, system
+- [x] System page (decision in `SomeShell.md`): CPU, Memory, GPU, Network, Disk, Battery as label, rolling number, a minute's thin line (Disk and Battery: a bar), one line of detail. `lib/sysmon.sh` samples once a second only while the page is open (sensors found once; no `sleep` or command substitution per sample: ~0.9% of one core on the tablet, was 1.9%). GPU: NVIDIA (one `nvidia-smi -l 1`), AMD busy file, else the devfreq clock (Adreno: shown as "GPU clock"). Battery power from UPower or the battery's own current x voltage (UPower says 0 W on the tablet). The tray's battery opens the page. Tested on the tablet, dark and light
+- [ ] System page on the PC: NVIDIA load and temperature, coretemp/k10temp, Ethernet traffic, no battery column
+- [ ] Calendar page
+- [ ] Browser extension, music layout data, lyrics
+
 ## Later steps
-- Step 5: browser extension, music layout data, lyrics; calendar and system pages
 - Step 6: edit desktop (grid editor without motion while editing, widgets, presets, workspace designs, control layout editing)
 - Step 7: lock screen, overview, dock, settings window, installer. Overview must: click a window → switch to its workspace, focus that window, close; Enter on a workspace → switch and close; tested by mouse with ydotool
 - Step 8: GIFs, Quick Share, WARP, capture tools, game overlay, on-screen keyboard

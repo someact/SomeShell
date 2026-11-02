@@ -147,10 +147,18 @@ Item {
             }
         }
 
-        // Battery: icon and percentage; the error color when low
-        Row {
+        // Battery: icon and percentage; the error color when low. A click
+        // opens the System page (power draw, time left)
+        Tap {
+            id: batTap
             anchors.verticalCenter: parent.verticalCenter
             visible: Battery.available || Battery.testing
+            implicitWidth: batRow.implicitWidth + 12
+            implicitHeight: 28
+            onClicked: Ui.openPage("system")
+        Row {
+            id: batRow
+            anchors.centerIn: parent
             spacing: 2
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
@@ -158,14 +166,15 @@ Item {
                 filled: true
                 rotation: 90
                 name: Battery.icon
-                color: Battery.low ? Theme.ink.error : Theme.ink.fg
+                color: batTap.pressed ? batTap.fg : Battery.low ? Theme.ink.error : Theme.ink.fg
             }
             Digits {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Battery.percent + "%"
                 size: Theme.font.small
-                color: Battery.low ? Theme.ink.error : Theme.ink.fg
+                color: batTap.pressed ? batTap.fg : Battery.low ? Theme.ink.error : Theme.ink.fg
             }
+        }
         }
     }
 
