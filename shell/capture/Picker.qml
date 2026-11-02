@@ -1,19 +1,28 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Widgets
 import qs.core
 import qs.components
 import qs.services
 
 // The capture picker on one monitor: the frozen picture, dimmed except the
 // chosen box. Hover lights a window, a click takes it, a drag draws a box,
-// Enter takes the whole monitor, Esc or a right click cancels.
+// Enter takes the whole monitor, Esc or a right click cancels. The bar at the
+// bottom switches the mode (Screenshot, Text, Lens, Translate, Color; also
+// Tab, Shift+Tab, 1-5). Color: a magnifier follows the pointer, a click takes
+// the pixel.
 PanelWindow {
     id: win
 
     required property var modelData
     screen: modelData
     readonly property var mon: Capture.monitor(modelData.name)
+    readonly property string mode: Capture.session?.mode ?? "shot"
+    readonly property var modeInfo: Capture.modes.find(m => m.id === mode) ?? Capture.modes[0]
+    readonly property bool colorMode: mode === "color"
+    // Where the pointer is (for the magnifier); -1 when it is not here
+    property point pointer: Qt.point(-1, -1)
 
     anchors.top: true
     anchors.bottom: true
@@ -42,8 +51,8 @@ PanelWindow {
     property point to: Qt.point(0, 0)
     property bool dragging: false
     property var hovered: null
-    // The box that would be taken now
-    readonly property var box: dragging
+    // The box that would be taken now (none in color mode)
+    readonly property var box: colorMode ? null : dragging
         ? { x: Math.min(from.x, to.x), y: Math.min(from.y, to.y), w: Math.abs(to.x - from.x), h: Math.abs(to.y - from.y) }
         : hovered
 
@@ -112,7 +121,7 @@ PanelWindow {
         Txt {
             id: hint
             anchors.centerIn: parent
-            text: (Capture.session?.mode === "text" ? "Copy text" : "Screenshot") + "   ·   drag a box  ·  click a window  ·  enter: whole screen  ·  esc"
+            text: win.modeInfo.label + "   ·   " + win.modeInfo.hint + "   ·   esc"
             caps: true
             size: Theme.font.small
             color: Theme.ink.fg
@@ -124,15 +133,21 @@ PanelWindow {
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: Qt.CrossCursor
+        onExited: win.pointer = Qt.point(-1, -1)
         onPressed: event => {
             if (event.button === Qt.RightButton) {
                 Capture.cancel();
                 return;
             }
+            if (win.colorMode)
+                return;
             win.from = Qt.point(event.x, event.y);
             win.to = win.from;
         }
         onPositionChanged: event => {
+            win.pointer = Qt.point(event.x, event.y);
+            if (win.colorMode)
+                return;
             if (pressed && !win.dragging && Math.abs(event.x - win.from.x) + Math.abs(event.y - win.from.y) > 6)
                 win.dragging = true;
             if (win.dragging)
@@ -143,6 +158,10 @@ PanelWindow {
         onReleased: event => {
             if (event.button !== Qt.LeftButton)
                 return;
+            if (win.colorMode) {
+                Capture.pickColor(win.mon.name, Math.max(0, Math.min(win.width - 1, event.x)), Math.max(0, Math.min(win.height - 1, event.y)));
+                return;
+            }
             if (win.dragging) {
                 win.dragging = false;
                 win.take({ x: Math.min(win.from.x, win.to.x), y: Math.min(win.from.y, win.to.y), w: Math.abs(win.to.x - win.from.x), h: Math.abs(win.to.y - win.from.y) });
@@ -152,11 +171,88 @@ PanelWindow {
         }
     }
 
+    // Color: a magnifier at the pointer, 8x, the pixel under it boxed
+    ClippingRectangle {
+        id: loupe
+        visible: win.colorMode && win.pointer.x >= 0
+        readonly property int zoom: 8
+        readonly property real side: 136
+        x: Math.min(win.pointer.x + 24, win.width - side - 8)
+        y: Math.min(win.pointer.y + 24, win.height - side - 8)
+        width: side
+        height: side
+        radius: 14
+        color: Theme.ink.bg
+        Image {
+            x: -win.pointer.x * loupe.zoom + loupe.side / 2 - loupe.zoom / 2
+            y: -win.pointer.y * loupe.zoom + loupe.side / 2 - loupe.zoom / 2
+            width: win.width * loupe.zoom
+            height: win.height * loupe.zoom
+            source: win.mon ? "file://" + win.mon.file : ""
+            fillMode: Image.Stretch
+            smooth: false
+        }
+        Rectangle {
+            anchors.centerIn: parent
+            width: loupe.zoom + 4
+            height: loupe.zoom + 4
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.ink.fg
+        }
+        // The frame, over the picture
+        Rectangle {
+            anchors.fill: parent
+            radius: loupe.radius
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.ink.fg
+        }
+    }
+
+    // The mode bar: one outlined pill per mode, the chosen one filled
+    Rectangle {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 48
+        width: modeRow.implicitWidth + 16
+        height: modeRow.implicitHeight + 16
+        radius: height / 2
+        color: Theme.ink.bg
+        Row {
+            id: modeRow
+            anchors.centerIn: parent
+            spacing: 6
+            Repeater {
+                model: Capture.modes
+                Chip {
+                    required property var modelData
+                    required property int index
+                    icon: modelData.icon
+                    label: (index + 1) + "  " + modelData.label
+                    active: win.mode === modelData.id
+                    onClicked: Capture.setMode(modelData.id)
+                }
+            }
+        }
+    }
+
     Item {
         anchors.fill: parent
         focus: true
         Keys.onEscapePressed: Capture.cancel()
-        Keys.onReturnPressed: win.take({ x: 0, y: 0, w: win.width, h: win.height })
-        Keys.onEnterPressed: win.take({ x: 0, y: 0, w: win.width, h: win.height })
+        Keys.onReturnPressed: if (!win.colorMode) win.take({ x: 0, y: 0, w: win.width, h: win.height })
+        Keys.onEnterPressed: if (!win.colorMode) win.take({ x: 0, y: 0, w: win.width, h: win.height })
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Tab)
+                Capture.stepMode(1);
+            else if (event.key === Qt.Key_Backtab)
+                Capture.stepMode(-1);
+            else if (event.key >= Qt.Key_1 && event.key <= Qt.Key_5)
+                Capture.setMode(Capture.modes[event.key - Qt.Key_1].id);
+            else
+                return;
+            event.accepted = true;
+        }
     }
 }

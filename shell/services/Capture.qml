@@ -6,8 +6,10 @@ import Quickshell.Hyprland
 import qs.core
 
 // Capture tools: freeze the screens, let the picker (capture/Picker.qml) choose
-// a box, then cut it out (lib/capture.sh). Modes: "shot" (save and copy the
-// picture), "text" (copy the text in it). `screen()` takes the whole monitor
+// a box, then cut it out (lib/capture.sh). Modes (the picker's bar): "shot"
+// (save and copy the picture), "text" (copy the text in it), "lens" (search it
+// with Google Lens in the browser), "translate" (Thai <-> English on the
+// island), "color" (copy a pixel's color). `screen()` takes the whole monitor
 // at once, with no picker (PrtSc). `session` is set while picking.
 Singleton {
     id: root
@@ -17,6 +19,25 @@ Singleton {
     readonly property bool picking: session !== null
     property string mode: ""
     readonly property string script: Quickshell.shellPath("lib/capture.sh")
+    readonly property var modes: [
+        { id: "shot", label: "Screenshot", icon: "screenshot_region", hint: "Drag a box · click a window · Enter: whole screen" },
+        { id: "text", label: "Text", icon: "text_fields", hint: "Drag a box around the text to copy it" },
+        { id: "lens", label: "Lens", icon: "image_search", hint: "Drag a box to search it with Google Lens" },
+        { id: "translate", label: "Translate", icon: "translate", hint: "Drag a box around the text · Thai ↔ English" },
+        { id: "color", label: "Color", icon: "colorize", hint: "Click a pixel to copy its color" }
+    ]
+    // Switch the mode while picking (the picker's bar, Tab, 1-5)
+    function setMode(m) {
+        if (!session || !modes.some(x => x.id === m))
+            return;
+        session = Object.assign({}, session, { mode: m });
+    }
+    function stepMode(by) {
+        if (!session)
+            return;
+        const i = modes.findIndex(x => x.id === session.mode);
+        setMode(modes[(i + by + modes.length) % modes.length].id);
+    }
 
     function start(m) {
         if (picking || freezer.running || worker.running)
@@ -98,6 +119,17 @@ Singleton {
         worker.running = true;
     }
 
+    // Color mode: one pixel (layout pixels inside the monitor)
+    function pickColor(name, px, py) {
+        const m = monitor(name);
+        if (!m)
+            return cancel();
+        session = null;
+        worker.kind = "color";
+        worker.command = [script, "color", m.file, String(Math.round(px * m.scale)), String(Math.round(py * m.scale))];
+        worker.running = true;
+    }
+
     function cancel() {
         session = null;
         cleaner.running = true;
@@ -123,6 +155,30 @@ Singleton {
                 Ui.showAlert("Screenshot failed", "", "Capture", "error");
             else
                 Ui.showAlert("Screenshot saved", "Copied · click to open", "Capture", "screenshot_region", { image: out, open: out });
+        } else if (kind === "lens") {
+            if (out.startsWith("https://")) {
+                Quickshell.execDetached(["xdg-open", out]);
+                Ui.showAlert("Searching with Lens", "Opened in your browser", "Capture · Lens", "image_search");
+            } else {
+                Ui.showAlert("Lens failed", "Google Lens did not answer", "Capture · Lens", "error");
+            }
+        } else if (kind === "color") {
+            if (out === "")
+                Ui.showAlert("No color", "", "Capture · Color", "error");
+            else
+                Ui.showAlert(out, "Copied", "Capture · Color", "colorize", { image: Quickshell.env("XDG_RUNTIME_DIR") + "/someshell-swatch.png?" + Date.now() });
+        } else if (kind === "translate") {
+            let t = null;
+            try {
+                t = JSON.parse(out);
+            } catch (e) {}
+            if (!t || !t.translation)
+                Ui.showAlert(out === "" ? "No text found" : "Translate failed", out === "" ? "Nothing to translate" : "Google Translate did not answer", "Capture · Translate", "translate");
+            else
+                Ui.showAlert(t.translation, t.text, "Translate · " + t.from.toUpperCase() + " → " + t.to.toUpperCase() + " · copied", "translate", {
+                    wide: true,
+                    open: "https://translate.google.com/?sl=auto&tl=" + t.to + "&text=" + encodeURIComponent(t.text)
+                });
         } else if (out === "") {
             Ui.showAlert("No text found", "Nothing was copied", "Capture", "search_off");
         } else {

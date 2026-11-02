@@ -127,13 +127,19 @@ Singleton {
     // A short alert shown over everything else, then gone
     property var alert: null
     // extra: { image: a picture shown instead of the icon, open: a file a click opens }
+    // extra: { image, open (a file or address a click opens), wide (a long
+    // text, e.g. a translation: shown wider and longer) }
+    property int alertTime: 4500
     function showAlert(title, body, app, icon, extra) {
-        alert = { title: title ?? "", body: body ?? "", app: app ?? "", icon: icon || "notifications", image: extra?.image ?? "", open: extra?.open ?? "" };
+        const wide = extra?.wide ?? false;
+        // A wide alert stays long enough to read: 4.5 s plus 40 ms a letter, up to 12 s
+        alertTime = wide ? Math.min(12000, 4500 + 40 * String(title ?? "").length) : 4500;
+        alert = { title: title ?? "", body: body ?? "", app: app ?? "", icon: icon || "notifications", image: extra?.image ?? "", open: extra?.open ?? "", wide: wide };
         alertTimer.restart();
     }
     Timer {
         id: alertTimer
-        interval: 4500
+        interval: root.alertTime
         onTriggered: root.alert = null
     }
 

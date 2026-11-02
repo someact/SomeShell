@@ -39,9 +39,9 @@ Scope {
         wallpaperRandom: () => Wallpapers.random(),
         screenshot: () => Capture.start("shot"),
         screenshotScreen: () => Capture.screen(),
-        lens: () => later("Google Lens", 8),
+        lens: () => Capture.start("lens"),
         ocr: () => Capture.start("text"),
-        translate: () => later("Translate", 8),
+        translate: () => Capture.start("translate"),
         recordRegion: () => later("Recording", 8),
         recordScreen: () => later("Recording", 8),
         recordScreenSound: () => later("Recording", 8)

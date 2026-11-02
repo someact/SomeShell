@@ -69,6 +69,7 @@ Design mockup, **approved** 2026-11-02 (round 2): https://claude.ai/artifact/6Lr
 > - **Page switch (user, 2026-11-02): slide + wipe.** The old page fades out fast (~90 ms); the new page slides in 24 px from the side you moved toward (Tab or a tab to the right: from the right; Shift+Tab or a tab to the left: from the left) while it is wiped in top to bottom (~240 ms, ease-out). The tab underline slides to the new tab. The size spring settles without a visible bounce.
 > - Island shape (tab with ears, plain tab, floating) and island color (always ink, or opposite of the desktop) both become options in Edit desktop. Default: tab with ears, always ink.
 > - The mockup is a design reference, not code to copy. Its layouts break (overlap, content outside the island) because every page was drawn at a fixed size and the island was resized around it afterwards.
+> - **Mouse wheel switches pages** (user, 2026-11-03): over the tab row, or over a page that has nothing to scroll; a page that scrolls (search results, clipboard, lyrics) keeps the wheel. One step per wheel notch, in the same slide + wipe.
 
 > [!warning] Lessons from the mockup (2026-11-02)
 > - **The content sizes the island, never the other way round.** Each page lays itself out and reports its size; the island animates to that size. No fixed widths or heights for pages.
@@ -159,6 +160,10 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   > - **Screenshot:** copied to the clipboard and saved to `~/Pictures/Screenshots/Screenshot_<date>_<time>.png` (the XDG pictures folder). The island alerts with a small preview; a click on it opens the file.
   > - **Text:** Tesseract reads the box (English and Thai; small boxes are enlarged first), the text is copied and the island shows its start. Nothing read: the island says so and copies nothing.
   > - The picker is loaded only while picking; the frozen pictures live in `$XDG_RUNTIME_DIR` and are deleted after. While the shell is down the keys fall back to `slurp` (as now).
+  > [!check] Decided (user, 2026-11-03): **a mode bar in the picker.** Super+Shift+S opens it on Screenshot (the default); a bar of outlined pills at the bottom switches the mode: **Screenshot, Text, Lens, Translate, Color**. Click a pill, Tab / Shift+Tab, or 1–5. The keys for one mode (Super+Shift+X text, Super+Shift+A Lens, Super+Shift+T translate) open the picker on that mode.
+  > - **Lens:** the box is uploaded to Google Lens and the result opens in the browser (the picture goes to Google).
+  > - **Translate:** Tesseract reads the box, Google Translate's free web endpoint translates it (Thai ↔ English: to English when the text is Thai, else to Thai); the island shows the original and the translation and copies the translation. Nothing opens.
+  > - **Color:** the picker shows a loupe at the pointer; a click copies the pixel's hex color and the island shows a swatch with it.
 
 **Media**
 - A browser extension (Zen/Firefox, later Chrome) sends the page info to the shell: site, title, full-size cover, and whether it's music.
@@ -220,6 +225,7 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   > - The power key locks and turns the screens off, like a phone; pressed again it turns them back on (the lock screen shows). Shutting down stays on the power page.
   > - Hyprland holds logind's power-key block (`systemd-inhibit --what=handle-power-key`) for the session; without a session, logind's own setting applies. No system file changes.
   > - Volume keys: raising the volume also unmutes it.
+  > [!check] Decided (user, 2026-11-03: the rising fill "look cheap"): **the line draws the edge.** While a button is held, a 2 px line draws itself around its border from the top left, clockwise (like the posters' rules), the corner marks close in, and the caption counts down `RELEASE · 3 · 2 · 1` (rolling digits). At the end the whole button inverts in one snap (ink ↔ paper, the press motion) and the action runs. Letting go early pulls the line back fast (150 ms). The hold stays 0.8 s.
 
 ---
 

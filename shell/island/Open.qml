@@ -40,6 +40,26 @@ FocusScope {
         event.accepted = true;
     }
 
+    // The mouse wheel switches pages. Pages that scroll (lists, lyrics, the
+    // calendar's month, sliders) take the wheel first, so this only gets it
+    // over the tab row and over pages with nothing to scroll. One page per
+    // notch; a touchpad adds up to a notch.
+    WheelHandler {
+        property real acc: 0
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        onWheel: event => {
+            const d = Math.abs(event.angleDelta.y) >= Math.abs(event.angleDelta.x) ? event.angleDelta.y : event.angleDelta.x;
+            acc += d;
+            while (Math.abs(acc) >= 120) {
+                const step = acc > 0 ? -1 : 1;
+                acc -= acc > 0 ? 120 : -120;
+                if (Ui.controlEdit)
+                    return;
+                Ui.nextPage(step);
+            }
+        }
+    }
+
     // Tabs
     Row {
         id: tabs

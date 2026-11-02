@@ -7,8 +7,11 @@ import qs.components
 Item {
     id: root
 
-    readonly property var alert: Ui.alert ?? { title: "", body: "", app: "", icon: "notifications", image: "" }
-    readonly property int textWidth: Math.min(380, Math.max(title.implicitWidth, body.implicitWidth, app.implicitWidth))
+    readonly property var alert: Ui.alert ?? { title: "", body: "", app: "", icon: "notifications", image: "", wide: false }
+    // Wide (a translation): the title wraps to four lines, the body (the
+    // original) to two, and it stays longer (Ui.alertTime)
+    readonly property bool wide: !!alert.wide
+    readonly property int textWidth: Math.min(wide ? 520 : 380, Math.max(title.implicitWidth, body.implicitWidth, app.implicitWidth))
 
     implicitWidth: 20 + badge.width + 14 + textWidth + 22
     implicitHeight: Math.max(44, col.implicitHeight) + 34
@@ -50,7 +53,8 @@ Item {
 
         Txt {
             id: app
-            text: root.alert.app || "SomeShell"
+            // Upper case already, so its width is measured as shown
+            text: (root.alert.app || "SomeShell").toUpperCase()
             caps: true
             color: Theme.ink.mute
             width: parent.width
@@ -60,6 +64,8 @@ Item {
             text: root.alert.title
             face: Theme.font.medium
             width: parent.width
+            wrapMode: root.wide ? Text.Wrap : Text.NoWrap
+            maximumLineCount: root.wide ? 4 : 1
         }
         Txt {
             id: body
@@ -89,7 +95,7 @@ Item {
             property: "left"
             from: 1
             to: 0
-            duration: 4500
+            duration: Ui.alertTime
         }
     }
 }
