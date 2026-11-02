@@ -21,6 +21,7 @@ Item {
     property bool hovered: false
     readonly property string mode: !here || (Ui.hidden && !Ui.open) ? "none"
         : Ui.open ? "open"
+        : Ui.level !== "" ? "level"
         : Ui.alert ? "alert"
         : hovered ? "peek"
         : Ui.quiet ? "quiet"
@@ -66,7 +67,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             focus: root.mode === "open"
             sourceComponent: ({
-                rest: rest, peek: peek, alert: alert, quiet: quiet, open: open
+                rest: rest, peek: peek, alert: alert, quiet: quiet, open: open, level: level
             })[root.mode] ?? null
             // New content fades in while the shape springs to its size
             onLoaded: if (root.mode !== "open") fade.restart()
@@ -202,4 +203,5 @@ Item {
     Component { id: alert; Alert {} }
     Component { id: quiet; Quiet {} }
     Component { id: open; Open {} }
+    Component { id: level; Level {} }
 }

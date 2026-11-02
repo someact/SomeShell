@@ -23,8 +23,13 @@ Scope {
         emoji: () => Ui.openPage("search", false, "/emoji "),
         islandHide: () => Ui.hidden = !Ui.hidden,
         lightDark: () => Config.theme.mode = Config.theme.mode === "dark" ? "light" : "dark",
-        brightnessUp: () => Brightness.available ? Brightness.step(5) : brightness.run("+"),
-        brightnessDown: () => Brightness.available ? Brightness.step(-5) : brightness.run("-"),
+        brightnessUp: () => root.brightnessStep(5),
+        brightnessDown: () => root.brightnessStep(-5),
+        // Raising unmutes (a muted speaker would hide the change)
+        volumeUp: () => { if (Audio.muted) Audio.toggleMute(); root.volumeStep(0.05); },
+        volumeDown: () => root.volumeStep(-0.05),
+        mute: () => { Audio.toggleMute(); Ui.showLevel("volume"); },
+        micMute: () => { Audio.toggleMic(); Ui.showLevel("mic"); },
         overview: () => later("Overview", 7),
         keys: () => later("Keybind list", 7),
         osk: () => later("On-screen keyboard", 8),
@@ -54,6 +59,23 @@ Scope {
             // The Super tap is a release bind, which only sends "released"
             onReleased: if (modelData === "island" && Date.now() - pressedAt > 400) root.actions[modelData]()
         }
+    }
+
+    // Steps land on whole multiples (37% + 5% → 40%), so the number stays round
+    function volumeStep(by) {
+        const size = Math.abs(by);
+        const at = Audio.volume / size;
+        const steps = by > 0 ? Math.floor(at + 0.01) + 1 : Math.ceil(at - 0.01) - 1;
+        Audio.setVolume(Math.max(0, steps * size));
+        Ui.showLevel("volume");
+    }
+    function brightnessStep(by) {
+        if (!Brightness.available) {
+            brightness.run(by > 0 ? "+" : "-");
+            return;
+        }
+        Brightness.step(by);
+        Ui.showLevel("brightness");
     }
 
     // Brightness keys go through the Brightness service (the tile stays right);

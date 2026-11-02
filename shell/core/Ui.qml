@@ -68,6 +68,23 @@ Singleton {
         onTriggered: root.alert = null
     }
 
+    // A level a key just changed: "volume", "mic" or "brightness". Shown for
+    // a moment after the last press; touching its bars keeps it up.
+    property string level: ""
+    function showLevel(kind) {
+        level = kind;
+        levelTimer.restart();
+    }
+    function keepLevel() {
+        if (level !== "")
+            levelTimer.restart();
+    }
+    Timer {
+        id: levelTimer
+        interval: 1600
+        onTriggered: root.level = ""
+    }
+
     function pageIndex(id) {
         const i = pages.findIndex(p => p.id === id);
         return i < 0 ? 0 : i;

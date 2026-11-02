@@ -29,7 +29,7 @@ Old bugs (section 6 of `SomeShell.md`):
 - [~] Island window: rest, alert over everything, peek on hover, open (tabs on top, each page sets the size), quiet line in game mode or fullscreen; size from content with a spring; follows the mouse while closed; shapes ears, tab, float. Live items (music, recording, several at once) come with their services in step 4
 - [~] Keyboard focus: none at rest, OnDemand while open (keys stay with the island even when the mouse moves over windows), Esc and Tab work, a hover-opened island closes 450 ms after the mouse leaves, a click outside closes it. Exception: a click on a window border or in the gap between windows does not count (Hyprland takes it for resizing); tested by mouse with ydotool 2026-11-02
 - [x] Workspace badge per monitor (slot number, scroll to switch), tray tab with the keyboard layout (tray icons untested: no tray apps were running)
-- [x] Global shortcuts (all 23 names in keybinds.lua; unbuilt ones say which step brings them) and IPC (`island`, `wallpaper`, `theme`)
+- [x] Global shortcuts (all names in keybinds.lua; unbuilt ones say which step brings them) and IPC (`island`, `wallpaper`, `theme`)
 
 ## Step 3: Search and power
 - [x] Apps (name, generic name and keywords; letters-in-order matches; apps you open often and recently rank first, `launches.json`; an empty search lists only apps you have opened), math parser `lib/calc.js` (no eval, 18 cases tested with node), web search fallback (Google). The page is as tall as its results
@@ -77,6 +77,8 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
   - [x] DNS edit: 1.1.1.1 1.0.0.1 applied from the page, back to automatic from the page (`nmcli` save and reconnect now run in order). The college network blocks outside DNS: with 1.1.1.1 no name resolved, so a wrong DNS can cut the internet (idea: undo a DNS change that resolves nothing)
   - [x] Backlight brightness (`ktz8866-backlight`, through logind): click, drag, brightness key and a change from another tool all show on the tile (keys now go through the service, the backlight is reread when Control opens, `410563d`)
   - [x] Battery: tray, alerts (simulated 15% and 8%)
+  - [x] Power key (user: an accidental press shut the tablet down): logind's power-key block for the session; the key locks and turns the screen off, again turns it on. `lock.sh` never locked (`qs ipc call` exits 0 for a missing target); it now checks the target, else hyprlock. Tested with the real key (user), `6a06364`
+  - [x] Level on the island (user: volume keys showed nothing; decision in `SomeShell.md`): volume, mute, mic and brightness keys go through the shell and show one row (icon, label, bars, rolling percent) for 1.6 s; muted dims it. Volume steps 5%, up unmutes. Tested by IPC and virtual keys, dark and light
   - [ ] SDDM (step 7)
 - [ ] Blender on the tablet (later, when working on the PC): no aarch64 package (Arch Linux ARM has none, Flathub is x86_64 only); the GPU is enough for light work (OpenGL 4.6 freedreno, Vulkan 1.3 Turnip; Cycles CPU only). Build from source, or check whether blender.org has Linux ARM64 builds
 

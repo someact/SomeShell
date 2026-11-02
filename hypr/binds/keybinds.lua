@@ -24,9 +24,9 @@ hl.bind("CTRL + SUPER + ALT + Slash", hl.dsp.exec_cmd("xdg-open " .. HYPR_DIR ..
 
 shell_bind("XF86MonBrightnessUp", "brightnessUp", { locked = true, repeating = true })
 shell_bind("XF86MonBrightnessDown", "brightnessDown", { locked = true, repeating = true })
--- Raising the volume unmutes it (a muted speaker would hide the change)
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+ -l 1.5"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"), { locked = true, repeating = true })
+-- Volume through the shell (it shows the level); raising unmutes
+shell_bind("XF86AudioRaiseVolume", "volumeUp", { locked = true, repeating = true })
+shell_bind("XF86AudioLowerVolume", "volumeDown", { locked = true, repeating = true })
 
 -- Power key (logind leaves it to us, autostart.lua): lock and screens off;
 -- with a screen off, turn them on (any key already wakes them, so this
@@ -90,11 +90,11 @@ hl.bind("SUPER + SHIFT + ALT + mouse:275", hl.dsp.exec_cmd("playerctl previous")
 hl.bind("SUPER + SHIFT + P", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Media: Play or pause" })
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("SUPER + SHIFT + M", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true, description = "Media: Mute" })
-hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true })
-hl.bind("SUPER + ALT + M", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, description = "Media: Mute the microphone" })
-hl.bind("ALT + XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
-hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
+shell_bind("SUPER + SHIFT + M", "mute", { locked = true, description = "Media: Mute" })
+shell_bind("XF86AudioMute", "mute", { locked = true })
+shell_bind("SUPER + ALT + M", "micMute", { locked = true, description = "Media: Mute the microphone" })
+shell_bind("ALT + XF86AudioMute", "micMute", { locked = true })
+shell_bind("XF86AudioMicMute", "micMute", { locked = true })
 
 --##! Window
 hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Window: Move" })

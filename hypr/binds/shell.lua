@@ -13,6 +13,10 @@ local FALLBACK = {
     ocr             = "pidof slurp || " .. ocr,
     brightnessUp    = "brightnessctl s 5%+",
     brightnessDown  = "brightnessctl s 5%-",
+    volumeUp        = "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ -l 1.5",
+    volumeDown      = "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-",
+    mute            = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    micMute         = "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
 }
 
 -- The shell is up while its island layer exists. Checked in Lua, so a key
