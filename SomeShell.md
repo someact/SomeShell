@@ -66,6 +66,7 @@ Design mockup, **approved** 2026-11-02 (round 2): https://claude.ai/artifact/6Lr
 > [!check] Decided from the mockup
 > - Pages are tabs along the **top** of the open island: icons, and the active one opens to show its number and name. The clock sits at the end of the tab row.
 > - **Every page has its own island size**, shaped by its content, and the island reshapes with a spring when the page changes (Search tall and narrow, Notifications narrowest, System wide and short, Media music wide and short, Media video taller). Sub-pages (a tile's details, music vs video) resize too.
+> - **Page switch (user, 2026-11-02): slide + wipe.** The old page fades out fast (~90 ms); the new page slides in 24 px from the side you moved toward (Tab or a tab to the right: from the right; Shift+Tab or a tab to the left: from the left) while it is wiped in top to bottom (~240 ms, ease-out). The tab underline slides to the new tab. The size spring settles without a visible bounce.
 > - Island shape (tab with ears, plain tab, floating) and island color (always ink, or opposite of the desktop) both become options in Edit desktop. Default: tab with ears, always ink.
 > - The mockup is a design reference, not code to copy. Its layouts break (overlap, content outside the island) because every page was drawn at a fixed size and the island was resized around it afterwards.
 

@@ -22,7 +22,17 @@ Singleton {
     property int page: 0
     // A tile's own page on the control page ("net", "bt", "sound", "night")
     property string detail: ""
-    onPageChanged: detail = ""
+    // Which way the last switch went (1: right, -1: left), for the page
+    // motion. Tab wraps around but still counts as its own direction.
+    property int direction: 1
+    property int previousPage: 0
+    property int step: 0
+    onPageChanged: {
+        detail = "";
+        direction = step !== 0 ? step : page >= previousPage ? 1 : -1;
+        step = 0;
+        previousPage = page;
+    }
     // Opened by a click after a hover: it closes when the mouse leaves.
     // Opened by Super, a shortcut or IPC: it stays until Esc or a click outside.
     property bool openedByHover: false
@@ -82,7 +92,8 @@ Singleton {
         else
             openPage(id ?? "search");
     }
-    function nextPage(step) {
-        page = (page + step + pages.length) % pages.length;
+    function nextPage(by) {
+        step = by > 0 ? 1 : -1;
+        page = (page + by + pages.length) % pages.length;
     }
 }
