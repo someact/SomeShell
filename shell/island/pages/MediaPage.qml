@@ -5,7 +5,7 @@ import qs.services
 
 // 03 Media. Music gets a square cover and big type; video gets a wide
 // picture. With several players, chips along the top pick one. The position
-// is read once a second only while this page shows and something plays.
+// is read once a second (Media.watchers) only while this page shows and something plays.
 Item {
     id: root
 
@@ -20,13 +20,8 @@ Item {
         return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
     }
 
-    Timer {
-        running: Media.playing
-        interval: 1000
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: Media.readPosition()
-    }
+    Component.onCompleted: Media.watchers++
+    Component.onDestruction: Media.watchers--
 
     Column {
         id: col

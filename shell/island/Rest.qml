@@ -20,25 +20,15 @@ Item {
         anchors.centerIn: parent
         spacing: 12
 
-        // Playing: cover and a small level meter
+        // Playing: round cover with the track's progress around it, and a small level meter
         Row {
             visible: root.media
             anchors.verticalCenter: parent.verticalCenter
             spacing: 8
-            Rectangle {
+            CoverRing {
                 anchors.verticalCenter: parent.verticalCenter
-                width: 22
-                height: 22
-                radius: 6
-                color: Theme.ink.raised
-                clip: true
-                Image {
-                    anchors.fill: parent
-                    source: root.media ? Media.art : ""
-                    sourceSize: Qt.size(44, 44)
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                }
+                visible: root.media
+                size: 30
             }
             Row {
                 anchors.verticalCenter: parent.verticalCenter

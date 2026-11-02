@@ -12,6 +12,12 @@ Item {
     readonly property bool media: Media.active
     readonly property bool rec: Recorder.recording
 
+    function time(s) {
+        s = Math.max(0, Math.round(s));
+        const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = String(s % 60).padStart(2, "0");
+        return h > 0 ? h + ":" + String(m).padStart(2, "0") + ":" + sec : m + ":" + sec;
+    }
+
     // The top row sets the width: clock, date and (with nothing live) the hint
     implicitWidth: Math.max(col.implicitWidth + 44, 400,
         clock.width + 14 + date.implicitWidth + (hint.visible ? 28 + hint.implicitWidth : 0) + 44)
@@ -112,6 +118,62 @@ Item {
                         }
                     }
                 }
+            }
+        }
+
+        // Elapsed, a thin progress line, the length; a click on the line seeks
+        Item {
+            id: progressRow
+            visible: root.media && Media.length > 0
+            width: parent.width
+            height: 18
+
+            PositionWatch { active: progressRow.visible }
+
+            Txt {
+                id: elapsed
+                anchors.verticalCenter: parent.verticalCenter
+                width: 52
+                text: root.time(Media.position)
+                size: Theme.font.small
+                color: Theme.ink.mute
+            }
+            Item {
+                id: track
+                anchors.left: elapsed.right
+                anchors.right: total.left
+                anchors.leftMargin: 6
+                anchors.rightMargin: 6
+                height: parent.height
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width
+                    height: 3
+                    radius: 1.5
+                    color: Theme.ink.line
+                }
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width * Media.progress
+                    height: 3
+                    radius: 1.5
+                    color: Theme.ink.accent
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: event => Media.seek(event.x / width * Media.length)
+                }
+            }
+            Txt {
+                id: total
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                width: 52
+                horizontalAlignment: Text.AlignRight
+                text: root.time(Media.length)
+                size: Theme.font.small
+                color: Theme.ink.mute
             }
         }
 

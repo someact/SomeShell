@@ -86,6 +86,7 @@ Scope {
             return JSON.stringify({
                 player: Media.player?.identity ?? null, title: Media.title, artist: Media.artist, kind: Media.kind,
                 source: Media.source, art: Media.art, liked: Media.liked, fromExtension: Media.tab !== null,
+                position: Math.round(Media.position), length: Math.round(Media.length), progress: Media.progress, watchers: Media.watchers,
                 tabs: Browser.tabs.map(t => ({ browser: t.browser, tab: t.tab, site: t.site, title: t.title, kind: t.kind, playing: t.playing, cover: t.cover, liked: t.liked }))
             });
         }

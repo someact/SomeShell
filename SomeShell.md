@@ -148,6 +148,11 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   > - The path: page script → extension background → native messaging (stdin/stdout) → helper → the shell's socket `$XDG_RUNTIME_DIR/someshell/browser.sock` (a Quickshell `SocketServer`), one JSON object per line. Back the other way for commands (like). The helper connects again when the shell restarts; nothing polls.
   > - Readers: every site through `navigator.mediaSession` (title, artist, album, the largest artwork); own readers where the site has more: YouTube Music (full-size cover, like state, music), YouTube (the full-size thumbnail, video). Each message says the site, the tab's address, music or video, and whether it plays.
   > - The shell matches the message to the browser's MPRIS player by title; when it matches, the extension's cover, site and kind win over the guess. Without the extension, nothing changes (MPRIS only).
+  > [!check] Decided (user, 2026-11-02: "cover when island idle should be circle and that circle are duration"; "when peek island while media play, should show the time too")
+  > - Resting island: the cover is a small circle, and a thin ring around it fills clockwise from the top as the track plays (the track's progress). The level meter beside it stays.
+  > - Peek: under the playing row, the elapsed time, a thin progress line and the length (like a phone lock screen); a click on the line seeks. Left out when the length is unknown (live streams).
+  > - The position is read once a second only while something plays and one of these is on screen (MPRIS does not push it), like the clock.
+  > - Lyrics come from LRCLIB (not from the site), so songs without lyrics on YouTube still get them.
 
 **Notifications**
 - Grouped by app, swipe or click to dismiss, reply when the app allows.

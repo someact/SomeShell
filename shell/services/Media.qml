@@ -54,10 +54,28 @@ Singleton {
         return "video";
     }
 
-    // Position is not pushed by MPRIS: it is read while a page shows it
+    // Position is not pushed by MPRIS: it is read once a second while
+    // something plays and a view that shows it is on screen (`watchers`),
+    // and at once on a seek, a pause or a new track
     property real position: 0
+    readonly property real progress: length > 0 ? Math.min(1, position / length) : 0
+    property int watchers: 0
     function readPosition() {
         position = player?.position ?? 0;
+    }
+    Timer {
+        running: root.playing && root.watchers > 0
+        interval: 1000
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.readPosition()
+    }
+    onPlayerChanged: readPosition()
+    onTitleChanged: readPosition()
+    onPlayingChanged: readPosition()
+    Connections {
+        target: root.player
+        function onPositionChanged() { root.readPosition(); }
     }
 
     function toggle() { player?.togglePlaying(); }
