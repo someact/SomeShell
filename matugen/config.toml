@@ -20,3 +20,49 @@ output_path = '~/.config/hypr/generated/colors.lua'
 [templates.hyprlock]
 input_path = './templates/hyprlock-colors.conf'
 output_path = '~/.config/hypr/generated/hyprlock-palette.conf'
+
+# Fixed terminal hues blended toward the wallpaper ({{colors.term_red...}})
+[config.custom_colors]
+term_red = { color = "#CC241D", blend = true }
+term_green = { color = "#98971A", blend = true }
+term_yellow = { color = "#D79921", blend = true }
+term_blue = { color = "#458588", blend = true }
+term_magenta = { color = "#B16286", blend = true }
+term_cyan = { color = "#689D6A", blend = true }
+
+# --- Apps ----------------------------------------------------------------
+[templates.gtk3]
+input_path = './templates/gtk.css'
+output_path = '~/.config/gtk-3.0/gtk.css'
+
+[templates.gtk4]
+input_path = './templates/gtk.css'
+output_path = '~/.config/gtk-4.0/gtk.css'
+post_hook = 'gsettings set org.gnome.desktop.interface color-scheme prefer-{{mode}}'
+
+[templates.kde]
+input_path = './templates/kde.colors'
+output_path = '~/.local/share/color-schemes/SomeShell.colors'
+post_hook = '~/.config/matugen/hooks/kde-colors.sh &'
+
+[templates.kitty]
+input_path = './templates/kitty-theme.conf'
+output_path = '~/.local/state/someshell/kitty-theme.conf'
+
+[templates.terminals]
+input_path = './templates/terminal-sequences.txt'
+output_path = '~/.local/state/someshell/terminal-sequences.txt'
+post_hook = '~/.config/matugen/hooks/terminals.sh &'
+
+[templates.zen]
+input_path = './templates/zen.css'
+output_path = '~/.local/state/someshell/zen-colors.css'
+post_hook = '~/.config/matugen/hooks/zen-colors.sh &'
+
+[templates.vesktop]
+input_path = './templates/vesktop.theme.css'
+output_path = '~/.config/vesktop/themes/someshell.theme.css'
+
+[templates.fuzzel]
+input_path = './templates/fuzzel.ini'
+output_path = '~/.config/fuzzel/fuzzel_theme.ini'

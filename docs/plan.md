@@ -23,7 +23,7 @@ Old bugs (section 6 of `SomeShell.md`):
 
 ## Step 2: Shell skeleton
 - [x] matugen config (relative template paths, run with `-c`) and the core templates: the shell palette (every role in dark and light, `~/.local/state/someshell/palette.json`), Hyprland borders and background, hyprlock
-- [ ] App templates: GTK 3/4, KDE, Kitty and other terminals, Zen, Vesktop, Fuzzel (last in step 2: they recolor live apps, so they are written only when the switch is near)
+- [x] App templates: GTK 3/4, KDE (plasma-apply-colorscheme), Kitty (its include now points at `~/.local/state/someshell/kitty-theme.conf`; it pointed at the pre-rename `somehypr` folder) and other terminals, Zen, Vesktop, Fuzzel (2026-11-02, at the switch)
 - [x] Shell entry, theme from the palette (desktop colors follow the mode; the island uses the ink set: always dark, or the opposite of the desktop), Mitr faces, motion parts (resize spring, rolling digits, press invert, fade-in on open)
 - [x] Wallpaper layer (decoded at screen size, crossfade), state `wall.json` (first start takes v1's wallpaper), matugen on wallpaper, mode and scheme changes, IPC
 - [~] Island window: rest, alert over everything, peek on hover, open (tabs on top, each page sets the size), quiet line in game mode or fullscreen; size from content with a spring; follows the mouse while closed; shapes ears, tab, float. Live items (music, recording, several at once) come with their services in step 4
@@ -42,7 +42,14 @@ Old bugs (section 6 of `SomeShell.md`):
 - [x] Media through MPRIS: music layout (square cover, big title) and video layout (wide picture), guessed from the player, the page address or an audio file; player chips when several play; seekable progress; live on the resting island (cover and meter) and as a row with controls in the peek. Tested with a silent VLC test track
 - [x] Notification server (alerts unless do not disturb; critical ones always), history grouped by app (`notifications.json`, last 100), dismiss, clear all, default action on click. Recording shows on the resting island next to music (several live things at once)
 
-**Base done → push, switch this machine to the new version, remove the v1 worktree.**
+**Base done (2026-11-02): this machine switched to the new version and everything was pushed.** The v1 worktree stays as the rollback until the new one has run for a while (`ln -sfn ../SomeShell-v1/{hypr,matugen,shell}` back, reload, start its shell).
+
+Switch notes:
+- [x] Links: `~/.config/hypr`, `matugen`, `quickshell/someshell`, the Mitr fontconfig rule (back in `fontconfig/`, written fresh) point at the repo; hypridle restarted on the new config
+- [x] The UGTablet area moved to `~/.config/someshell/hypr.json` (`devices`)
+- [x] Super tap fixed for real keys: a release bind sends the global shortcut as "released" only, so `Shortcuts.qml` acts on the release for `island`. Tested with ydotool: tap opens, tap closes, Super+2 and a 0.7 s hold do not, Super+N held 0.6 s opens once
+- [ ] Blender: check that pan/rotate keep working after Super+number (the user)
+- [ ] Live for a day, then remove the v1 worktree
 
 ## Later steps
 - Step 5: browser extension, music layout data, lyrics; calendar and system pages

@@ -44,9 +44,15 @@ Scope {
         model: Object.keys(root.actions)
         GlobalShortcut {
             required property string modelData
+            property real pressedAt: 0
             appid: "someshell"
             name: modelData
-            onPressed: root.actions[modelData]()
+            onPressed: {
+                pressedAt = Date.now();
+                root.actions[modelData]();
+            }
+            // The Super tap is a release bind, which only sends "released"
+            onReleased: if (modelData === "island" && Date.now() - pressedAt > 400) root.actions[modelData]()
         }
     }
 

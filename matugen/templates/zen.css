@@ -1,0 +1,17 @@
+/* Written by matugen from the wallpaper (SomeShell). Zen reads it at start,
+   so a new wallpaper recolors Zen on its next launch. */
+:root {
+    --zen-primary-color: {{colors.primary.default.hex}} !important;
+    --zen-colors-primary: {{colors.primary_container.default.hex}} !important;
+    --zen-colors-secondary: {{colors.secondary_container.default.hex}} !important;
+    --zen-colors-tertiary: {{colors.surface_container_low.default.hex}} !important;
+    --zen-colors-border: {{colors.outline_variant.default.hex}} !important;
+    --zen-colors-primary-foreground: {{colors.on_primary_container.default.hex}} !important;
+    --toolbar-bgcolor: {{colors.surface_container.default.hex}} !important;
+    --toolbar-color: {{colors.on_surface.default.hex}} !important;
+    --toolbar-field-background-color: {{colors.surface_container_high.default.hex}} !important;
+    --toolbar-field-color: {{colors.on_surface.default.hex}} !important;
+    --arrowpanel-background: {{colors.surface_container.default.hex}} !important;
+    --arrowpanel-color: {{colors.on_surface.default.hex}} !important;
+    --focus-outline-color: {{colors.primary.default.hex}} !important;
+}

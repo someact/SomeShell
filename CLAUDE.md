@@ -6,7 +6,7 @@ Current work: a full rebuild from scratch (2026-11-02): shell, Hyprland config, 
 SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.sh someshell|reimagined` relinks this machine between the two.
 
 ## The old version (v1)
-- Archived as tag `archive/shell-v1`. This machine still runs it from the detached worktree `../SomeShell-v1`: `~/.config/hypr`, `~/.config/matugen`, `~/.config/quickshell/someshell` and the Mitr fontconfig rule link there until the new version replaces them. Never edit or commit in that worktree.
+- Archived as tag `archive/shell-v1`. Since 2026-11-02 this machine runs the new version (links point at this repo); the detached worktree `../SomeShell-v1` stays as the rollback for now. Never edit or commit in that worktree.
 - Nothing is brought back from v1 (user, 2026-11-02). Read it only to learn how something worked or why a bug happened: `git show archive/shell-v1:<path>`.
 
 ## The new shell (`shell/`)
@@ -15,7 +15,8 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - `services/`: one singleton per system source (`Wallpaper` runs matugen). `components/`: `Txt`, `Icon`, `Digits` (rolling digits), `Tap` (press inverts).
 - `top/`: `TopBar` (one layer window per screen, namespace `someshell:island`, input mask = badge + tray + island, keyboard only while open, `HyprlandFocusGrab` closes on an outside click), `Island` (shape, state choice, hover/click, size spring), `Badge`, `Tray`. `island/`: one file per island state (`Rest`, `Peek`, `Alert`, `Quiet`, `Open`). Every state and page sets its own implicit size; the island never has a fixed size.
 - State files: `~/.local/state/someshell/palette.json` (matugen), `wall.json`. v1 used `colors.json`, `wallpaper.json` and `config.json`; the new names avoid clashes while both exist.
-- Testing before the switch (v1 still runs as `someshell`): stop v1 with `qs kill -c someshell`, start the new one with `SOMESHELL_MATUGEN_CONFIG=$PWD/matugen/config.toml qs -p $PWD/shell/shell.qml` (detached: `setsid -f`), drive it with `qs -p shell/shell.qml ipc call …` and `hyprctl eval 'hl.dispatch(hl.dsp.global("someshell:<name>"))'`; afterwards kill it, put back v1's `~/.config/hypr/generated/colors.lua` (matugen with the new config overwrites it) and start v1 with `hyprctl eval 'hl.exec_cmd("<v1 worktree>/hypr/scripts/shell.sh")'`.
+- Testing: the live shell is `qs -c someshell` (this repo). Restart it with `qs kill -c someshell`, then `hyprctl eval 'hl.exec_cmd("~/.config/hypr/scripts/shell.sh")'`; drive it with `qs -c someshell ipc call …` and real keys through ydotool. `SOMESHELL_DRY_POWER=1` makes the power page only say what it would run.
+- A Hyprland release bind (the Super tap) sends a global shortcut as "released" only; `Shortcuts.qml` handles that for `island`.
 - Live reload is not reliable for judging a change: after several edits it keeps running old code (seen 2026-11-02: a fixed bug stayed until a restart). Restart the shell before a screenshot that has to prove a fix.
 - Qt's JavaScript has no `Array.prototype.flatMap`; build arrays with a loop. A property named `top`, `bottom`, `left`, `right` etc. on an Item clashes with its anchor lines ("Cannot override FINAL property").
 - After many live reloads, `qs kill` can segfault in a Wayland destructor, and Quickshell's crash handler relaunches the shell as `quickshell` (a second copy draws over the first). After killing, check `ps -C qs,quickshell` and `kill -9` leftovers by PID. A fresh start stops cleanly.
