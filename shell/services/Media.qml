@@ -35,7 +35,10 @@ Singleton {
     readonly property string art: tab?.cover || player?.trackArtUrl || ""
     // Liked on the site (YouTube Music); null where the site has no like
     readonly property var liked: tab?.canLike ? tab.liked === true : null
-    readonly property real length: player?.length ?? 0
+    // A browser tab's own duration (the extension reads the media element);
+    // else the player's, only when it sent one: Zen drops the length after a
+    // seek, and Quickshell then reports about the position as the length
+    readonly property real length: (tab?.duration > 0 ? tab.duration : 0) || (player?.lengthSupported ? (player.length || 0) : 0)
     readonly property string url: tab?.url || player?.metadata?.["xesam:url"] || ""
     readonly property string source: {
         if (tab)
@@ -54,43 +57,84 @@ Singleton {
         return "video";
     }
 
-    // Position is not pushed by MPRIS: it is read once a second while
-    // something plays and a view that shows it is on screen (`watchers`),
-    // and at once on a seek, a pause or a new track
+    // Position: MPRIS does not push it. It is read at once on a seek, a pause
+    // or a new track, and then on each whole second of the track while
+    // something plays and a view shows it (`watchers`), so the shown second
+    // turns when the track's does.
     property real position: 0
     readonly property real progress: length > 0 ? Math.min(1, position / length) : 0
     property int watchers: 0
-    // When `position` was read (ms), to estimate it in between
+    // When `position` was set (ms), to estimate it in between
     property real positionAt: 0
+    // After a seek from here, reports far from the target are the player's
+    // old position (Zen sends one while a new track loads): skipped for a
+    // moment, until it confirms
+    property real seekTo: -1
+    property real seekUntil: 0
     function readPosition() {
-        position = player?.position ?? 0;
+        const p = player?.position ?? 0;
+        if (seekTo >= 0) {
+            if (Date.now() < seekUntil && Math.abs(p - seekTo) > 2)
+                return scheduleTick();
+            seekTo = -1;
+        }
+        setPosition(p);
+    }
+    function setPosition(seconds) {
+        position = Math.max(0, seconds);
         positionAt = Date.now();
+        scheduleTick();
     }
     // The position now, between reads
     function positionNow() {
         return playing ? position + (Date.now() - positionAt) / 1000 * (player?.rate || 1) : position;
     }
+    function scheduleTick() {
+        if (!playing || watchers <= 0) {
+            tick.stop();
+            return;
+        }
+        const now = positionNow();
+        tick.interval = Math.max(50, (Math.floor(now) + 1 - now) * 1000 / (player?.rate || 1) + 20);
+        tick.restart();
+    }
     Timer {
-        running: root.playing && root.watchers > 0
-        interval: 1000
-        repeat: true
-        triggeredOnStart: true
+        id: tick
         onTriggered: root.readPosition()
     }
+    onWatchersChanged: readPosition()
     onPlayerChanged: readPosition()
-    onTitleChanged: readPosition()
     onPlayingChanged: readPosition()
+    // A new track starts at 0; players report its position a moment later
+    onTitleChanged: {
+        setPosition(0);
+        settle.restart();
+    }
+    Timer {
+        id: settle
+        interval: 400
+        onTriggered: root.readPosition()
+    }
     Connections {
         target: root.player
+        // Sent on a seek (here or in the player)
         function onPositionChanged() { root.readPosition(); }
     }
+
 
     function toggle() { player?.togglePlaying(); }
     function next() { player?.next(); }
     function previous() { player?.previous(); }
     function like() { Browser.command(tab, "like"); }
+    // Shown at once; the player confirms with a seek signal. Without a known
+    // length (a new track) the seek is not clamped to it
     function seek(seconds) {
-        if (player?.canSeek)
-            player.position = Math.max(0, Math.min(length, seconds));
+        if (!player?.canSeek)
+            return;
+        const to = Math.max(0, length > 0 ? Math.min(length - 1, seconds) : seconds);
+        seekTo = to;
+        seekUntil = Date.now() + 1500;
+        player.position = to;
+        setPosition(to);
     }
 }

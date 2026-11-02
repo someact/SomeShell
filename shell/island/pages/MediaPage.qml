@@ -19,7 +19,7 @@ Item {
     implicitHeight: col.implicitHeight
 
     function time(s) {
-        s = Math.max(0, Math.round(s));
+        s = Math.max(0, Math.floor(s));
         return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
     }
 
@@ -124,6 +124,9 @@ Item {
                     height: 42
                     visible: Media.length > 0
                     BarSlider {
+                        id: seekBar
+                        // Seeks once, when let go
+                        live: false
                         width: parent.width
                         height: 12
                         y: 8
@@ -134,7 +137,7 @@ Item {
                     }
                     Txt {
                         anchors.bottom: parent.bottom
-                        text: root.time(Media.position)
+                        text: root.time(seekBar.dragging ? seekBar.dragValue * Media.length : Media.position)
                         caps: true
                         color: Theme.ink.mute
                     }
@@ -153,7 +156,7 @@ Item {
                     Repeater {
                         model: root.music
                             ? [{ icon: "skip_previous", run: () => Media.previous() }, { icon: Media.playing ? "pause" : "play_arrow", run: () => Media.toggle(), main: true }, { icon: "skip_next", run: () => Media.next() }]
-                            : [{ icon: "replay_10", run: () => Media.seek(Media.position - 10) }, { icon: Media.playing ? "pause" : "play_arrow", run: () => Media.toggle(), main: true }, { icon: "forward_10", run: () => Media.seek(Media.position + 10) }]
+                            : [{ icon: "replay_10", run: () => Media.seek(Media.positionNow() - 10) }, { icon: Media.playing ? "pause" : "play_arrow", run: () => Media.toggle(), main: true }, { icon: "forward_10", run: () => Media.seek(Media.positionNow() + 10) }]
                         Tap {
                             required property var modelData
                             width: modelData.main ? 56 : 40

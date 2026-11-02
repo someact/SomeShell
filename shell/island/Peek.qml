@@ -13,7 +13,7 @@ Item {
     readonly property bool rec: Recorder.recording
 
     function time(s) {
-        s = Math.max(0, Math.round(s));
+        s = Math.max(0, Math.floor(s));
         const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = String(s % 60).padStart(2, "0");
         return h > 0 ? h + ":" + String(m).padStart(2, "0") + ":" + sec : m + ":" + sec;
     }
