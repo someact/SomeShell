@@ -117,6 +117,10 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
 - A snap grid with block sizes **1×1, 2×1, 1×2, 2×2**. Long-press or the pencil enters edit mode: blocks wiggle, drag to move, pull a corner to resize, remove or add from a drawer. The same editor arranges the island and the desktop (section 4).
 - Each block is a toggle. Click it to go into its own page, like a phone.
   - **Internet:** Wi-Fi list, connect, forget, Ethernet, edit DNS, IP and proxy.
+    > [!check] Decided (user, 2026-11-02): joining and editing Wi-Fi
+    > - A new secured network asks inside the island: a password for home networks (WPA/WPA3 personal), a **username and password** for enterprise ones (802.1X: eduroam, a university network; PEAP with MSCHAPv2, the common setup).
+    > - While joining the row says "Connecting…"; a failure stays on the form with the reason (wrong password, timeout). A failed new network leaves no broken saved profile behind.
+    > - Right-click on a saved network shows **Edit** (enter the password or login again, the profile is kept) and **Forget**. Nothing is deleted by one click: Forget is its own button.
   - **Bluetooth:** pair, connect, rename, switch the audio device.
   - **Keep awake:** forever or for a time.
   - **Night light:** on/off, how warm, schedule (sunset to sunrise or set times).

@@ -41,12 +41,57 @@ Singleton {
         value: root.scanning
     }
 
-    // Known or open networks connect directly; a new secured one needs its password
-    function join(network, password) {
-        if (network.known || network.security === WifiSecurityType.Open || !password)
-            network.connect();
-        else
-            run(["nmcli", "device", "wifi", "connect", network.name, "password", password]);
+    // Enterprise (802.1X) networks need a username as well as a password
+    function enterprise(network) {
+        const t = network?.security;
+        return t === WifiSecurityType.Wpa2Eap || t === WifiSecurityType.WpaEap || t === WifiSecurityType.Wpa3SuiteB192;
+    }
+    function open(network) {
+        return network?.security === WifiSecurityType.Open;
+    }
+
+    // Joining: the network being joined, and the last failure (by network name)
+    property string joining: ""
+    property string joinError: ""
+    property string errorFor: ""
+
+    // A saved or open network connects as it is
+    function connect(network) {
+        joinError = "";
+        network.connect();
+    }
+    // A new network, or a saved one with new secrets (Edit): lib/wifi.sh
+    // keeps or makes the profile; secrets go on its stdin
+    function join(network, user, password) {
+        if (joiner.running)
+            return;
+        joining = network.name;
+        joinError = "";
+        errorFor = "";
+        joiner.secrets = (enterprise(network) ? user + "\n" : "") + password + "\n";
+        joiner.command = [Quickshell.shellPath("lib/wifi.sh"), enterprise(network) ? "eap" : "psk", network.name];
+        joiner.running = true;
+    }
+    Process {
+        id: joiner
+        property string secrets: ""
+        stdinEnabled: true
+        onStarted: {
+            write(secrets);
+            secrets = "";
+            stdinEnabled = false;
+        }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const last = text.trim().split("\n").pop() ?? "";
+                if (last !== "ok") {
+                    root.errorFor = root.joining;
+                    root.joinError = last.replace(/^error: /, "") || "could not connect";
+                }
+                root.joining = "";
+                joiner.stdinEnabled = true;
+            }
+        }
     }
 
     // DNS for the connection in use: a list like "1.1.1.1 1.0.0.1", or "" for automatic
