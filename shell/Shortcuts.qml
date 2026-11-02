@@ -31,7 +31,7 @@ Scope {
         volumeDown: () => root.volumeStep(-0.05),
         mute: () => { Audio.toggleMute(); Ui.showLevel("volume"); },
         micMute: () => { Audio.toggleMic(); Ui.showLevel("mic"); },
-        overview: () => later("Overview", 7),
+        overview: () => Ui.toggleOverview(),
         keys: () => later("Keybind list", 7),
         osk: () => later("On-screen keyboard", 8),
         overlay: () => later("Game overlay", 8),

@@ -4,8 +4,7 @@ import Quickshell
 import Quickshell.Hyprland
 
 // Workspace designs (SomeShell.md 3.3): a name and what the resting island
-// shows, per workspace number 1-10 (the badge's number, the same on every
-// monitor). Stored in Desktop.workspaces as [{ slot, name, rest }], only for
+// shows, per workspace number 1-10 (shared by every monitor). Stored in Desktop.workspaces as [{ slot, name, rest }], only for
 // numbers that have a design. A switch to a named workspace on the island's
 // monitor flashes its name in the island.
 Singleton {
@@ -24,8 +23,9 @@ Singleton {
     // What the resting island shows here: "clock" or "media"
     readonly property string rest: current?.rest ?? "clock"
 
+    // Workspaces are shared by every monitor: the number is the id
     function slotOf(id) {
-        return id > 0 ? (id - 1) % 10 + 1 : 0;
+        return id >= 1 && id <= 10 ? id : 0;
     }
     function design(n) {
         return (Desktop.workspaces ?? []).find(w => w.slot === n) ?? null;

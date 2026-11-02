@@ -3,14 +3,15 @@ import Quickshell.Hyprland
 import qs.core
 import qs.components
 
-// The workspace on this monitor, as its slot number (Super+1..0). Scroll
-// to move left or right; a click opens the overview (step 7).
+// The workspace on this monitor, by its number (shared by every monitor,
+// Super+1..0). Scroll to go to the previous or next number; a click opens
+// the overview.
 Rectangle {
     id: root
 
     property var monitor
     readonly property int id: monitor?.activeWorkspace?.id ?? 1
-    readonly property int slot: id > 0 ? (id - 1) % 10 + 1 : 0
+    readonly property int slot: id > 0 ? id : 0
 
     width: 34
     height: 34
@@ -26,7 +27,7 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: Ui.showAlert("Overview", "The overview comes in step 7.", "SomeShell", "grid_view")
-        onWheel: wheel => Hyprland.dispatch(`hl.dsp.focus({ workspace = "r${wheel.angleDelta.y > 0 ? "-" : "+"}1" })`)
+        onClicked: Ui.openOverview()
+        onWheel: wheel => Hyprland.dispatch(`hl.dsp.focus({ workspace = workspace_step(${wheel.angleDelta.y > 0 ? -1 : 1}) })`)
     }
 }

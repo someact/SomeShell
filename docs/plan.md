@@ -115,8 +115,15 @@ Decisions in `SomeShell.md` section 4 ("Decided, start of step 6"). Tablet first
 - [ ] Workspace designs on the tablet (one screen, scale 2)
 - [x] On the PC: two monitors (a card and widgets per monitor), presets with both. Checked 2026-11-03: widgets (clock, calendar on HDMI-A-1; clock, system on DP-1) draw on their own monitor, each edit card shows its monitor's widgets, the grid and the chosen widget's outline and handle, dark and light; a card per monitor (the panel on the island's monitor); fixed: the card's badge always said 1 and its tray always showed Wi-Fi, Bluetooth and battery, now the real `Badge` and `Tray` (this monitor's workspace, only the status the machine has). A preset saved, changed to light + Plain, applied back (dark + Notch on both). Dock style: a bar per monitor with its own workspace, the island and tray only on the mouse's monitor
 
+## Shared workspaces and overview (pulled forward from step 7, user 2026-11-03)
+Decisions and the approved mockup in `SomeShell.md` section 5 (Overview).
+- [x] Shared workspaces 1–10: Super+N goes to N (jumps to the monitor showing it), Super+Alt+N sends, `workspace_step` for next/previous and the badge's wheel (wraps 1–10), the badge shows the real number, `Spaces` uses the id. No windows were left on 11–20 on the PC or the tablet, so nothing to move
+- [x] Overview (`shell/overview/`): header (current workspace big, monitor map, barcode, index, keys), 10 pages with windows as boxes (icon, name, title), monitor pills, captions, footer that changes while dragging; keys (arrows, 1–0, Enter, Esc, Super+Tab again); click a page or a window; drag a window onto a page (moves it, stays open) or a page's monitor spot (also shows the workspace there, the focus stays); drag a page by its name row onto a monitor in the map. IPC `overview open|close|toggle|state`. Fixed while building: a crash from 13 wallpaper decodes at once (one shared decode now), a press handler stopped by an id clash (`win`), the dragged window's name drawn over its neighbour, a full page had no place to grab (the name row is the handle)
+- [x] Checked on the PC (2026-11-03): real keys and mouse (ydotool), both monitors, dark and light
+- [ ] Check on the tablet (one monitor: no monitor spots, a map of one)
+
 ## Later steps
-- Step 7: lock screen, overview, dock, settings window, installer. Overview must: click a window → switch to its workspace, focus that window, close; Enter on a workspace → switch and close; tested by mouse with ydotool
+- Step 7: lock screen, dock, settings window, installer (the overview moved up)
 - Step 8: GIFs, Quick Share, WARP, capture tools, game overlay, on-screen keyboard
 
 ## Where each part can be built

@@ -106,6 +106,24 @@ Singleton {
         }
     }
 
+    // The overview (overview/Overview.qml, Super+Tab): all ten workspaces on
+    // the monitor the mouse was on when it opened
+    property bool overview: false
+    property string overviewMonitor: ""
+    function openOverview() {
+        if (editing)
+            return;
+        close();
+        overviewMonitor = followed || monitor;
+        overview = true;
+    }
+    function closeOverview() {
+        overview = false;
+    }
+    function toggleOverview() {
+        overview ? closeOverview() : openOverview();
+    }
+
     // A short alert shown over everything else, then gone
     property var alert: null
     // extra: { image: a picture shown instead of the icon, open: a file a click opens }

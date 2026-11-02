@@ -7,6 +7,7 @@ import "top"
 import "wallpaper"
 import "capture"
 import "edit"
+import "overview"
 import qs.core
 import qs.services
 
@@ -45,6 +46,12 @@ ShellRoot {
             model: Quickshell.screens
             EditWindow {}
         }
+    }
+
+    // The overview, only while open, on one monitor
+    LazyLoader {
+        active: Ui.overview
+        Overview {}
     }
 
     // The capture picker, only while picking

@@ -123,50 +123,47 @@ hl.bind("SUPER + ALT + F", hl.dsp.window.fullscreen_state({ internal = 0, client
 hl.bind("SUPER + P", hl.dsp.window.pin(), { description = "Window: Pin on every workspace" })
 hl.bind("CTRL + SUPER + Backslash", hl.dsp.window.resize({ x = 640, y = 480, "exact" }))
 
---# Send to workspace 1..10 on this monitor
+--# Send to workspace 1..10 (shared by every monitor)
 for i = 1, 10 do
-    local send = function()
-        hl.dispatch(hl.dsp.window.move({ workspace = workspace_slot(i), follow = false }))
-    end
+    local send = hl.dsp.window.move({ workspace = i, follow = false })
     hl.bind("SUPER + ALT + code:" .. NUMBER_CODES[i], send, { description = "Window: Send to workspace " .. i })
     hl.bind("SUPER + ALT + code:" .. KEYPAD_CODES[i], send)
 end
 
 --# Send to the workspace left or right
 for _, keys in ipairs({ "SUPER + SHIFT + mouse_down", "SUPER + ALT + mouse_down", "SUPER + SHIFT + Page_Up", "SUPER + ALT + Page_Up", "CTRL + SUPER + SHIFT + Left" }) do
-    hl.bind(keys, hl.dsp.window.move({ workspace = "r-1" }), keys == "SUPER + SHIFT + Page_Up" and { description = "Window: Send to the workspace on the left" } or {})
+    hl.bind(keys, function() hl.dispatch(hl.dsp.window.move({ workspace = workspace_step(-1) })) end, keys == "SUPER + SHIFT + Page_Up" and { description = "Window: Send to the workspace on the left" } or {})
 end
 for _, keys in ipairs({ "SUPER + SHIFT + mouse_up", "SUPER + ALT + mouse_up", "SUPER + SHIFT + Page_Down", "SUPER + ALT + Page_Down", "CTRL + SUPER + SHIFT + Right" }) do
-    hl.bind(keys, hl.dsp.window.move({ workspace = "r+1" }), keys == "SUPER + SHIFT + Page_Down" and { description = "Window: Send to the workspace on the right" } or {})
+    hl.bind(keys, function() hl.dispatch(hl.dsp.window.move({ workspace = workspace_step(1) })) end, keys == "SUPER + SHIFT + Page_Down" and { description = "Window: Send to the workspace on the right" } or {})
 end
 
 hl.bind("SUPER + ALT + S", hl.dsp.window.move({ workspace = "special:special", follow = false }), { description = "Window: Send to the scratchpad" })
 
 --##! Workspace
+-- Shared by every monitor: a workspace shown on another monitor is jumped to
 for i = 1, 10 do
-    local go = function()
-        hl.dispatch(hl.dsp.focus({ workspace = workspace_slot(i) }))
-    end
+    local go = hl.dsp.focus({ workspace = i })
     hl.bind("SUPER + code:" .. NUMBER_CODES[i], go, { description = "Workspace: Go to " .. i })
     hl.bind("SUPER + code:" .. KEYPAD_CODES[i], go)
 end
 
-hl.bind("CTRL + SUPER + Left", hl.dsp.focus({ workspace = "r-1" }), { description = "Workspace: Left" })
-hl.bind("CTRL + SUPER + Right", hl.dsp.focus({ workspace = "r+1" }), { description = "Workspace: Right" })
+hl.bind("CTRL + SUPER + Left", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(-1) })) end, { description = "Workspace: Left" })
+hl.bind("CTRL + SUPER + Right", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(1) })) end, { description = "Workspace: Right" })
 hl.bind("CTRL + SUPER + ALT + Left", hl.dsp.focus({ workspace = "m-1" }))
 hl.bind("CTRL + SUPER + ALT + Right", hl.dsp.focus({ workspace = "m+1" }))
-hl.bind("SUPER + Page_Down", hl.dsp.focus({ workspace = "r+1" }))
-hl.bind("SUPER + Page_Up", hl.dsp.focus({ workspace = "r-1" }))
-hl.bind("CTRL + SUPER + Page_Down", hl.dsp.focus({ workspace = "r+1" }))
-hl.bind("CTRL + SUPER + Page_Up", hl.dsp.focus({ workspace = "r-1" }))
-hl.bind("SUPER + mouse_up", hl.dsp.focus({ workspace = "+1" }))
-hl.bind("SUPER + mouse_down", hl.dsp.focus({ workspace = "-1" }))
-hl.bind("CTRL + SUPER + mouse_up", hl.dsp.focus({ workspace = "r+1" }))
-hl.bind("CTRL + SUPER + mouse_down", hl.dsp.focus({ workspace = "r-1" }))
-hl.bind("CTRL + SUPER + BracketLeft", hl.dsp.focus({ workspace = "-1" }))
-hl.bind("CTRL + SUPER + BracketRight", hl.dsp.focus({ workspace = "+1" }))
-hl.bind("CTRL + SUPER + Up", hl.dsp.focus({ workspace = "r-5" }))
-hl.bind("CTRL + SUPER + Down", hl.dsp.focus({ workspace = "r+5" }))
+hl.bind("SUPER + Page_Down", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(1) })) end)
+hl.bind("SUPER + Page_Up", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(-1) })) end)
+hl.bind("CTRL + SUPER + Page_Down", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(1) })) end)
+hl.bind("CTRL + SUPER + Page_Up", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(-1) })) end)
+hl.bind("SUPER + mouse_up", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(1) })) end)
+hl.bind("SUPER + mouse_down", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(-1) })) end)
+hl.bind("CTRL + SUPER + mouse_up", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(1) })) end)
+hl.bind("CTRL + SUPER + mouse_down", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(-1) })) end)
+hl.bind("CTRL + SUPER + BracketLeft", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(-1) })) end)
+hl.bind("CTRL + SUPER + BracketRight", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(1) })) end)
+hl.bind("CTRL + SUPER + Up", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(-5) })) end)
+hl.bind("CTRL + SUPER + Down", function() hl.dispatch(hl.dsp.focus({ workspace = workspace_step(5) })) end)
 
 --## Scratchpad
 hl.bind("SUPER + S", hl.dsp.workspace.toggle_special("special"), { description = "Workspace: Scratchpad" })

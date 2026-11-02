@@ -163,6 +163,16 @@ Scope {
     }
 
     IpcHandler {
+        target: "overview"
+
+        // The overview (Super+Tab): open, close, toggle, state
+        function open(): void { Ui.openOverview(); }
+        function close(): void { Ui.closeOverview(); }
+        function toggle(): void { Ui.toggleOverview(); }
+        function state(): string { return JSON.stringify({ open: Ui.overview, monitor: Ui.overviewMonitor }); }
+    }
+
+    IpcHandler {
         target: "workspace"
 
         // Designs per workspace number 1-10: list, set <slot> <name> <clock|media>, clear <slot>

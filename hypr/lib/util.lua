@@ -82,14 +82,11 @@ function monitors_in_order()
     return list
 end
 
--- Workspace id for slot `i` (1..10) on the focused monitor.
-function workspace_slot(i)
-    local active = hl.get_active_monitor()
-    local group = 0
-    if active then
-        for index, m in ipairs(monitors_in_order()) do
-            if m.name == active.name then group = index - 1 break end
-        end
-    end
-    return group * 10 + i
+-- Workspaces are shared by every monitor: numbers 1..10 (SomeShell.md,
+-- Overview). The number `delta` steps away from the focused one, wrapping
+-- 10 -> 1 and 1 -> 10.
+function workspace_step(delta)
+    local ws = hl.get_active_workspace()
+    local id = (ws and ws.id and ws.id >= 1 and ws.id <= 10) and ws.id or 1
+    return (id - 1 + delta) % 10 + 1
 end

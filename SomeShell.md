@@ -268,6 +268,15 @@ Widget ideas: clock (poster style, huge), now playing, calendar, notes, system, 
   > - Click: network → Internet page, Bluetooth → Bluetooth page, layout → next layout, battery → System page.
   > - Battery alerts on the island at 20% and 10% while discharging, once each until it charges again; 10% shows even with Do not disturb.
 - **Overview** (Super+Tab): workspaces as a row of "pages" with their names big. It must always switch (see section 6).
+  > [!check] Decided (user, 2026-11-03: "it really hard to use now since each monitor has its own 10 workspaces, it should use the same workspaces and build overview"; pulled forward from step 7)
+  > Mockup, **approved** 2026-11-03: https://claude.ai/artifact/BHJzWmDpPxBsHxVTisvyRd
+  > - **Shared workspaces 1–10:** one set for all monitors. Super+N goes to workspace N; when N is on another monitor, focus and the mouse **jump there** (Hyprland's default). Super+Alt+N sends the window to N. The badge shows the real number; workspace designs (3.3) belong to these numbers. Ctrl+Super+←/→ and the badge's wheel go to the previous/next number (1–10, wrapping), with the same jump. At login each monitor takes the lowest free number, left to right (Hyprland's own rule; no monitor names in the config).
+  > - **Overview opens and stays:** Super+Tab (or a click on the badge) opens it on the monitor with the mouse; Esc or Super+Tab again closes. Arrows move between pages, 1–0 pick one, Enter goes.
+  > - **Always all 10 pages**, two rows of five, each shaped like its monitor, the wallpaper dimmed behind; windows as boxes at their real place and size with the app icon, app name and title (no live previews). Above a page: its number and design name big, and a pill with the monitor showing it (filled on yours). Below: a short rule and a caption (You are here, Enter: go, n windows).
+  > - **Header like a poster:** the current workspace set huge (`02 CODE`), a line of spaced caps (monitor, window count, date, year), the **monitor map** (each monitor laid out like the real ones, showing its workspace), a barcode, `02 / 10` and the keys as outlined pills. Footer: a hairline with crosshairs and the three mouse actions.
+  > - **Mouse:** click a page: go there and close. Click a window: go to its workspace, focus it, close. Drag a window onto a page: move it there (the overview stays). **While dragging a window, each page shows a spot per monitor along its bottom: dropping on a spot also shows that workspace on that monitor.** Drag a page onto a monitor in the map: show that workspace there.
+  > - States: hover = outline and corner marks; current = a 2 px accent outline; keyboard = corner marks and an outer outline; a hovered window inverts; a drop target is dashed. One motion: a quick fade and scale in.
+  > - Every action is a Hyprland dispatch (rule 1); it switches every time (rule 4). The overview takes the keyboard only while open, and is loaded only while open.
 - **Lock screen:** big clock in poster style, password dots that pop in and shake when wrong.
 - **Dock:** optional, hidden by default?
 - **On-screen keyboard, capture tools, game overlay:** later, after the core works.
