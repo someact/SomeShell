@@ -8,11 +8,12 @@ import "wallpaper"
 import qs.services
 
 ShellRoot {
-    // Services that must run from the start: the notification server and the
-    // night light schedule
+    // Services that must run from the start: the notification server, the
+    // night light schedule and the battery alerts
     Component.onCompleted: {
         Notifications.dnd;
         NightLight.on;
+        Battery.available;
     }
 
     Variants {

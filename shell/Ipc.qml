@@ -65,6 +65,20 @@ Scope {
     }
 
     IpcHandler {
+        target: "battery"
+
+        function state(): string {
+            return JSON.stringify({
+                available: Battery.available, percent: Battery.percent, charging: Battery.charging,
+                full: Battery.full, low: Battery.low, minutes: Battery.minutes, icon: Battery.icon, testing: Battery.testing
+            });
+        }
+        // Stand in for the hardware (alerts, colors); `real` goes back
+        function simulate(percent: int, charging: bool): void { Battery.simulate(percent, charging); }
+        function real(): void { Battery.testPercent = -1; }
+    }
+
+    IpcHandler {
         target: "theme"
 
         // dark or light

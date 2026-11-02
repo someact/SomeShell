@@ -62,6 +62,8 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
   - [x] Super+Space did nothing: the tablet had no `hypr.json`, so only `us` loaded. Written with `us,th`; setup step added to CLAUDE.md, `8da33e0`
   - [x] Page switch motion (user): slide + wipe, sliding tab underline, size spring without bounce (decision in `SomeShell.md`), `9428b5f`
   - [x] ydotool: user added to `input`, `ydotool.service` enabled (works from the next login)
+  - [x] Tray status (user, decision in `SomeShell.md`): layout (click switches), network (signal bars; click opens Internet), Bluetooth (connected icon; click opens Bluetooth), battery (UPower: icon, rolling percentage, error color at 20%); alerts at 20% and 10% once per discharge (10% even with Do not disturb). `ipc call battery simulate <percent> <charging>` for tests. Tested on the tablet by mouse, dark and light. App tray icons (Discord) still untested: none installed
+  - [ ] Desktop: battery hidden (no laptop battery), Ethernet icon
   - [ ] Search by real keys: apps, math, web fallback, `/clip`, `/emoji`, `/wall`
   - [ ] Control detail pages by mouse: Internet, Bluetooth, Sound, Night light
   - [ ] Media with a real player (music and video layouts, peek row, resting island)

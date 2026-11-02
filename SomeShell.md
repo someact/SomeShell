@@ -169,6 +169,11 @@ Widget ideas: clock (poster style, huge), now playing, calendar, notes, system, 
 ## 5. Other parts (smaller)
 - **Workspace badge** (top-left): the workspace number in a circle. Click for overview, scroll to switch.
 - **Tray tab** (top-right): system tray and status icons.
+  > [!check] Decided (user, 2026-11-02): the tray carries the status
+  > - Left to right: app tray icons (Discord and the like, Quickshell `SystemTray`), keyboard layout, network, Bluetooth, battery. Each status icon shows only where the hardware is there (no battery on the desktop, no Bluetooth without an adapter).
+  > - Network: Ethernet, Wi-Fi with signal bars, searching, off. Bluetooth: on, connected (with a device), hidden when off. Battery: icon and percentage (rolling digits), a bolt while charging, the error color at 20% and below while discharging.
+  > - Click: network → Internet page, Bluetooth → Bluetooth page, layout → next layout. Battery: no page yet (the system page comes in step 5).
+  > - Battery alerts on the island at 20% and 10% while discharging, once each until it charges again; 10% shows even with Do not disturb.
 - **Overview** (Super+Tab): workspaces as a row of "pages" with their names big. It must always switch (see section 6).
 - **Lock screen:** big clock in poster style, password dots that pop in and shake when wrong.
 - **Dock:** optional, hidden by default?
