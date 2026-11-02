@@ -27,6 +27,24 @@ Singleton {
         set(value + delta);
     }
 
+    // Read the backlight again (another tool may have changed it); the
+    // Control page asks when it opens. DDC is too slow to read each time.
+    function refresh() {
+        if (screens.some(s => s.kind === "backlight") && !reader.running && !writer.running && pending < 0)
+            reader.running = true;
+    }
+    Process {
+        id: reader
+        command: ["sh", "-c", "brightnessctl -m -c backlight | head -1 | cut -d, -f4 | tr -d %"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const v = parseInt(text);
+                if (!isNaN(v) && root.pending < 0)
+                    root.screens = root.screens.map(s => s.kind === "backlight" ? Object.assign({}, s, { value: v }) : s);
+            }
+        }
+    }
+
     property int pending: -1
     function flush() {
         if (pending < 0)

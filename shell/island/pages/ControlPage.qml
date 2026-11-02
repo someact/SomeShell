@@ -18,6 +18,8 @@ Item {
     readonly property var btConnected: adapter?.devices.values.filter(d => d.connected) ?? []
 
     implicitWidth: 4 * cell + 3 * gap
+    // The backlight may have been changed by another tool since
+    Component.onCompleted: Brightness.refresh()
     implicitHeight: Ui.detail ? detailLoader.implicitHeight : grid.height
 
     function span(c, r) {

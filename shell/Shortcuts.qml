@@ -23,8 +23,8 @@ Scope {
         emoji: () => Ui.openPage("search", false, "/emoji "),
         islandHide: () => Ui.hidden = !Ui.hidden,
         lightDark: () => Config.theme.mode = Config.theme.mode === "dark" ? "light" : "dark",
-        brightnessUp: () => brightness.run("+"),
-        brightnessDown: () => brightness.run("-"),
+        brightnessUp: () => Brightness.available ? Brightness.step(5) : brightness.run("+"),
+        brightnessDown: () => Brightness.available ? Brightness.step(-5) : brightness.run("-"),
         overview: () => later("Overview", 7),
         keys: () => later("Keybind list", 7),
         osk: () => later("On-screen keyboard", 8),
@@ -56,7 +56,8 @@ Scope {
         }
     }
 
-    // Brightness keys until the brightness service exists (step 4)
+    // Brightness keys go through the Brightness service (the tile stays right);
+    // this is only used while it is still finding the screens at start
     Process {
         id: brightness
         function run(dir) {
