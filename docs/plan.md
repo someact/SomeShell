@@ -71,6 +71,13 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
   - [x] Super tap (ydotool): tap opens on Search, tap closes, Super+1/2 only switch, a 0.7 s hold does nothing. Once, right after a restart, a tap seemed to land before the shortcuts were registered (not reproduced; the user was also using the tablet)
   - [x] Memory and idle CPU: fresh 268 MB RSS / 177 MB anon, after every page 286 / 182 (pages unload); idle ~0.4% of one core. Anon is high next to an empty Quickshell (~55 MB on the desktop): likely the layer buffers (Adreno shares system memory; the top window is 80% of a 2880x1800 screen). Desktop numbers still to take for comparison
 - [ ] Test what the desktop cannot: Wi-Fi (join, password, DNS), backlight brightness, battery (once the battery part exists), SDDM (step 7)
+  - [x] Wi-Fi join: enterprise (802.1X, PEAP + MSCHAPv2) joined @NU-WiFi with the user's login through the Internet page (2026-11-02). Join, Edit and failure path built in `394e01b`; a failed new network leaves no profile (tested with a missing SSID)
+  - [x] Right-click no longer forgets a saved network at once (the user lost @NU-WiFi that way): Edit and Forget buttons
+  - [ ] Wi-Fi join with a home (WPA personal) password, and a wrong password showing its message
+  - [ ] DNS edit (changes the live connection: note the old value, set, check, set back to automatic)
+  - [ ] Backlight brightness (`ktz8866-backlight`): the Brightness tile and slider
+  - [x] Battery: tray, alerts (simulated 15% and 8%)
+  - [ ] SDDM (step 7)
 
 ## Later steps
 - Step 5: browser extension, music layout data, lyrics; calendar and system pages
