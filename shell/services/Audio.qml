@@ -15,7 +15,9 @@ Singleton {
     readonly property bool micMuted: source?.audio?.muted ?? true
 
     readonly property var outputs: Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio)
-    readonly property var streams: Pipewire.nodes.values.filter(n => n.isStream && n.isSink === false && n.audio && n.properties["media.class"] === "Stream/Output/Audio")
+    // Apps playing sound, by node type: `properties` stays empty until a
+    // node is tracked, and Quickshell 0.3 marks these streams isSink.
+    readonly property var streams: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream && n.audio)
 
     function name(node) {
         return node?.description || node?.nickname || node?.name || "";
