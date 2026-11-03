@@ -3,6 +3,7 @@ import QtQuick.Shapes
 import Quickshell
 import Quickshell.Io
 import qs.core
+import qs.services
 import "../island"
 
 // The island: a dark tab hanging from the top edge (Notch), a pill below it
@@ -32,6 +33,7 @@ Item {
     property bool hovered: false
     readonly property string mode: !here || (Ui.hidden && !Ui.open) ? "none"
         : Ui.open ? "open"
+        : Drop.over ? "drop"
         : Ui.level !== "" ? "level"
         : Ui.alert ? "alert"
         : Spaces.flash ? "flash"
@@ -82,7 +84,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             focus: root.mode === "open"
             sourceComponent: ({
-                rest: rest, peek: peek, alert: alert, quiet: quiet, open: open, level: level, flash: flash
+                rest: rest, peek: peek, alert: alert, quiet: quiet, open: open, level: level, flash: flash, drop: dropping
             })[root.mode] ?? null
             // New content fades in while the shape springs to its size
             onLoaded: if (root.mode !== "open") fade.restart()
@@ -149,6 +151,23 @@ Item {
                         leaveTimer.restart();
                     }
                 }
+            }
+        }
+        // Things dragged from other apps: the Drop state while over the
+        // island, the Drop page after a drop (services/Drop.qml). Always a
+        // copy: the source keeps its file.
+        DropArea {
+            anchors.fill: parent
+            onEntered: drag => {
+                Drop.hover(drag);
+                drag.accept(Qt.CopyAction);
+            }
+            onExited: Drop.leave()
+            onDropped: drop => {
+                const promise = "application/x-moz-file-promise-url";
+                Drop.take(drop.urls, drop.hasText ? drop.text : "", drop.formats,
+                    drop.formats.includes(promise) ? drop.getDataAsString(promise) : "");
+                drop.accept(Qt.CopyAction);
             }
         }
         TapHandler {
@@ -238,4 +257,5 @@ Item {
     Component { id: open; Open {} }
     Component { id: level; Level {} }
     Component { id: flash; Flash {} }
+    Component { id: dropping; Dropping {} }
 }

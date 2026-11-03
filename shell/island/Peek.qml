@@ -11,6 +11,7 @@ Item {
 
     readonly property bool media: Media.active
     readonly property bool rec: Recorder.recording
+    readonly property bool jobs: Jobs.list.length > 0
 
     function time(s) {
         s = Math.max(0, Math.floor(s));
@@ -49,7 +50,7 @@ Item {
             }
             Txt {
                 id: hint
-                visible: !root.media && !root.rec
+                visible: !root.media && !root.rec && !root.jobs
                 anchors.right: parent.right
                 anchors.verticalCenter: clock.verticalCenter
                 text: "Click to open"
@@ -174,6 +175,59 @@ Item {
                 text: root.time(Media.length)
                 size: Theme.font.small
                 color: Theme.ink.mute
+            }
+        }
+
+        // Downloads and transfers: ring, name, percent, Cancel
+        Repeater {
+            model: Jobs.list
+            Item {
+                id: jobRow
+                required property var modelData
+                width: col.width
+                height: 40
+                ProgressRing {
+                    id: jobRing
+                    anchors.verticalCenter: parent.verticalCenter
+                    value: jobRow.modelData.progress
+                    icon: jobRow.modelData.icon
+                    size: 32
+                }
+                Column {
+                    anchors.left: jobRing.right
+                    anchors.leftMargin: 12
+                    anchors.right: stop.left
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    Txt {
+                        width: parent.width
+                        text: jobRow.modelData.title
+                        face: Theme.font.medium
+                    }
+                    Txt {
+                        width: parent.width
+                        text: ({ download: "Downloading", send: "Sending", receive: "Receiving" })[jobRow.modelData.kind]
+                            + (jobRow.modelData.progress >= 0 ? " · " + Math.floor(jobRow.modelData.progress * 100) + "%" : "")
+                            + (jobRow.modelData.peer ? " · " + jobRow.modelData.peer : "")
+                        caps: true
+                        color: Theme.ink.mute
+                    }
+                }
+                Tap {
+                    id: stop
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 36
+                    height: 36
+                    radius: 18
+                    outlined: true
+                    onClicked: Jobs.cancel(jobRow.modelData.id)
+                    Icon {
+                        anchors.centerIn: parent
+                        name: "close"
+                        color: parent.fg
+                    }
+                }
             }
         }
 

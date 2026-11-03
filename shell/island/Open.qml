@@ -326,7 +326,7 @@ FocusScope {
     // Pages live in two slots: on a switch the new page loads into the free
     // slot and slides in (from the side you moved toward) while it is wiped
     // in top to bottom; the old one fades out fast and is unloaded.
-    readonly property var files: ({ search: "pages/SearchPage.qml", control: "pages/ControlPage.qml", media: "pages/MediaPage.qml", notify: "pages/NotifyPage.qml", calendar: "pages/CalendarPage.qml", system: "pages/SystemPage.qml", power: "pages/PowerPage.qml", clipboard: "pages/ClipboardPage.qml" })
+    readonly property var files: ({ search: "pages/SearchPage.qml", control: "pages/ControlPage.qml", media: "pages/MediaPage.qml", notify: "pages/NotifyPage.qml", calendar: "pages/CalendarPage.qml", system: "pages/SystemPage.qml", power: "pages/PowerPage.qml", clipboard: "pages/ClipboardPage.qml", drop: "pages/DropPage.qml" })
     readonly property int slide: 24
     property int slot: 0
     readonly property Item page: slot === 0 ? slotA : slotB

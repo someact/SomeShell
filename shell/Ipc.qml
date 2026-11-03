@@ -131,6 +131,29 @@ Scope {
         function next(): void { Media.next(); }
     }
 
+    // Something dropped on the island, without dragging: paths, file:// or
+    // web addresses (separated by spaces or new lines), else it is text.
+    // `image` is a picture's address as a browser gives it
+    IpcHandler {
+        target: "drop"
+        function take(data: string): void {
+            const parts = data.trim().split(/\s+/);
+            const urls = parts.every(p => /^(file:\/\/|https?:\/\/|\/)/.test(p))
+                ? parts.map(p => p.startsWith("/") ? "file://" + p : p) : [];
+            Drop.take(urls, urls.length ? "" : data, [], "");
+        }
+        function image(url: string): void { Drop.take([], "", ["application/x-moz-file-promise-url"], url); }
+        function run(action: string): void { Drop.run(action); }
+        function state(): string { return JSON.stringify({ over: Drop.over, label: Drop.label, item: Drop.item, actions: Drop.actions.map(a => a.id) }); }
+    }
+
+    IpcHandler {
+        target: "download"
+        function start(url: string, mode: string): void { Downloads.start(url, mode || "video", ""); }
+        function cancel(): void { if (Jobs.current) Jobs.cancel(Jobs.current.id); }
+        function state(): string { return JSON.stringify(Jobs.list); }
+    }
+
     IpcHandler {
         target: "capture"
 

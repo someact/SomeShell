@@ -13,6 +13,8 @@ Item {
 
     readonly property bool media: Media.active && Media.playing
     readonly property bool rec: Recorder.recording
+    // A download or a Bluetooth transfer running (Jobs): on the right
+    readonly property var job: Jobs.current
     // "clock" or "media"; the edit card sets it to preview a workspace
     property string kind: Spaces.rest
     readonly property bool large: kind === "media" && media
@@ -97,11 +99,38 @@ Item {
             size: Theme.font.title
         }
         Txt {
-            visible: !root.large && !(root.media && root.rec)
+            visible: !root.large && !(root.media && (root.rec || root.job))
             anchors.verticalCenter: parent.verticalCenter
             text: Clock.day
             caps: true
             color: Theme.ink.mute
+        }
+
+        // A job: its ring and the percent (and how many more)
+        Row {
+            visible: root.job !== null
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 6
+            ProgressRing {
+                anchors.verticalCenter: parent.verticalCenter
+                value: root.job?.progress ?? -1
+                icon: root.job?.icon ?? ""
+                size: 24
+            }
+            Digits {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: (root.job?.progress ?? -1) >= 0
+                text: Math.floor((root.job?.progress ?? 0) * 100) + "%"
+                size: Theme.font.small
+                face: Theme.font.medium
+            }
+            Txt {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: Jobs.list.length > 1
+                text: "+" + (Jobs.list.length - 1)
+                caps: true
+                color: Theme.ink.mute
+            }
         }
 
         // Recording: red dot and the time

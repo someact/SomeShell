@@ -13,6 +13,8 @@
 #       Reads the text in the box (English and Thai), copies it and prints it.
 #   capture.sh translate <picture> <x> <y> <w> <h>
 #       Reads the text and translates it (Thai <-> English); prints JSON.
+#   capture.sh translate-text <text>
+#       Translates text as given (Thai <-> English); prints the same JSON.
 #   capture.sh lens <picture> <x> <y> <w> <h>
 #       Uploads the box to Google Lens; prints the results address.
 #   capture.sh color <picture> <x> <y>
@@ -41,6 +43,25 @@ read_text() {
         | perl -CSD -pe 'if (/[A-Za-z]/) { s/(?:^|(?<=\s))\p{Thai}{1,2}(?=\s|$)[ \t]*//g; s/^[ \t]+//; }' \
         | sed -e 's/[[:space:]]*$//' | sed -e '/./,$!d' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')
     printf '%s' "$text"
+}
+
+# Google Translate's free endpoint: Thai to English, anything else to Thai.
+# Prints {from, to, text, translation}; copies the translation. No answer:
+# prints nothing.
+translate() {
+    local text=$1 thai latin to answer result
+    # Thai when Thai letters are at least 30% of all letters (a few English
+    # letters misread as Thai must not flip it)
+    thai=$(printf '%s' "$text" | grep -oP '\p{Thai}' | wc -l)
+    latin=$(printf '%s' "$text" | grep -oP '[A-Za-z]' | wc -l)
+    to=th
+    (( thai * 10 >= (thai + latin) * 3 && thai > 0 )) && to=en
+    answer=$(curl -sS --max-time 8 -G "https://clients5.google.com/translate_a/t" \
+        --data-urlencode "client=dict-chrome-ex" --data-urlencode "sl=auto" \
+        --data-urlencode "tl=$to" --data-urlencode "q=$text") || return 0
+    result=$(jq -c --arg text "$text" --arg to "$to" '{from: (.[0][1] // "auto"), to: $to, text: $text, translation: .[0][0]}' <<<"$answer" 2>/dev/null) || return 0
+    jq -j .translation <<<"$result" | wl-copy
+    printf '%s\n' "$result"
 }
 
 case ${1:-} in
@@ -93,28 +114,21 @@ text)
     printf '%s' "$text"
     ;;
 translate)
-    # Read the text, then Google Translate's free endpoint: Thai to English,
-    # anything else to Thai. Prints {from, to, text, translation}; copies the
-    # translation. Nothing found or no answer: prints nothing.
+    # Read the text, then translate it (below)
     text=$(read_text "$2" "$3" "$4" "$5" "$6")
     [ -n "$text" ] || exit 0
-    # Thai when Thai letters are at least 30% of all letters (a few English
-    # letters misread as Thai must not flip it)
-    thai=$(printf '%s' "$text" | grep -oP '\p{Thai}' | wc -l)
-    latin=$(printf '%s' "$text" | grep -oP '[A-Za-z]' | wc -l)
-    to=th
-    (( thai * 10 >= (thai + latin) * 3 && thai > 0 )) && to=en
-    answer=$(curl -sS --max-time 8 -G "https://clients5.google.com/translate_a/t" \
-        --data-urlencode "client=dict-chrome-ex" --data-urlencode "sl=auto" \
-        --data-urlencode "tl=$to" --data-urlencode "q=$text") || exit 0
-    result=$(jq -c --arg text "$text" --arg to "$to" '{from: (.[0][1] // "auto"), to: $to, text: $text, translation: .[0][0]}' <<<"$answer" 2>/dev/null) || exit 0
-    jq -j .translation <<<"$result" | wl-copy
-    printf '%s\n' "$result"
+    translate "$text"
+    ;;
+translate-text)
+    # Text given as is (a drop on the island)
+    [ -n "${2:-}" ] || exit 0
+    translate "$2"
     ;;
 lens)
     # Upload the box to Google Lens; prints the results page's address
     src=$2 x=$3 y=$4 w=$5 h=$6
     f="$dir/lens.png"
+    mkdir -p "$dir"
     magick "$src" -crop "${w}x${h}+${x}+${y}" +repage "$f" || exit 1
     curl -sS --max-time 20 -o /dev/null -w '%{redirect_url}' \
         -A 'Mozilla/5.0 (X11; Linux x86_64; rv:135.0) Gecko/20100101 Firefox/135.0' \
