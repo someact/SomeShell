@@ -28,7 +28,8 @@ Singleton {
         { id: "clipboard", label: "Clipboard", icon: "content_paste", sizes: ["1x1", "2x1"] },
         { id: "wallpaper", label: "Wallpaper", icon: "shuffle", sizes: ["1x1", "2x1"] },
         { id: "preset", label: "Preset", icon: "dashboard_customize", sizes: ["1x1", "2x1"] },
-        { id: "lock", label: "Lock", icon: "lock", sizes: ["1x1", "2x1"] }
+        { id: "lock", label: "Lock", icon: "lock", sizes: ["1x1", "2x1"] },
+        { id: "share", label: "Quick Share", icon: "share", sizes: ["1x1", "2x1"] }
     ]
 
     // The layout before any edit (the one step 4 built)

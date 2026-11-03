@@ -26,7 +26,7 @@ Item {
         sourceComponent: ({
             net: net, bt: bt, sound: sound, night: night, dnd: dnd, awake: awake, game: game,
             brightness: brightness, shot: shot, record: record,
-            dark: dark, mic: mic, picker: picker, clipboard: clipboard, wallpaper: wallpaper, preset: preset, lock: lock
+            dark: dark, mic: mic, picker: picker, clipboard: clipboard, wallpaper: wallpaper, preset: preset, lock: lock, share: share
         })[root.kind] ?? null
     }
     Connections {
@@ -272,6 +272,23 @@ Item {
                 Ui.close();
                 Quickshell.execDetached(["loginctl", "lock-session"]);
             }
+        }
+    }
+    // Quick Share: the devices and how to send (Share page); the arrow and a
+    // right click open the Bluetooth page, where a phone is paired
+    Component {
+        id: share
+        Tile {
+            icon: "share"
+            label: "Quick Share"
+            sub: !Share.available ? (Share.adapter ? "Not installed" : "No Bluetooth")
+                : Jobs.list.some(j => j.kind === "send" || j.kind === "receive") ? "Sending…"
+                : Share.targets.length === 1 ? Share.targets[0].name
+                : Share.targets.length + " devices"
+            enabled: Share.adapter
+            more: true
+            onClicked: Ui.openPage("share")
+            onOpened: Ui.detail = "bt"
         }
     }
 }

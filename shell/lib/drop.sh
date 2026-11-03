@@ -19,6 +19,8 @@
 #       Copies it into Pictures (or Pictures/Wallpapers) and prints the new path.
 #   drop.sh note <text>
 #       Saves the text as ~/Documents/notes/<date>.txt and prints the path.
+#   drop.sh url-file <url>
+#       Writes the link as a small .url file (to share it) and prints its path.
 #   drop.sh show <path>
 #       Shows the file selected in the file manager.
 set -u
@@ -120,6 +122,12 @@ note)
     mkdir -p "$dir"
     out=$(free_name "$dir" "$(date '+%Y-%m-%d_%H.%M').txt")
     printf '%s\n' "$2" > "$out" && printf '%s\n' "$out"
+    ;;
+url-file)
+    mkdir -p "$cache"
+    host=$(printf '%s' "$2" | sed -E 's#^[a-z]+://(www\.)?##; s#[/?#:].*##')
+    out="$cache/${host:-link}.url"
+    printf '[InternetShortcut]\r\nURL=%s\r\n' "$2" > "$out" && printf '%s\n' "$out"
     ;;
 show)
     uri="file://$(jq -rn --arg p "$2" '$p | @uri' | sed 's/%2F/\//g')"

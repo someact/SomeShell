@@ -148,6 +148,20 @@ Scope {
     }
 
     IpcHandler {
+        target: "share"
+        function devices(): string { Share.refresh(); return JSON.stringify(Share.devices); }
+        function send(device: string, paths: string): void {
+            Share.pending = { files: paths.trim().split(/\s+/), url: "" };
+            Share.sendTo(device);
+        }
+        function pick(paths: string): void { Share.offer(paths.trim().split(/\s+/), ""); }
+        function cancel(): void { Share.cancel(); }
+        function accept(): void { if (Share.offers.length) Share.answer(Share.offers[0].id, true); }
+        function decline(): void { if (Share.offers.length) Share.answer(Share.offers[0].id, false); }
+        function state(): string { return JSON.stringify({ available: Share.available, adapter: Share.adapter, installed: Share.installed, ready: Share.ready, targets: Share.targets.map(d => d.name), offers: Share.offers, pending: Share.pending }); }
+    }
+
+    IpcHandler {
         target: "download"
         function start(url: string, mode: string): void { Downloads.start(url, mode || "video", ""); }
         function cancel(): void { if (Jobs.current) Jobs.cancel(Jobs.current.id); }

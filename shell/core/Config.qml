@@ -14,6 +14,7 @@ Singleton {
     property alias wallpaper: adapter.wallpaper
     property alias nightLight: adapter.nightLight
     property alias calendar: adapter.calendar
+    property alias share: adapter.share
     readonly property bool loaded: file.loaded
 
     FileView {
@@ -53,6 +54,11 @@ Singleton {
 
             property JsonObject wallpaper: JsonObject {
                 // Where /wall looks for images (empty = ~/Pictures/Wallpapers)
+                property string folder: ""
+            }
+
+            property JsonObject share: JsonObject {
+                // Where received files go (empty = ~/Downloads)
                 property string folder: ""
             }
 

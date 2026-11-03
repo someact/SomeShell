@@ -7,4 +7,5 @@ hypr/hyprland/shellOverrides/
 
 # Browser helper build and packed extension
 browser/host/target/
+share/target/
 browser/*.xpi
