@@ -138,6 +138,15 @@ Singleton {
 
     // The overview (overview/Overview.qml, Super+Tab): all ten workspaces on
     // the monitor the mouse was on when it opened
+    // The settings window (settings/SettingsWindow.qml), loaded while open
+    property bool settings: false
+    property string settingsPage: "general"
+    function openSettings(page) {
+        if (page)
+            settingsPage = page;
+        settings = true;
+    }
+
     property bool overview: false
     property string overviewMonitor: ""
     function openOverview() {

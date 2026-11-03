@@ -15,6 +15,7 @@ Singleton {
     property alias nightLight: adapter.nightLight
     property alias calendar: adapter.calendar
     property alias share: adapter.share
+    property alias lock: adapter.lock
     readonly property bool loaded: file.loaded
 
     FileView {
@@ -45,6 +46,12 @@ Singleton {
                 property bool follow: true
                 property string monitor: ""
                 // The island's style and color are part of the look: desktop.json (Desktop)
+            }
+
+            property JsonObject lock: JsonObject {
+                // Lock screen style: headline (A); island (B) and contents
+                // (C) come later (SomeShell.md section 5)
+                property string style: "headline"
             }
 
             property JsonObject theme: JsonObject {

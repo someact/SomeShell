@@ -9,6 +9,7 @@ import "capture"
 import "edit"
 import "overview"
 import "lock"
+import "settings"
 import qs.core
 import qs.services
 
@@ -70,6 +71,12 @@ ShellRoot {
     LazyLoader {
         active: Locker.shown
         Lock {}
+    }
+
+    // The settings window, only while open
+    LazyLoader {
+        active: Ui.settings
+        SettingsWindow {}
     }
 
     Shortcuts {}

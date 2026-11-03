@@ -98,7 +98,7 @@ Item {
                 Share.openPage();
             } else if (r.data.cmd === "/settings") {
                 Ui.close();
-                Ui.showAlert("Settings", "The settings window comes in step 7.", "SomeShell", "settings");
+                Ui.openSettings("");
             } else {
                 input.text = r.data.cmd + " ";
             }

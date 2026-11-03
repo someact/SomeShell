@@ -54,6 +54,49 @@ Scope {
         }
     }
 
+    // settings open: the window on its last page; page <id>: on that page
+    // (general, displays); close
+    IpcHandler {
+        target: "settings"
+
+        function open(): void { Ui.openSettings(""); }
+        function page(id: string): void { Ui.openSettings(id); }
+        function close(): void { Ui.settings = false; }
+        function state(): string { return JSON.stringify({ open: Ui.settings, page: Ui.settingsPage }); }
+    }
+
+    // displays: the Displays page's work without the window. set <name>
+    // <key> <value> changes the draft (key: on, res, mode, scale, transform,
+    // x, y, mirror, vrr, bits, main); apply starts the 15 s countdown; keep
+    // saves; back goes back now
+    IpcHandler {
+        target: "displays"
+
+        function state(): string {
+            return JSON.stringify({ set: Displays.setKey, saved: Displays.saved, changes: Displays.changes, waiting: Displays.waiting, left: Displays.left,
+                draft: Displays.draft.map(m => ({ name: m.name, mode: m.mode, scale: m.scale, transform: m.transform, x: m.x, y: m.y, on: m.on, mirror: m.mirror, vrr: m.vrr, bits: m.bits, main: m.main })) });
+        }
+        function set(name: string, key: string, value: string): void {
+            const m = Displays.draft.find(d => d.name === name);
+            if (!m)
+                return;
+            let v = value;
+            if (["on", "main"].includes(key))
+                v = value === "true";
+            else if (["scale", "transform", "x", "y", "vrr", "bits"].includes(key))
+                v = Number(value);
+            if (key === "x" || key === "y")
+                Displays.place(m.desc, key === "x" ? v : m.x, key === "y" ? v : m.y);
+            else
+                Displays.set(m.desc, key, v);
+        }
+        function apply(): void { Displays.apply(); }
+        function keep(): void { Displays.keep(); }
+        function back(): void { Displays.revert(); }
+        function undo(): void { Displays.undo(); }
+        function identify(): void { Displays.identify(); }
+    }
+
     IpcHandler {
         target: "wallpaper"
 

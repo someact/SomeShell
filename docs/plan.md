@@ -152,6 +152,14 @@ Decision in `SomeShell.md` section 5. Style A now; B and C as a setting later.
 - [~] SDDM theme `sddm/someshell` + `sddm/install.sh`: style A with user ‹ ›, session ‹ › (Alt+Left/Right, F2), Sleep / Restart / Shut down, a greeting top right. Checked on the PC in `sddm-greeter-qt6 --test-mode`, dark and light palette. Left: install and log in for real (PC, then the tablet, the SDDM test machine)
 - [ ] Lock styles B (Island) and C (Contents page), chosen in settings
 
+## Settings window (step 7, user 2026-11-04)
+Decision in `SomeShell.md` section 5.
+- [x] The window: `settings/SettingsWindow.qml` (FloatingWindow, lazy, floats centered by its title), page list, IPC `settings open|page <id>|close|state`, `/settings`, Super+I; shared controls in `components/` (`Select` opens upward when the window has no room below, `IconChoice`, `Switch`, `SetRow`, `SetSection`, `SetButton`)
+- [x] General page: mode, island style and color, lock style (A; B and C shown as later), follow the mouse or one monitor, dock and auto-hide, keyboard layouts (every xkb layout from `base.lst`; `services/HyprConfig.qml` writes `hypr.json` with jq and applies with `hyprctl eval`). Checked on the PC, dark
+- [x] Displays page + `services/Displays.qml` (draft, apply with 15 s revert, profiles per monitor set in `displays.json`, `generated/monitors.lua`), IPC `displays state|set|apply|keep|back|undo|identify`. Tested on the PC with two monitors: dragged DP-1 under HDMI-A-1 (snapped to 0,1080), Apply moved it live, no Keep went back after 15 s; main display kept (files written, `--verify-config` ok); Identify; dropdowns; dark and light
+  - [ ] Not tried yet: a mode or refresh change on a real monitor, rotation, scale, mirror, 10-bit, turning a monitor off, a profile switching when a monitor is plugged in (laptop with a second screen)
+- [ ] Later pages: Input, Power & lock, Night light, Apps, Sharing, About
+
 ## Later steps
 - Step 7: lock screen, dock, settings window, installer (the overview moved up)
 - Step 8: GIFs, WARP, capture tools, game overlay, on-screen keyboard

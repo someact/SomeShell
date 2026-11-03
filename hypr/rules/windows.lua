@@ -25,7 +25,7 @@ for _, class in ipairs({ ".*plasmawindowed.*", "^(kcm_.*)$", ".*bluedevilwizard"
 end
 
 -- The settings window
-hl.window_rule({ match = { class = "^(someshell-settings)$" }, float = true, center = true, size = { 1080, 740 } })
+hl.window_rule({ match = { title = "^(SomeShell Settings)$" }, float = true, center = true, size = { 1080, 740 } })
 
 -- Picture-in-picture: small, pinned, bottom right, keeps its shape
 hl.window_rule({
