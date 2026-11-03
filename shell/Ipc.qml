@@ -55,7 +55,7 @@ Scope {
     }
 
     // settings open: the window on its last page; page <id>: on that page
-    // (general, displays); close
+    // (general, displays, input); close
     IpcHandler {
         target: "settings"
 

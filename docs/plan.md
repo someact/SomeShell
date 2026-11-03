@@ -158,7 +158,10 @@ Decision in `SomeShell.md` section 5.
 - [x] General page: mode, island style and color, lock style (A; B and C shown as later), follow the mouse or one monitor, dock and auto-hide, keyboard layouts (every xkb layout from `base.lst`; `services/HyprConfig.qml` writes `hypr.json` with jq and applies with `hyprctl eval`). Checked on the PC, dark
 - [x] Displays page + `services/Displays.qml` (draft, apply with 15 s revert, profiles per monitor set in `displays.json`, `generated/monitors.lua`), IPC `displays state|set|apply|keep|back|undo|identify`. Tested on the PC with two monitors: dragged DP-1 under HDMI-A-1 (snapped to 0,1080), Apply moved it live, no Keep went back after 15 s; main display kept (files written, `--verify-config` ok); Identify; dropdowns; dark and light
   - [ ] Not tried yet: a mode or refresh change on a real monitor, rotation, scale, mirror, 10-bit, turning a monitor off, a profile switching when a monitor is plugged in (laptop with a second screen)
-- [ ] Later pages: Input, Power & lock, Night light, Apps, Sharing, About
+- [x] Fixes (user, 2026-11-04): a second click on a dropdown closes it; dragging a monitor no longer scrolls the page (pages scroll by wheel only), a click only chooses, bigger boxes, a monitor dropped on another moves to the nearest free edge
+- [x] Input page: keyboard repeat delay and speed, Num Lock; mouse speed, acceleration, scroll speed, natural scrolling, left-handed, focus follows the mouse or click; touchpad rows only with a touchpad; pen tablet rows only with a tablet (monitor, rotation, left-handed; `HyprConfig.setDevice` keeps the rest of its entry, e.g. the active area). `components/SetSlider.qml` (writes on release). Checked on the PC: repeat speed dragged (applied live and saved, then put back), pen left-handed on and off (active area kept), wheel scrolling, dark and light
+  - [ ] Touchpad rows on the laptop
+- [ ] Later pages: Power & lock, Night light, Apps, Sharing, About
 
 ## Later steps
 - Step 7: lock screen, dock, settings window, installer (the overview moved up)

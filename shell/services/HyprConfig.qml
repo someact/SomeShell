@@ -53,7 +53,39 @@ Singleton {
         data = d;
     }
 
+    // A JSON value as Lua: arrays and objects as tables
+    function luaValue(v) {
+        if (Array.isArray(v))
+            return "{ " + v.map(luaValue).join(", ") + " }";
+        if (v !== null && typeof v === "object")
+            return "{ " + Object.keys(v).map(k => k + " = " + luaValue(v[k])).join(", ") + " }";
+        return lua(v);
+    }
+
+    // One device (a pen tablet, a mouse) in hypr.json "devices", by name;
+    // the whole entry is sent again, so its other fields stay
+    function device(name) {
+        return (data.devices ?? []).find(d => d && d.name === name) ?? null;
+    }
+    function setDevice(name, key, value) {
+        const entry = Object.assign({ name: name }, device(name) ?? {});
+        if (value === null || value === undefined)
+            delete entry[key];
+        else
+            entry[key] = value;
+        Quickshell.execDetached(["hyprctl", "eval", "hl.device(" + luaValue(entry) + ")"]);
+        const list = (data.devices ?? []).filter(d => d && d.name !== name).concat([entry]);
+        deviceWriter.command = ["sh", "-c",
+            'f="$1"; t=$(mktemp) && { [ -s "$f" ] && cat "$f" || echo "{}"; } | jq --argjson v "$2" "$3" > "$t" && mv "$t" "$f"',
+            "sh", root.path, JSON.stringify(list), ".devices = $v"];
+        deviceWriter.running = true;
+        const d = JSON.parse(JSON.stringify(data));
+        d.devices = list;
+        data = d;
+    }
+
     Process { id: writer }
+    Process { id: deviceWriter }
 
     FileView {
         id: file

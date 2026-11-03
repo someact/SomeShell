@@ -15,7 +15,8 @@ FloatingWindow {
     readonly property var c: Theme.paper
     readonly property var pages: [
         { id: "general", name: "General", icon: "tune" },
-        { id: "displays", name: "Displays", icon: "desktop_windows" }
+        { id: "displays", name: "Displays", icon: "desktop_windows" },
+        { id: "input", name: "Input", icon: "mouse" }
     ]
     readonly property int index: Math.max(0, pages.findIndex(p => p.id === Ui.settingsPage))
     readonly property var page: pages[index]
