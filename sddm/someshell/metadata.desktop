@@ -1,0 +1,13 @@
+[SddmGreeterTheme]
+Name=SomeShell
+Description=SomeShell lock style A (Headline): the login screen as a poster
+Author=someact
+Website=https://github.com/someact/SomeShell
+License=GPL-3.0-or-later
+Type=sddm-theme
+Version=1.0
+ConfigFile=theme.conf
+MainScript=Main.qml
+Theme-Id=someshell
+Theme-API=2.0
+QtVersion=6

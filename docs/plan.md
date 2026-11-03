@@ -149,7 +149,7 @@ Decisions in `SomeShell.md` section 5 (Drop onto the island and Quick Share).
 Decision in `SomeShell.md` section 5. Style A now; B and C as a setting later.
 - [~] Shell lock, style A: `services/Locker.qml` (lock, PAM, crash restore), `lock/` (one surface per monitor), `services/Keyboard.qml` (layout code and Caps Lock, shared with the tray), IPC `lock lock|preview|state`; `scripts/lock.sh` already prefers it. Preview checked on the PC (both monitors, dark and light, typing, one wrong password through PAM, Esc). Left: a real lock and unlock with the password (user)
 - [x] hyprlock backup redrawn as style A (`hypr/scripts/lockinfo.sh` writes its lines; checked on the PC with `hyprlock --grace 60`, a mouse move opens it)
-- [ ] SDDM theme `sddm/someshell` + `sddm/install.sh` (tested with `sddm-greeter-qt6 --test-mode`; for real on the tablet, the SDDM test machine)
+- [~] SDDM theme `sddm/someshell` + `sddm/install.sh`: style A with user ‹ ›, session ‹ › (Alt+Left/Right, F2), Sleep / Restart / Shut down, a greeting top right. Checked on the PC in `sddm-greeter-qt6 --test-mode`, dark and light palette. Left: install and log in for real (PC, then the tablet, the SDDM test machine)
 - [ ] Lock styles B (Island) and C (Contents page), chosen in settings
 
 ## Later steps
