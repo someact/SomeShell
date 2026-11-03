@@ -290,6 +290,20 @@ Widget ideas: clock (poster style, huge), now playing, calendar, notes, system, 
   > - **Mouse:** click a page: go there and close. Click a window: go to its workspace, focus it, close. Drag a window onto a page: move it there (the overview stays). **While dragging a window, each page shows a spot per monitor along its bottom: dropping on a spot also shows that workspace on that monitor.** Drag a page onto a monitor in the map: show that workspace there.
   > - States: hover = outline and corner marks; current = a 2 px accent outline; keyboard = corner marks and an outer outline; a hovered window inverts; a drop target is dashed. One motion: a quick fade and scale in.
   > - Every action is a Hyprland dispatch (rule 1); it switches every time (rule 4). The overview takes the keyboard only while open, and is loaded only while open.
+- **Drop onto the island and Quick Share** (user, 2026-11-03; pulled forward from step 8)
+  > [!check] Decided (user, 2026-11-03): **Quick Share is Bluetooth push, send and receive; anything can be dropped on the island, then you choose.** This replaces the earlier "Quick Share helper (Google's protocol)".
+  > - **Quick Share = Bluetooth file push (OBEX Object Push through bluez's `obexd`).** Works with any Android phone or computer with Bluetooth, and on the desktop without Wi-Fi; not with iPhones. Slow (about 0.1–2 MB/s): meant for photos and documents. A small Rust helper (`share/`, like `browser/host`) talks to `obexd` over D-Bus: it sends, and it is the agent that answers incoming pushes. It prints events as JSON lines; the shell reads them (events, not polling). Only where a Bluetooth adapter exists.
+  > - **Sending:** a device list (paired devices that take files, the connected one first). Pick one: the island shows the transfer on the right of rest (like a recording: a ring that fills and the percent), then an alert "Sent to …" or the error. Several files go one after another; Cancel stops.
+  > - **Receiving:** a phone sends to this machine → the island opens a Share page: who, the file name and size, **Accept / Decline** (keyboard too). Accepted files go to `~/Downloads` (settings: `share.folder`); the alert at the end opens the file or its folder. Pairing stays in the Bluetooth page (a phone must be paired first).
+  > - **Dragging onto the island:** while something from another app is dragged over the island, it grows a little and says what it holds (`DROP · 1 IMAGE`, `DROP · YOUTUBE LINK`, `DROP · 3 FILES`). Drop it anywhere on the island: the island opens the **Drop page** (a tabless page, like clipboard): a preview (thumbnail or icon, name, size, or the link / text) and the actions for that kind as chips, clickable and by keyboard. Esc closes it.
+  > - **Actions by kind:**
+  >   - Files (one or more): Share, Open, Show in folder, Copy (as files).
+  >   - Image (a file, or dragged from a browser: downloaded with curl first): Share, Copy image, Save to Pictures, Set as wallpaper, Read text (Tesseract, copied), Google Lens.
+  >   - Video link (anything `yt-dlp` knows: YouTube and the like): Download video (`~/Videos`), Download audio (`~/Music`, m4a/opus as given), Open, Copy link. Progress on the right of rest, like a transfer; the alert at the end opens the file.
+  >   - Other link: Open, Copy, Share (as a small `.url` file).
+  >   - Text: Copy, Translate (Thai ↔ English, the capture's translate), Search the web, Save as a note file (`~/Documents/notes/`).
+  > - **Control tile Quick Share:** its page lists the devices and the last transfers; a right click / Shift+Enter opens the Bluetooth page.
+  > - IPC `share devices|send <device> <path…>|cancel|accept|decline|state`, `drop <text|uri…>` (to test without dragging), `download <url> video|audio`.
 - **Lock screen:** big clock in poster style, password dots that pop in and shake when wrong.
 - **Dock:** optional, hidden by default?
 - **On-screen keyboard, capture tools, game overlay:** later, after the core works.
@@ -354,7 +368,7 @@ Built on Quickshell. It already ships modules for Hyprland, PipeWire audio, medi
 | Do not disturb | Our own notification server holds alerts | Auto-on during games and screen share | ● |
 | Game mode | Hyprland settings off (blur, animations) while a fullscreen game is focused | Telling a game from a fullscreen video | ●● |
 | Screenshot, record, color picker | `grim` + own region picker, `gpu-screen-recorder` or `wf-recorder`, `hyprpicker` | Region picker in the new look; NVIDIA encoding | ●● |
-| WARP, Quick Share | `warp-cli`; Quick Share helper (Rust) | Only when installed; later | ●● |
+| WARP, Quick Share | `warp-cli`; Quick Share = Bluetooth push through `obexd`, a small Rust helper (section 5) | Only when installed; a phone must be paired | ●● |
 | Battery (laptop) | Quickshell UPower module | Hidden on a desktop | ● |
 | Control layout editing | Snap grid 1×1, 2×1, 1×2, 2×2, saved in the config | Drag and resize feel; the same editor is reused for the desktop (7.3) | ●●● |
 | Media | Quickshell MPRIS module: any player | Several players at once: pick the active one | ●● |
@@ -414,5 +428,5 @@ Each step ends with something that runs and is checked on the desktop. Commits s
 5. Browser extension, music layout, lyrics. Calendar and system pages.
 6. Edit desktop: grid editor, widgets, presets, workspace designs, control layout editing.
 7. Lock screen, overview, dock, installer.
-8. Later: GIFs, Quick Share, WARP, capture tools, game overlay, on-screen keyboard.
+8. Later: GIFs, WARP, capture tools, game overlay, on-screen keyboard.
 

@@ -130,9 +130,18 @@ Decisions and the approved mockup in `SomeShell.md` section 5 (Overview).
 - [ ] Check on the tablet (one monitor: no monitor spots, a map of one)
 - [x] Tablet with a second monitor (user, 2026-11-03): DSI-1 plus an external monitor over USB-C to HDMI (shows as DP-1, 1920x1080@120) works like the PC with two monitors
 
+## Drop and Quick Share (pulled forward from step 8, user 2026-11-03)
+Decisions in `SomeShell.md` section 5 (Drop onto the island and Quick Share).
+- [ ] Drop: the island takes drags from other apps (a `DropArea` on the top window; the spike on the tablet got Nautilus's `text/uri-list`), a Drop state while dragging (`DROP · 1 IMAGE`), the Drop page (`Ui.extraPages`: preview and the actions for the kind), IPC `drop`
+- [ ] Drop actions without Bluetooth: files (open, show in folder, copy), image (copy, save, wallpaper, read text, Lens; from a browser: curl first), link (open, copy), text (copy, translate, search, save as a note)
+- [ ] Video download: `services/Downloads.qml` + `yt-dlp` (video to `~/Videos`, audio to `~/Music`), progress on the right of rest, an alert that opens the file at the end, cancel; IPC `download`
+- [ ] Share helper (`share/`, Rust, zbus): `send <device> <files>` and the `obexd` agent for incoming pushes, JSON lines on stdout; an install script like `browser/install.sh`
+- [ ] Quick Share in the shell: `services/Share.qml` (devices that take files, send queue, progress, incoming offers), device picker from the Drop page, the incoming page (Accept / Decline), the control tile and its page, IPC `share`
+- [ ] Test with a phone: pair it in the Bluetooth page, send a photo both ways, decline, cancel mid-way; on the PC as well (no Wi-Fi there; check that it has a Bluetooth adapter)
+
 ## Later steps
 - Step 7: lock screen, dock, settings window, installer (the overview moved up)
-- Step 8: GIFs, Quick Share, WARP, capture tools, game overlay, on-screen keyboard
+- Step 8: GIFs, WARP, capture tools, game overlay, on-screen keyboard
 
 ## Where each part can be built
 The tablet (one screen, battery, Wi-Fi, backlight, ARM, 8 GB) and the PC (two monitors, DDC, NVIDIA, Ethernet, games, pen) test different things. Build on either; check the "PC" or "tablet" parts on that machine before ticking.
