@@ -22,6 +22,18 @@ Item {
 
     signal moved(real value)
 
+    // Keyboard (Open.qml): Left/Right step 5% (not while the control
+    // page's tiles are being moved)
+    readonly property bool kbNav: enabled && !Ui.controlEdit
+    function kbStep(d) {
+        moved(Math.max(0, Math.min(1, value + 0.05 * d)));
+        return true;
+    }
+    KeyRing {
+        target: root
+        radiusOf: 4
+    }
+
     implicitHeight: 24
 
     Row {

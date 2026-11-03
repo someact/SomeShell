@@ -21,6 +21,11 @@ Item {
     signal clicked
     signal rightClicked
 
+    // Keyboard (Open.qml): arrows mark it, Enter clicks, Shift+Enter right-clicks
+    property bool kbNav: enabled
+    function kbClick() { clicked(); }
+    function kbAlt() { rightClicked(); }
+
     implicitWidth: 34
     implicitHeight: 34
     opacity: enabled ? 1 : 0.4
@@ -43,6 +48,11 @@ Item {
         anchors.fill: parent
         // So content can write `color: parent.fg`
         readonly property color fg: root.fg
+    }
+
+    KeyRing {
+        target: root
+        radiusOf: root.radius
     }
 
     MouseArea {

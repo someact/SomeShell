@@ -15,12 +15,22 @@ Rectangle {
 
     function focusField() { input.forceActiveFocus(); }
 
+    // Keyboard (Open.qml): Enter on the marked field starts typing in it
+    readonly property bool kbNav: enabled
+    readonly property bool kbField: true
+    function kbClick() { focusField(); }
+
     implicitWidth: 220
     implicitHeight: 34
     radius: 10
     color: "transparent"
     border.width: 1
     border.color: input.activeFocus ? Theme.ink.accent : Theme.ink.line
+
+    KeyRing {
+        target: root
+        radiusOf: root.radius
+    }
 
     TextInput {
         id: input

@@ -21,23 +21,164 @@ FocusScope {
         Qt.callLater(() => underline.ready = true);
     }
 
+    // Keyboard: the arrows move a mark (Ui.kbItem) between the things on
+    // the page you can click, by position. Anything can join by having
+    //   kbNav: bool        can be marked now
+    //   kbClick()          Enter            kbAlt()   Shift+Enter (right click)
+    //   kbHold(bool)       Enter held down (instead of kbClick)
+    //   kbStep(d): bool    Left/Right while marked (a slider); true if used
+    //   kbLeaf: true       the things inside it are not marked on their own
+    //   kbField: true      a text field (Enter types in it)
+    // and a KeyRing to show the mark. With nothing marked, Left/Right switch
+    // pages and Down marks the first thing; Up from the top unmarks.
     Keys.onPressed: event => {
-        if (event.key === Qt.Key_Escape && Ui.controlEdit) {
-            Ui.controlEdit = false;
-        } else if (event.key === Qt.Key_Escape) {
-            Ui.close();
+        const enter = event.key === Qt.Key_Return || event.key === Qt.Key_Enter;
+        const shift = event.modifiers & Qt.ShiftModifier;
+        const kb = Ui.kbItem;
+        if (event.key === Qt.Key_Escape) {
+            if (Ui.controlEdit)
+                Ui.controlEdit = false;
+            else if (Ui.detail !== "")
+                Ui.detail = "";
+            else
+                Ui.close();
         } else if (event.key === Qt.Key_Tab) {
             Ui.nextPage(1);
         } else if (event.key === Qt.Key_Backtab) {
             Ui.nextPage(-1);
-        } else if (event.key === Qt.Key_Left && !(event.modifiers & Qt.ShiftModifier)) {
-            Ui.nextPage(-1);
-        } else if (event.key === Qt.Key_Right && !(event.modifiers & Qt.ShiftModifier)) {
-            Ui.nextPage(1);
+        } else if (enter && kb && shift) {
+            if (!event.isAutoRepeat && typeof kb.kbAlt === "function")
+                kb.kbAlt();
+        } else if (enter && kb) {
+            if (event.isAutoRepeat) {
+                // held: nothing more
+            } else if (typeof kb.kbHold === "function") {
+                kb.kbHold(true);
+            } else if (typeof kb.kbClick === "function") {
+                kb.kbClick();
+            }
+        } else if (shift && [Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down].includes(event.key)) {
+            return;
+        } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Right) {
+            const d = event.key === Qt.Key_Left ? -1 : 1;
+            if (kb && typeof kb.kbStep === "function" && kb.kbStep(d)) {
+                // a slider took it
+            } else if (kb) {
+                mark(d, 0);
+            } else {
+                Ui.nextPage(d);
+            }
+        } else if (event.key === Qt.Key_Down) {
+            mark(0, 1);
+        } else if (event.key === Qt.Key_Up) {
+            if (kb && !mark(0, -1))
+                Ui.kbItem = null;
         } else {
             return;
         }
         event.accepted = true;
+    }
+    Keys.onReleased: event => {
+        const enter = event.key === Qt.Key_Return || event.key === Qt.Key_Enter;
+        if (enter && !event.isAutoRepeat && Ui.kbItem && typeof Ui.kbItem.kbHold === "function") {
+            Ui.kbItem.kbHold(false);
+            event.accepted = true;
+        }
+    }
+
+    // Everything that can be marked now: the Edit chip and the page
+    function navItems() {
+        const out = [];
+        const walk = item => {
+            if (!item || !item.visible || item.opacity === 0)
+                return;
+            if (item.kbNav === true && item.width > 0 && item.height > 0) {
+                out.push(item);
+                if (item.kbLeaf === true)
+                    return;
+            }
+            for (const c of item.children)
+                walk(c);
+        };
+        walk(editChip);
+        walk(page);
+        return out;
+    }
+    // Moves the mark one step (dx, dy); false when there is nothing that way
+    function mark(dx, dy) {
+        const items = navItems();
+        const cur = items.includes(Ui.kbItem) ? Ui.kbItem : null;
+        let best = null;
+        if (!cur) {
+            // Nothing marked: Down starts at the page's top left (the Edit
+            // chip above it is reached with Up)
+            if (dy <= 0)
+                return false;
+            const onPage = items.filter(it => it !== editChip);
+            let bestKey = Infinity;
+            for (const it of onPage.length ? onPage : items) {
+                const r = it.mapToItem(root, 0, 0, it.width, it.height);
+                const k = Math.round(r.y / 8) * 100000 + r.x;
+                if (k < bestKey) {
+                    bestKey = k;
+                    best = it;
+                }
+            }
+        } else {
+            const a = cur.mapToItem(root, 0, 0, cur.width, cur.height);
+            const acx = a.x + a.width / 2, acy = a.y + a.height / 2;
+            let bestScore = Infinity;
+            for (const it of items) {
+                if (it === cur)
+                    continue;
+                const b = it.mapToItem(root, 0, 0, it.width, it.height);
+                const bcx = b.x + b.width / 2, bcy = b.y + b.height / 2;
+                // Its centre must lie that way
+                if ((bcx - acx) * dx + (bcy - acy) * dy <= 2)
+                    continue;
+                // The gap along the way, and how far off to the side
+                const gap = dx > 0 ? b.x - (a.x + a.width) : dx < 0 ? a.x - (b.x + b.width)
+                    : dy > 0 ? b.y - (a.y + a.height) : a.y - (b.y + b.height);
+                const side = dx !== 0
+                    ? Math.max(0, Math.max(a.y, b.y) - Math.min(a.y + a.height, b.y + b.height))
+                    : Math.max(0, Math.max(a.x, b.x) - Math.min(a.x + a.width, b.x + b.width));
+                const offCentre = dx !== 0 ? Math.abs(bcy - acy) : Math.abs(bcx - acx);
+                const score = Math.max(0, gap) + side * 3 + offCentre * 0.05;
+                if (score < bestScore) {
+                    bestScore = score;
+                    best = it;
+                }
+            }
+        }
+        if (!best)
+            return false;
+        // Leaving a text field: the keys come back here
+        if (cur && cur.kbField === true)
+            root.forceActiveFocus();
+        Ui.kbItem = best;
+        reveal(best);
+        return true;
+    }
+    // Scrolls the list that holds `it` so it shows
+    function reveal(it) {
+        for (let p = it.parent; p && p !== root; p = p.parent) {
+            if (p.contentItem === undefined || p.contentY === undefined || p.contentHeight === undefined)
+                continue;
+            const r = it.mapToItem(p.contentItem, 0, 0, it.width, it.height);
+            if (p.contentHeight > p.height) {
+                if (r.y < p.contentY)
+                    p.contentY = r.y;
+                else if (r.y + r.height > p.contentY + p.height)
+                    p.contentY = r.y + r.height - p.height;
+            }
+            if (p.contentWidth > p.width) {
+                if (r.x < p.contentX)
+                    p.contentX = r.x;
+                else if (r.x + r.width > p.contentX + p.width)
+                    p.contentX = r.x + r.width - p.width;
+            }
+            return;
+        }
     }
 
     // The mouse wheel switches pages. Pages that scroll (lists, lyrics, the
@@ -171,6 +312,7 @@ FocusScope {
 
     // Control: quick edit of its tiles (also a long press on a tile)
     Chip {
+        id: editChip
         visible: root.current.id === "control" && !Ui.detail
         anchors.right: parent.right
         anchors.rightMargin: 26

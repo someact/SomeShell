@@ -78,6 +78,13 @@ Design mockup, **approved** 2026-11-02 (round 2): https://claude.ai/artifact/6Lr
 
 ### 3.1 How to call it
 - **Super key:** press to open the island on the search page. Arrow keys to move, Enter to choose, Super or Esc again to close.
+  > [!check] Decided (user, 2026-11-03): **the open island works fully by keyboard.**
+  > - Arrows move a keyboard mark (an accent outline; a calendar day gets the hover fill, since a ring is today's mark) to the nearest thing you can click in that direction: buttons, chips, tiles, rows, calendar days, sliders, the Edit chip.
+  > - With nothing marked, Left/Right switch pages as before and Down marks the first thing on the page. Up from the top row takes the mark away again (back to switching pages). Tab / Shift+Tab always switch pages.
+  > - **Enter** clicks the marked thing, **Shift+Enter** is a right click (a tile with a page opens it, other tiles start quick edit, a saved network shows its menu, a clipboard entry is removed). Power buttons: hold Enter, like holding the mouse.
+  > - A marked slider takes Left/Right: 5% a step (a slider in a tile is marked on its own: Down from the tile).
+  > - **Esc** goes back one level: out of quick edit, out of a tile's page, then closes.
+  > - Search and clipboard keep their own keys (the typed text and the list); Shift+Enter there is the right click too.
 - **Mouse:** move onto the island and it **peeks** (grows a little and shows more). Click it to open fully, click outside to close. When it was opened by hover, moving away closes it.
 - **Shortcuts to a page:** e.g. Super+V clipboard, Super+. emoji, Super+A control panel.
 

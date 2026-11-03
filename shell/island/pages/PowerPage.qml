@@ -53,11 +53,35 @@ Item {
                     // 0..1 while held; at 1 the button inverts and the action runs
                     property real progress: 0
                     property bool done: false
-                    readonly property bool holding: mouse.pressed && !done
+                    // Held by the mouse or by Enter (Open.qml calls kbHold)
+                    property bool keyHeld: false
+                    readonly property bool holding: (mouse.pressed || keyHeld) && !done
+                    readonly property bool kbNav: true
+                    function holdStart() {
+                        if (done)
+                            return;
+                        drain.stop();
+                        fill.duration = 800 * (1 - progress);
+                        fill.restart();
+                    }
+                    function holdEnd() {
+                        if (progress < 1) {
+                            fill.stop();
+                            drain.restart();
+                        }
+                    }
+                    function kbHold(on) {
+                        keyHeld = on;
+                        on ? holdStart() : holdEnd();
+                    }
                     readonly property color ink: done ? Theme.ink.bg : Theme.ink.fg
                     width: 132
                     height: 168
 
+                    KeyRing {
+                        target: button
+                        radiusOf: 20
+                    }
                     Rectangle {
                         anchors.fill: parent
                         radius: 20
@@ -179,19 +203,8 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onPressed: {
-                            if (button.done)
-                                return;
-                            drain.stop();
-                            fill.duration = 800 * (1 - button.progress);
-                            fill.restart();
-                        }
-                        onReleased: {
-                            if (button.progress < 1) {
-                                fill.stop();
-                                drain.restart();
-                            }
-                        }
+                        onPressed: button.holdStart()
+                        onReleased: button.holdEnd()
                     }
                 }
             }

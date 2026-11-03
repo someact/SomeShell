@@ -26,6 +26,10 @@ Scope {
                 open: Ui.open,
                 page: Ui.pageId,
                 controlEdit: Ui.controlEdit,
+                detail: Ui.detail,
+                // The keyboard mark: its label, title, icon or type
+                kb: Ui.kbItem ? (Ui.kbItem.label || Ui.kbItem.title || Ui.kbItem.icon || Ui.kbItem.kind || Ui.kbItem.modelData?.name || String(Ui.kbItem).split("(")[0].replace(/_QML.*/, ""))
+                    + " @" + Math.round(Ui.kbItem.mapToItem(null, 0, 0).x) + "," + Math.round(Ui.kbItem.mapToItem(null, 0, 0).y) : null,
                 openedByHover: Ui.openedByHover,
                 monitor: Ui.monitor,
                 quiet: Ui.quiet,

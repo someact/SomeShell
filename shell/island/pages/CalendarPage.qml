@@ -122,13 +122,22 @@ Item {
                     width: root.cell
                     height: root.cell - 4
 
+                    // Keyboard (Open.qml): Enter chooses the day. Marked like
+                    // a hover (a ring would look like today's circle)
+                    readonly property bool kbNav: true
+                    function kbClick() {
+                        root.chosen = day.date;
+                        if (!day.inMonth)
+                            root.month = new Date(day.date.getFullYear(), day.date.getMonth(), 1);
+                    }
+
                     // Chosen: filled (press-invert look); today: circled
                     Rectangle {
                         anchors.centerIn: num
                         width: 32
                         height: 32
                         radius: 16
-                        color: day.isChosen ? Theme.ink.fg : mouse.containsMouse ? Theme.ink.raised : "transparent"
+                        color: day.isChosen ? Theme.ink.fg : mouse.containsMouse || Ui.kbItem === day ? Theme.ink.raised : "transparent"
                         border.width: day.isToday && !day.isChosen ? 1.5 : 0
                         border.color: Theme.ink.accent
                     }
@@ -154,11 +163,7 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.chosen = day.date;
-                            if (!day.inMonth)
-                                root.month = new Date(day.date.getFullYear(), day.date.getMonth(), 1);
-                        }
+                        onClicked: day.kbClick()
                     }
                 }
             }

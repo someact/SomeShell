@@ -102,6 +102,7 @@ Item {
                     else if (event.key === Qt.Key_Up) root.move(-1);
                     else if (event.key === Qt.Key_PageDown) root.move(root.maxRows);
                     else if (event.key === Qt.Key_PageUp) root.move(-root.maxRows);
+                    else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier)) root.removeAt(root.sel);
                     else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) root.activate(root.sel);
                     // Delete removes the entry once the filter is empty or the cursor is at its end
                     else if (event.key === Qt.Key_Delete && input.cursorPosition === input.text.length) root.removeAt(root.sel);

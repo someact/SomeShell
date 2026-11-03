@@ -106,6 +106,8 @@ An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard 
 ## Island refinements (user, 2026-11-03)
 - [x] The mouse wheel switches pages: over the tab row, or over a page with nothing to scroll (lists, lyrics, the calendar's month and sliders keep the wheel). Tested on the PC: tab row both ways, the System page, the clipboard list
 - [x] Power page: the line draws the edge while held, the corner marks close in, `Release · 3 2 1` rolls, the button inverts at the end and then runs; letting go pulls the line back. Tested with `SOMESHELL_DRY_POWER=1` by mouse: a full hold, an early release
+- [x] Full keyboard in the open island (decision in `SomeShell.md` 3.1): arrows move a mark (`Ui.kbItem`, `components/KeyRing.qml`) to the nearest clickable thing by position; Enter clicks, Shift+Enter right-clicks, Esc goes back a level (quick edit, a tile's page, close). Anything joins with `kbNav` + `kbClick`/`kbAlt`/`kbHold`/`kbStep` (Tap, Chip, ListRow, Tile, BarSlider, Field, calendar days, notifications, power buttons). With nothing marked Left/Right still switch pages; Search and clipboard keep their own list keys (Shift+Enter removes a clipboard entry). `island state` shows the mark. Tested on the tablet with real keys (ydotool): Control grid both ways, the Edit chip, the Sound slider (5% steps), Shift+Enter into Sound, Esc back and closed, Calendar arrows and days, Notifications, Power hold Enter (dry: a tap does nothing, a hold runs), dark and light
+  - [ ] On the PC: two monitors, Media with something playing
 
 ## Step 6: Edit desktop
 Decisions in `SomeShell.md` section 4 ("Decided, start of step 6"). Tablet first (one screen); per-monitor parts are checked on the PC.

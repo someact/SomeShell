@@ -33,12 +33,19 @@ Singleton {
     property string detail: ""
     // Quick edit of the control page's tiles
     property bool controlEdit: false
+    // The thing marked with the keyboard in the open island (Open.qml moves
+    // it with the arrows; components show a KeyRing while it is them)
+    property Item kbItem: null
+    onDetailChanged: kbItem = null
+    onControlEditChanged: kbItem = null
+    onExtraChanged: kbItem = null
     // Which way the last switch went (1: right, -1: left), for the page
     // motion. Tab wraps around but still counts as its own direction.
     property int direction: 1
     property int previousPage: 0
     property int step: 0
     onPageChanged: {
+        kbItem = null;
         detail = "";
         controlEdit = false;
         direction = step !== 0 ? step : page >= previousPage ? 1 : -1;
@@ -200,6 +207,7 @@ Singleton {
         open = true;
     }
     function close() {
+        kbItem = null;
         open = false;
         extra = "";
         detail = "";

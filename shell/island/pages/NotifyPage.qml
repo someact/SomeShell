@@ -115,6 +115,14 @@ Item {
                         width: group.width
                         height: Math.max(54, text.implicitHeight + 18)
 
+                        // Keyboard (Open.qml): Enter opens it
+                        readonly property bool kbNav: true
+                        function kbClick() { Notifications.invoke(item.modelData.id, "default"); }
+                        KeyRing {
+                            target: item
+                            anchors.bottomMargin: -2
+                        }
+
                         Rectangle {
                             anchors.fill: parent
                             anchors.bottomMargin: 1
@@ -126,7 +134,7 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: Notifications.invoke(item.modelData.id, "default")
+                            onClicked: item.kbClick()
                         }
                         Column {
                             id: text

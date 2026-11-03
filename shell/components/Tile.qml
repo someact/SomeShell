@@ -27,6 +27,13 @@ Item {
     signal opened
     signal held      // a long press (the control page starts quick edit)
 
+    // Keyboard (Open.qml): Enter clicks, Shift+Enter opens the tile's page
+    // (or starts quick edit, like a long press). A slider inside is marked
+    // on its own (Down from the tile).
+    readonly property bool kbNav: enabled && !Ui.controlEdit
+    function kbClick() { clicked(); }
+    function kbAlt() { more ? opened() : held(); }
+
     opacity: enabled ? 1 : 0.45
 
     Rectangle {
@@ -41,6 +48,11 @@ Item {
         Behavior on color {
             ColorAnimation { duration: Motion.fast }
         }
+    }
+
+    KeyRing {
+        target: root
+        radiusOf: root.active ? 26 : 16
     }
 
     MouseArea {

@@ -19,6 +19,11 @@ Item {
     signal clicked
     signal rightClicked
 
+    // Keyboard (Open.qml)
+    readonly property bool kbNav: clickable
+    function kbClick() { clicked(); }
+    function kbAlt() { rightClicked(); }
+
     implicitHeight: 52
     width: parent?.width ?? 400
 
@@ -27,6 +32,10 @@ Item {
         anchors.bottomMargin: 1
         radius: 10
         color: root.clickable && mouse.containsMouse ? Theme.ink.raised : "transparent"
+    }
+    KeyRing {
+        target: root
+        anchors.bottomMargin: -2
     }
     MouseArea {
         id: mouse
