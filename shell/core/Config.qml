@@ -16,6 +16,7 @@ Singleton {
     property alias calendar: adapter.calendar
     property alias share: adapter.share
     property alias lock: adapter.lock
+    property alias idle: adapter.idle
     readonly property bool loaded: file.loaded
 
     FileView {
@@ -52,6 +53,14 @@ Singleton {
                 // Lock screen style: headline (A); island (B) and contents
                 // (C) come later (SomeShell.md section 5)
                 property string style: "headline"
+            }
+
+            property JsonObject idle: JsonObject {
+                // Minutes of no input before each step; 0 = never
+                // (services/Idle.qml writes hypr/generated/hypridle.conf)
+                property int lock: 10
+                property int screenOff: 15
+                property int sleep: 30
             }
 
             property JsonObject theme: JsonObject {

@@ -6,7 +6,13 @@ hl.on("hyprland.start", function()
     hl.exec_cmd(SCRIPTS .. "/shell.sh")
 
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
-    hl.exec_cmd("hypridle")
+    -- Idle times from the settings window (generated/hypridle.conf), else the defaults
+    local idle = HYPR_DIR .. "/generated/hypridle.conf"
+    if file_exists(idle) then
+        hl.exec_cmd("hypridle -c " .. idle)
+    else
+        hl.exec_cmd("hypridle")
+    end
 
     -- logind would shut down on the power key: the session takes it (keybinds.lua locks instead)
     hl.exec_cmd("systemd-inhibit --what=handle-power-key --who=SomeShell --why='The power key locks the screen' --mode=block sleep infinity")

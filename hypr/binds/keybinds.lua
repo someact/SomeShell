@@ -29,11 +29,25 @@ shell_bind("XF86MonBrightnessDown", "brightnessDown", { locked = true, repeating
 shell_bind("XF86AudioRaiseVolume", "volumeUp", { locked = true, repeating = true })
 shell_bind("XF86AudioLowerVolume", "volumeDown", { locked = true, repeating = true })
 
--- Power key (logind leaves it to us, autostart.lua): lock and screens off;
--- with a screen off, turn them on (any key already wakes them, so this
--- press must not turn them off again right away)
+-- Power key (logind leaves it to us, autostart.lua). POWER_KEY comes from
+-- the settings window (hypr.json "power.key", changed live with hyprctl eval):
+--   lock     lock and screens off; with a screen off, turn them on (any key
+--            already wakes them, so this press must not turn them off again)
+--   sleep    suspend
+--   ask      the island's power page
+--   nothing
+POWER_KEY = setting("power.key", "lock")
 local screens_off_by_key = false
 hl.bind("XF86PowerOff", function()
+    if POWER_KEY == "nothing" then return end
+    if POWER_KEY == "sleep" then
+        hl.dispatch(hl.dsp.exec_cmd("systemctl suspend || loginctl suspend"))
+        return
+    end
+    if POWER_KEY == "ask" then
+        hl.dispatch(hl.dsp.exec_cmd("qs -c someshell ipc call island open power"))
+        return
+    end
     local any_off = false
     for _, m in ipairs(hl.get_monitors()) do
         if not m.dpms_status then any_off = true end

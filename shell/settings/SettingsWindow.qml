@@ -16,7 +16,8 @@ FloatingWindow {
     readonly property var pages: [
         { id: "general", name: "General", icon: "tune" },
         { id: "displays", name: "Displays", icon: "desktop_windows" },
-        { id: "input", name: "Input", icon: "mouse" }
+        { id: "input", name: "Input", icon: "mouse" },
+        { id: "power", name: "Power & lock", file: "Power", icon: "power_settings_new" }
     ]
     readonly property int index: Math.max(0, pages.findIndex(p => p.id === Ui.settingsPage))
     readonly property var page: pages[index]
@@ -161,7 +162,7 @@ FloatingWindow {
             Component.onCompleted: load()
             function load() {
                 const p = win.page;
-                source = Qt.resolvedUrl("pages/" + p.name + "Page.qml");
+                source = Qt.resolvedUrl("pages/" + (p.file ?? p.name) + "Page.qml");
             }
             Connections {
                 target: win

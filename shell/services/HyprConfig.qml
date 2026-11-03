@@ -53,6 +53,35 @@ Singleton {
         data = d;
     }
 
+    // A value at the top of hypr.json (not a Hyprland option), read by the
+    // Lua config through setting("a.b"); `live` is Lua to run now, if any
+    //   HyprConfig.setRoot(["power", "key"], "sleep", 'POWER_KEY = "sleep"')
+    function setRoot(keys, value, live) {
+        if (live)
+            Quickshell.execDetached(["hyprctl", "eval", live]);
+        const filter = keys.map(k => "." + k).join("") + " = $v";
+        const arg = typeof value === "string" ? "--arg" : "--argjson";
+        rootWriter.command = ["sh", "-c",
+            'f="$1"; t=$(mktemp) && { [ -s "$f" ] && cat "$f" || echo "{}"; } | jq "$2" "$3" "$4" "$5" > "$t" && mv "$t" "$f"',
+            "sh", root.path, arg, "v", typeof value === "string" ? value : JSON.stringify(value), filter];
+        rootWriter.running = true;
+        const d = JSON.parse(JSON.stringify(data));
+        let o = d;
+        for (let i = 0; i < keys.length - 1; i++)
+            o = o[keys[i]] = (o[keys[i]] && typeof o[keys[i]] === "object") ? o[keys[i]] : {};
+        o[keys[keys.length - 1]] = value;
+        data = d;
+    }
+    function getRoot(keys, fallback) {
+        let v = data;
+        for (const k of keys) {
+            if (v === null || typeof v !== "object" || !(k in v))
+                return fallback;
+            v = v[k];
+        }
+        return v;
+    }
+
     // A JSON value as Lua: arrays and objects as tables
     function luaValue(v) {
         if (Array.isArray(v))
@@ -86,6 +115,7 @@ Singleton {
 
     Process { id: writer }
     Process { id: deviceWriter }
+    Process { id: rootWriter }
 
     FileView {
         id: file

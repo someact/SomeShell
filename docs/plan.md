@@ -161,7 +161,10 @@ Decision in `SomeShell.md` section 5.
 - [x] Fixes (user, 2026-11-04): a second click on a dropdown closes it; dragging a monitor no longer scrolls the page (pages scroll by wheel only), a click only chooses, bigger boxes, a monitor dropped on another moves to the nearest free edge
 - [x] Input page: keyboard repeat delay and speed, Num Lock; mouse speed, acceleration, scroll speed, natural scrolling, left-handed, focus follows the mouse or click; touchpad rows only with a touchpad; pen tablet rows only with a tablet (monitor, rotation, left-handed; `HyprConfig.setDevice` keeps the rest of its entry, e.g. the active area). `components/SetSlider.qml` (writes on release). Checked on the PC: repeat speed dragged (applied live and saved, then put back), pen left-handed on and off (active area kept), wheel scrolling, dark and light
   - [ ] Touchpad rows on the laptop
-- [ ] Later pages: Power & lock, Night light, Apps, Sharing, About
+- [x] Power & lock page: lock / screens off / sleep after (minutes or never; `services/Idle.qml` writes `hypr/generated/hypridle.conf` and restarts hypridle with it; autostart uses that file when it exists), the power key (locks and screens off, sleeps, asks with the island's power page, nothing: `POWER_KEY` in keybinds.lua from hypr.json `power.key`, changed live), the SDDM theme (install or update colors in a terminal, since it needs sudo). Checked on the PC: lock after 15 and back to 10 (file and hypridle follow; Up key on a focused dropdown), power key ask and back (live and saved), dark and light
+  - [ ] Lid (laptop only: sleep, lock or nothing; needs logind's lid inhibit like the power key)
+- [ ] A polkit agent in the shell (none runs now: apps that ask for the admin password through polkit get no prompt; Quickshell has `Quickshell.Services.Polkit`)
+- [ ] Later pages: Night light, Apps, Sharing, About
 
 ## Later steps
 - Step 7: lock screen, dock, settings window, installer (the overview moved up)
