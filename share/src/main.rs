@@ -1,5 +1,7 @@
-//! someshell-share: Quick Share for SomeShell, Bluetooth file push (OBEX
-//! Object Push) through bluez's obexd.
+//! someshell-share: Quick Share for SomeShell. Google's Quick Share protocol
+//! on the local network (quick.rs, through rqs_lib), and Bluetooth file push
+//! (OBEX Object Push) through bluez's obexd as the fallback; also bluez's
+//! pairing agent. GPL-3.0 (rqs_lib is).
 //!
 //! Started by the shell (services/Share.qml), it reads one JSON command per
 //! line on stdin and prints one JSON event per line on stdout:
@@ -10,12 +12,18 @@
 //!     {"cmd":"cancel"}                                   stops the transfer running now
 //!     {"cmd":"accept","id":1} / {"cmd":"decline","id":1} answers an offer or a pairing
 //!     {"cmd":"visible","on":true}                       visible and pairable (the Bluetooth page is open)
+//!     {"cmd":"scan","on":true}                          look for Quick Share phones on the network
+//!     {"cmd":"qsend","id":"…","name":"…","addr":"ip:port","files":[…]}   send by Quick Share
 //!   events
 //!     {"ev":"ready","folder":"…"}                        the agent is registered
 //!     {"ev":"devices","list":[{address,name,icon,connected,files}]}
 //!     {"ev":"offer","id":1,"name":"…","size":123,"device":"…","peer":"…"}
 //!     {"ev":"pair","id":2,"peer":"…","device":"…","passkey":"123456"}   (passkey "" : just a yes)
 //!     {"ev":"pairDone","id":2}                           the pairing question went away
+//!     {"ev":"nearby","id":"…","name":"…","addr":"ip:port","type":"Phone","present":true}
+//!     {"ev":"waiting","via":"quick","dir":"send","pin":"1234"}   the phone is asked
+//!     {"ev":"text","via":"quick","kind":"url"|"text"|"wifi","text":"…","peer":"…"}
+//!   Quick Share events carry "via":"quick"; "ready" says whether it runs.
 //!     {"ev":"progress","dir":"send"|"receive","name":"…","size":…,"done":…,"index":0,"count":2,"peer":"…"}
 //!     {"ev":"done","dir":"…","name":"…","path":"…","peer":"…"}  (path: where a received file is)
 //!     {"ev":"finished","dir":"send","sent":2,"count":2,"peer":"…"}
@@ -40,6 +48,8 @@ use zbus::names::InterfaceName;
 use zbus::zvariant::{OwnedObjectPath, OwnedValue, Value};
 use zbus::{interface, Connection, Proxy};
 
+mod quick;
+
 const OBEX: &str = "org.bluez.obex";
 const TRANSFER: &str = "org.bluez.obex.Transfer1";
 const AGENT_PATH: &str = "/org/someshell/share/agent";
@@ -49,7 +59,7 @@ const OPP_UUID: &str = "00001105-0000-1000-8000-00805f9b34fb";
 // obexd waits about a minute for the agent; answer before it gives up
 const OFFER_TIMEOUT: Duration = Duration::from_secs(55);
 
-fn emit(v: Json) {
+pub(crate) fn emit(v: Json) {
     println!("{v}");
 }
 
@@ -194,12 +204,12 @@ enum AgentError {
     Rejected(String),
 }
 
-struct Shared {
+pub(crate) struct Shared {
     session: Connection,
     system: Option<Connection>,
     folder: PathBuf,
     offers: Mutex<HashMap<u32, oneshot::Sender<bool>>>,
-    next: AtomicU32,
+    pub(crate) next: AtomicU32,
     // The transfer running now (to cancel it), and whether a send was stopped
     current: Mutex<Option<String>>,
     stop: std::sync::atomic::AtomicBool,
@@ -490,7 +500,7 @@ async fn cancel(sh: &Shared) {
     }
 }
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() {
     let folder = std::env::args().nth(1).map(PathBuf::from).unwrap_or_else(|| {
         PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| "/tmp".into())).join("Downloads")
@@ -522,7 +532,7 @@ async fn main() {
     let path = zbus::zvariant::ObjectPath::try_from(AGENT_PATH).unwrap();
     match manager {
         Ok(m) => match m.call::<_, _, ()>("RegisterAgent", &(&path,)).await {
-            Ok(()) => emit(json!({"ev": "ready", "folder": folder})),
+            Ok(()) => {}
             Err(e) => emit(json!({"ev": "error", "dir": "start", "message": format!("Receiving is off: {}", short(&e))})),
         },
         Err(e) => emit(json!({"ev": "error", "dir": "start", "message": format!("obexd is missing: {e}")})),
@@ -552,6 +562,19 @@ async fn main() {
         }
     }
 
+    // Quick Share on the network (visible under the host name)
+    let quick = match quick::Quick::start(folder.clone()).await {
+        Ok(q) => {
+            tokio::spawn(q.clone().listen(shared.clone()));
+            Some(q)
+        }
+        Err(e) => {
+            emit(json!({"ev": "error", "dir": "start", "message": format!("Quick Share is off: {e}")}));
+            None
+        }
+    };
+    emit(json!({"ev": "ready", "folder": folder, "quick": quick.is_some()}));
+
     let mut lines = BufReader::new(tokio::io::stdin()).lines();
     while let Ok(Some(line)) = lines.next_line().await {
         let Ok(cmd) = serde_json::from_str::<Json>(&line) else { continue };
@@ -565,10 +588,37 @@ async fn main() {
                 }
                 tokio::spawn(send(shared.clone(), device, files));
             }
-            "cancel" => cancel(&shared).await,
+            "cancel" => {
+                let quick_stopped = match &quick {
+                    Some(q) => q.cancel().await,
+                    None => false,
+                };
+                if !quick_stopped {
+                    cancel(&shared).await;
+                }
+            }
+            "scan" => {
+                if let Some(q) = &quick {
+                    q.scan(cmd["on"].as_bool().unwrap_or(false)).await;
+                }
+            }
+            "qsend" => {
+                if let Some(q) = &quick {
+                    let files: Vec<String> = cmd["files"].as_array().map(|a| a.iter().filter_map(|f| f.as_str().map(String::from)).collect()).unwrap_or_default();
+                    let get = |k: &str| cmd[k].as_str().unwrap_or("").to_string();
+                    if !files.is_empty() {
+                        q.send(get("id"), get("name"), get("addr"), files).await;
+                    }
+                }
+            }
             "visible" => visible(&shared, cmd["on"].as_bool().unwrap_or(false)).await,
             what @ ("accept" | "decline") => {
                 let id = cmd["id"].as_u64().unwrap_or(0) as u32;
+                if let Some(q) = &quick {
+                    if q.answer(id, what == "accept").await {
+                        continue;
+                    }
+                }
                 if let Some(tx) = shared.offers.lock().await.remove(&id) {
                     let _ = tx.send(what == "accept");
                 }

@@ -152,13 +152,14 @@ Scope {
         function devices(): string { Share.refresh(); return JSON.stringify(Share.devices); }
         function send(device: string, paths: string): void {
             Share.pending = { files: paths.trim().split(/\s+/), url: "" };
-            Share.sendTo(device);
+            // By name, Quick Share id or Bluetooth address
+            Share.sendTo(Share.targets.find(t => t.name === device || t.id === device) ?? null);
         }
         function pick(paths: string): void { Share.offer(paths.trim().split(/\s+/), ""); }
         function cancel(): void { Share.cancel(); }
         function accept(): void { if (Share.offers.length) Share.answer(Share.offers[0].id, true); }
         function decline(): void { if (Share.offers.length) Share.answer(Share.offers[0].id, false); }
-        function state(): string { return JSON.stringify({ available: Share.available, discoverable: Share.discoverable, pairs: Share.pairs, adapter: Share.adapter, installed: Share.installed, ready: Share.ready, targets: Share.targets.map(d => d.name), offers: Share.offers, pending: Share.pending }); }
+        function state(): string { return JSON.stringify({ available: Share.available, discoverable: Share.discoverable, pairs: Share.pairs, adapter: Share.adapter, installed: Share.installed, ready: Share.ready, quick: Share.quick, nearby: Share.nearby, targets: Share.targets.map(d => d.name + " (" + d.via + ")"), offers: Share.offers, pending: Share.pending }); }
     }
 
     IpcHandler {

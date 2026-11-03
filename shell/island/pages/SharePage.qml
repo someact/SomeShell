@@ -24,12 +24,14 @@ Item {
         }
         return (i === 0 ? b : b.toFixed(b < 10 ? 1 : 0)) + " " + u[i];
     }
-    function deviceIcon(icon) {
-        return icon.startsWith("phone") ? "smartphone" : icon.startsWith("computer") ? "computer" : "devices";
-    }
 
-    // The devices again whenever the page opens (pairing may have changed)
-    Component.onCompleted: Share.refresh()
+    // The devices again whenever the page opens (pairing may have changed),
+    // and phones on the network while it is open
+    Component.onCompleted: {
+        Share.refresh();
+        Share.setScan(true);
+    }
+    Component.onDestruction: Share.setScan(false)
 
     Column {
         id: col
@@ -74,6 +76,8 @@ Item {
                     Txt {
                         width: parent.width
                         text: (root.incoming?.peer ?? "") + " wants to send this  ·  " + root.size(root.incoming?.size ?? 0)
+                            + (root.incoming?.pin ? "  ·  PIN " + root.incoming.pin : "")
+                            + (root.incoming?.via === "quick" ? "  ·  Wi-Fi" : "  ·  Bluetooth")
                             + (Share.offers.length > 1 ? "  ·  " + (Share.offers.length - 1) + " more" : "")
                         caps: true
                         color: Theme.ink.mute
@@ -114,11 +118,11 @@ Item {
                 model: Share.targets
                 ListRow {
                     required property var modelData
-                    icon: root.deviceIcon(modelData.icon)
+                    icon: modelData.icon
                     title: modelData.name
-                    sub: modelData.connected ? "Connected" : "Paired"
+                    sub: modelData.sub
                     clickable: root.pending !== null
-                    onClicked: Share.sendTo(modelData.address)
+                    onClicked: Share.sendTo(modelData)
                     Icon {
                         visible: root.pending !== null
                         anchors.verticalCenter: parent.verticalCenter
@@ -129,6 +133,16 @@ Item {
                 }
             }
         }
+        // Quick Share phones show up here once found on the network
+        Txt {
+            visible: root.incoming === null && Share.pairs.length === 0 && root.pending !== null && Share.quick && Share.nearby.length === 0 && Share.targets.length > 0
+            width: parent.width
+            text: "Looking for phones on the network: on the phone, Quick Share visible to Everyone, same Wi-Fi"
+            wrapMode: Text.Wrap
+            maximumLineCount: 2
+            color: Theme.ink.mute
+        }
+
         // No phone yet: where to pair one
         Row {
             visible: root.incoming === null && Share.pairs.length === 0 && Share.targets.length === 0
@@ -137,7 +151,10 @@ Item {
             Txt {
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - pairChip.width - 14
-                text: Share.ready ? "No paired phone or computer yet. Pair one, then share." : !Share.installed ? "The Quick Share helper is not installed (share/install.sh)." : "Starting…"
+                text: !Share.installed ? "The Quick Share helper is not installed (share/install.sh)."
+                    : !Share.ready ? "Starting…"
+                    : Share.quick ? "Looking on the network. On the phone: Quick Share visible to Everyone, same Wi-Fi. Or pair it by Bluetooth."
+                    : "No paired phone or computer yet. Pair one, then share."
                 wrapMode: Text.Wrap
                 maximumLineCount: 2
                 color: Theme.ink.mute
