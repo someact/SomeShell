@@ -39,7 +39,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: root.active ? 26 : 16
-        color: mouse.pressed ? Theme.ink.fg : root.active ? Theme.ink.accent : mouse.containsMouse ? Theme.ink.raised : "transparent"
+        color: mouse.pressed ? Theme.ink.fg : root.active ? Theme.ink.accent : mouse.containsMouse && !Ui.controlEdit ? Theme.ink.raised : "transparent"
         border.width: root.active || mouse.pressed ? 0 : 1
         border.color: Theme.ink.line
         Behavior on radius {

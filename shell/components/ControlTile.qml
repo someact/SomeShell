@@ -5,16 +5,24 @@ import qs.core
 import qs.components
 import qs.services
 
-// One control tile of any kind, at any of its sizes ("1x1", "2x1", "2x2").
-// Wide tiles show more: Sound and Brightness get a slider at 2x1 and a big
-// number at 2x2. `held` is a long press (it starts quick edit).
+// One control tile of any kind at any size ("WxH" in cells, 1x1 to 4x3).
+// Bigger tiles show more: Sound and Brightness get a slider beside the text
+// when one row high and wide, a slider along the bottom when taller, and a
+// big number when both wide and tall. `held` is a long press (quick edit).
 Item {
     id: root
 
     property string kind
     property string size: "1x1"
-    readonly property bool wide: size !== "1x1"
-    readonly property bool big: size === "2x2"
+    readonly property int cols: Number(size[0]) || 1
+    readonly property int rows: Number(size[2]) || 1
+    readonly property bool wide: cols > 1
+    readonly property bool tall: rows > 1
+    readonly property bool big: wide && tall
+    // Slider beside the text (one row, wide) or along the bottom (taller)
+    readonly property bool sideSlider: wide && !tall
+    readonly property bool bottomSlider: tall
+    readonly property real sideSliderWidth: (width - 28) * 0.5
     signal held
 
     readonly property var adapter: Bluetooth.defaultAdapter
@@ -26,7 +34,8 @@ Item {
         sourceComponent: ({
             net: net, bt: bt, sound: sound, night: night, dnd: dnd, awake: awake, game: game,
             brightness: brightness, shot: shot, record: record,
-            dark: dark, mic: mic, picker: picker, clipboard: clipboard, wallpaper: wallpaper, preset: preset, lock: lock, share: share
+            dark: dark, mic: mic, picker: picker, clipboard: clipboard, wallpaper: wallpaper, preset: preset, lock: lock, share: share,
+            warp: warp
         })[root.kind] ?? null
     }
     Connections {
@@ -71,9 +80,8 @@ Item {
             more: true
             onClicked: Audio.toggleMute()
             onOpened: Ui.detail = "sound"
-            // 2x2: the slider along the bottom; 2x1: on the right (like Brightness)
-            reserveBottom: root.big ? 34 : 0
-            reserveRight: root.size === "2x1" ? 184 : 0
+            reserveBottom: root.bottomSlider ? 34 : 0
+            reserveRight: root.sideSlider ? root.sideSliderWidth + 14 : 0
 
             Digits {
                 visible: root.big
@@ -86,13 +94,13 @@ Item {
                 color: Theme.ink.fg
             }
             BarSlider {
-                visible: root.wide
+                visible: root.sideSlider || root.bottomSlider
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: root.big ? 0 : 4
-                width: root.big ? parent.width : 170
-                height: root.big ? 24 : 16
-                bars: root.big ? 32 : 20
+                anchors.bottomMargin: root.bottomSlider ? 0 : 4
+                width: root.bottomSlider ? parent.width : root.sideSliderWidth
+                height: root.bottomSlider ? 24 : 16
+                bars: Math.max(10, Math.round(width / 10.5))
                 value: Math.min(1, Audio.volume)
                 fill: Audio.muted ? Theme.ink.mute : Theme.ink.fg
                 onMoved: v => Audio.setVolume(v)
@@ -105,11 +113,11 @@ Item {
             icon: "light_mode"
             label: "Brightness"
             sub: !Brightness.available ? "Not available"
-                : root.size === "2x1" ? Brightness.value + "%  ·  " + Brightness.label
+                : root.sideSlider ? Brightness.value + "%  ·  " + Brightness.label
                 : root.big ? Brightness.label : Brightness.value + "%"
             enabled: Brightness.available
-            reserveRight: root.size === "2x1" ? 184 : 0
-            reserveBottom: root.big ? 34 : 0
+            reserveRight: root.sideSlider ? root.sideSliderWidth + 14 : 0
+            reserveBottom: root.bottomSlider ? 34 : 0
             Digits {
                 visible: root.big && Brightness.available
                 anchors.right: parent.right
@@ -120,13 +128,13 @@ Item {
                 color: Theme.ink.fg
             }
             BarSlider {
-                visible: root.wide && Brightness.available
+                visible: (root.sideSlider || root.bottomSlider) && Brightness.available
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: root.big ? 0 : 4
-                width: root.big ? parent.width : 170
-                height: root.big ? 24 : 16
-                bars: root.big ? 32 : 20
+                anchors.bottomMargin: root.bottomSlider ? 0 : 4
+                width: root.bottomSlider ? parent.width : root.sideSliderWidth
+                height: root.bottomSlider ? 24 : 16
+                bars: Math.max(10, Math.round(width / 10.5))
                 value: Brightness.value / 100
                 onMoved: v => Brightness.set(v * 100)
             }
@@ -290,6 +298,21 @@ Item {
             more: true
             onClicked: Share.toggleReceive()
             onOpened: Share.openPage()
+        }
+    }
+    // WARP: a click connects or disconnects; the arrow (and a right click,
+    // Shift+Enter) opens the WARP page with the mode
+    Component {
+        id: warp
+        Tile {
+            icon: Warp.connected ? "vpn_lock" : "vpn_key_off"
+            label: "WARP"
+            sub: Warp.connected && root.wide ? "Connected  ·  " + Warp.modeLabel : Warp.label
+            active: Warp.on
+            enabled: Warp.installed
+            more: true
+            onClicked: Warp.toggle()
+            onOpened: Ui.detail = "warp"
         }
     }
 }

@@ -114,12 +114,39 @@ Scope {
     }
 
     IpcHandler {
+        target: "warp"
+
+        function connect(): void { Warp.setOn(true); }
+        function disconnect(): void { Warp.setOn(false); }
+        function toggle(): void { Warp.toggle(); }
+        function mode(mode: string): void { Warp.setMode(mode); }
+        function state(): string {
+            return JSON.stringify({ installed: Warp.installed, status: Warp.status, reason: Warp.reason, mode: Warp.mode, proxyPort: Warp.proxyPort });
+        }
+    }
+
+    IpcHandler {
         target: "control"
 
         // Quick edit on/off; the tiles as they are now (id and size, in order)
         function edit(on: bool): void { Ui.openPage("control"); Ui.controlEdit = on; }
         function layout(): string { return JSON.stringify(Desktop.control.length ? ControlTiles.clean(Desktop.control) : ControlTiles.defaultLayout); }
         function reset(): void { Desktop.control = []; }
+        // One tile's size ("2x1", up to "4x3") or place in the order
+        function size(id: string, size: string): void {
+            const list = Desktop.control.length ? ControlTiles.clean(Desktop.control) : ControlTiles.defaultLayout;
+            if (ControlTiles.parse(size))
+                Desktop.control = list.map(t => t.id === id ? { id: t.id, size: size } : t);
+        }
+        function move(id: string, index: int): void {
+            const list = (Desktop.control.length ? ControlTiles.clean(Desktop.control) : ControlTiles.defaultLayout).slice();
+            const from = list.findIndex(t => t.id === id);
+            if (from < 0)
+                return;
+            const t = list.splice(from, 1)[0];
+            list.splice(Math.max(0, Math.min(list.length, index)), 0, t);
+            Desktop.control = list;
+        }
 
         function state(): string {
             return JSON.stringify({
