@@ -63,6 +63,7 @@ PanelWindow {
         id: card
         screen: win.modelData
         interactive: win.main && win.zoom === 1
+        corners: win.zoom
         x: win.target.x * win.zoom
         y: win.target.y * win.zoom
         width: win.sw + (win.target.width - win.sw) * win.zoom

@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
 import Quickshell
-import Quickshell.Widgets
 import Quickshell.Hyprland
 import qs.core
 import qs.components
@@ -24,6 +23,9 @@ Item {
     property bool interactive: true
     // Off while a thumbnail is taken
     property bool showChoice: true
+    // The rounded corners' opacity: the edit window passes its zoom, so the
+    // corners fade in as the card leaves the screen's own edges
+    property real corners: 1
     readonly property real sw: screen.width
     readonly property real sh: screen.height
     readonly property real s: width / sw
@@ -39,11 +41,16 @@ Item {
         : Ui.editTab === "dock" ? (style === "dock" ? dockBar : sepDock ? dockAlone : null)
         : null
 
-    ClippingRectangle {
+    // A plain rectangle with a square clip. A ClippingRectangle draws the
+    // whole card into a texture that is made again on every frame of the
+    // zoom (the card's size changes): about 12 fps on the tablet. The round
+    // corners are painted over it instead (below).
+    Rectangle {
         id: frame
         anchors.fill: parent
-        radius: 22
+        readonly property real radius: 22
         color: "black"
+        clip: true
 
         Image {
             anchors.fill: parent
@@ -259,6 +266,36 @@ Item {
                 color: "transparent"
                 border.width: 2 / root.s
                 border.color: Theme.ink.accent
+            }
+        }
+
+        // The rounded corners: the outside of each corner in the edit
+        // window's background color (left out of preset thumbnails)
+        Repeater {
+            model: root.showChoice && root.corners > 0 ? 4 : 0
+            Shape {
+                required property int index
+                readonly property real e: frame.radius
+                x: index % 2 === 0 ? 0 : frame.width - e
+                y: index < 2 ? 0 : frame.height - e
+                width: e
+                height: e
+                opacity: root.corners
+                preferredRendererType: Shape.CurveRenderer
+                transform: Scale {
+                    xScale: index % 2 === 0 ? 1 : -1
+                    yScale: index < 2 ? 1 : -1
+                    origin.x: e / 2
+                    origin.y: e / 2
+                }
+                ShapePath {
+                    fillColor: Theme.ink.bg
+                    strokeWidth: -1
+                    startX: 0; startY: 0
+                    PathLine { x: e; y: 0 }
+                    PathArc { x: 0; y: e; radiusX: e; radiusY: e; direction: PathArc.Counterclockwise }
+                    PathLine { x: 0; y: 0 }
+                }
             }
         }
 
