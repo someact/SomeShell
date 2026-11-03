@@ -93,14 +93,14 @@ Item {
         Tap {
             id: layoutTap
             anchors.verticalCenter: parent.verticalCenter
-            visible: layout.code !== ""
+            visible: Keyboard.code !== ""
             implicitWidth: layoutText.implicitWidth + 12
             implicitHeight: 28
-            onClicked: switchLayout.running = true
+            onClicked: Keyboard.next()
             Txt {
                 id: layoutText
                 anchors.centerIn: parent
-                text: layout.code
+                text: Keyboard.code
                 caps: true
                 color: layoutTap.pressed ? layoutTap.fg : layoutTap.hovered ? Theme.ink.fg : Theme.ink.mute
             }
@@ -185,42 +185,5 @@ Item {
     function openDetail(name) {
         Ui.openPage("control");
         Ui.detail = name;
-    }
-    Process {
-        id: switchLayout
-        command: ["hyprctl", "switchxkblayout", "all", "next"]
-    }
-
-    // Keyboard layout: from Hyprland's events, read once at start
-    QtObject {
-        id: layout
-        property string code: ""
-        function from(name) {
-            if (!name)
-                return "";
-            if (/^english/i.test(name))
-                return "EN";
-            return name.replace(/[^A-Za-z]/g, "").slice(0, 2).toUpperCase();
-        }
-    }
-    Connections {
-        target: Hyprland
-        function onRawEvent(event) {
-            if (event.name === "activelayout")
-                layout.code = layout.from(event.data.split(",").slice(1).join(","));
-        }
-    }
-    Process {
-        running: true
-        command: ["hyprctl", "devices", "-j"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const kb = JSON.parse(text).keyboards ?? [];
-                    const main = kb.find(k => k.main) ?? kb[0];
-                    layout.code = layout.from(main?.active_keymap ?? "");
-                } catch (e) {}
-            }
-        }
     }
 }

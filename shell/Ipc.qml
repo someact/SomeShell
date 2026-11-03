@@ -41,6 +41,19 @@ Scope {
         }
     }
 
+    // lock: lock the session (scripts/lock.sh calls this). preview: the
+    // same page in a normal window, nothing locked (Esc closes). There is no
+    // unlock here: only the password opens the lock.
+    IpcHandler {
+        target: "lock"
+
+        function lock(): void { Locker.lock(); }
+        function preview(): void { Locker.showPreview(); }
+        function state(): string {
+            return JSON.stringify({ locked: Locker.locked, preview: Locker.preview, fails: Locker.fails, checking: Locker.checking, typed: Locker.password.length });
+        }
+    }
+
     IpcHandler {
         target: "wallpaper"
 

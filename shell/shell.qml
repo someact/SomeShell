@@ -8,16 +8,19 @@ import "wallpaper"
 import "capture"
 import "edit"
 import "overview"
+import "lock"
 import qs.core
 import qs.services
 
 ShellRoot {
     // Services that must run from the start: the notification server, the
-    // night light schedule and the battery alerts
+    // night light schedule, the battery alerts and the lock (it locks again
+    // after a crash while locked)
     Component.onCompleted: {
         Notifications.dnd;
         NightLight.on;
         Battery.available;
+        Locker.locked;
     }
 
     Variants {
@@ -61,6 +64,12 @@ ShellRoot {
             model: Quickshell.screens
             Picker {}
         }
+    }
+
+    // The lock screen, only while locked (or previewed)
+    LazyLoader {
+        active: Locker.shown
+        Lock {}
     }
 
     Shortcuts {}

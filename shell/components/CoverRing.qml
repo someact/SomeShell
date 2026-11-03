@@ -13,6 +13,10 @@ Item {
     property real size: 30
     property real ring: 2
     property real gap: 2
+    // Colors: the island's by default (the lock page passes its own)
+    property color disc: Theme.ink.raised
+    property color track: Theme.ink.line
+    property color fill: Theme.ink.accent
     readonly property real coverSize: size - 2 * (ring + gap)
 
     implicitWidth: size
@@ -38,7 +42,7 @@ Item {
         // Cover (or a plain disc while it loads)
         ShapePath {
             strokeWidth: -1
-            fillColor: Theme.ink.raised
+            fillColor: root.disc
             fillItem: art.status === Image.Ready ? art : null
             fillTransform: PlanarTransform.fromTranslate(root.ring + root.gap, root.ring + root.gap)
             PathAngleArc {
@@ -53,7 +57,7 @@ Item {
         // Track of the ring
         ShapePath {
             fillColor: "transparent"
-            strokeColor: Theme.ink.line
+            strokeColor: root.track
             strokeWidth: root.ring
             PathAngleArc {
                 centerX: root.size / 2
@@ -67,7 +71,7 @@ Item {
         // Progress
         ShapePath {
             fillColor: "transparent"
-            strokeColor: Theme.ink.accent
+            strokeColor: root.fill
             strokeWidth: root.ring
             capStyle: ShapePath.RoundCap
             PathAngleArc {

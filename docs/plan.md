@@ -145,6 +145,13 @@ Decisions in `SomeShell.md` section 5 (Drop onto the island and Quick Share).
   - [ ] With the phone on the same network: receive from its share sheet, send to it, decline, cancel. The tablet's NU-WiFi (10.58.0.0/16) may keep clients apart: try a phone hotspot or a home network
 - [ ] Test with a phone: pair it in the Bluetooth page, send a photo both ways, decline, cancel mid-way; on the PC as well (no Wi-Fi there; check that it has a Bluetooth adapter)
 
+## Lock screen (step 7, user 2026-11-04)
+Decision in `SomeShell.md` section 5. Style A now; B and C as a setting later.
+- [~] Shell lock, style A: `services/Locker.qml` (lock, PAM, crash restore), `lock/` (one surface per monitor), `services/Keyboard.qml` (layout code and Caps Lock, shared with the tray), IPC `lock lock|preview|state`; `scripts/lock.sh` already prefers it. Preview checked on the PC (both monitors, dark and light, typing, one wrong password through PAM, Esc). Left: a real lock and unlock with the password (user)
+- [x] hyprlock backup redrawn as style A (`hypr/scripts/lockinfo.sh` writes its lines; checked on the PC with `hyprlock --grace 60`, a mouse move opens it)
+- [ ] SDDM theme `sddm/someshell` + `sddm/install.sh` (tested with `sddm-greeter-qt6 --test-mode`; for real on the tablet, the SDDM test machine)
+- [ ] Lock styles B (Island) and C (Contents page), chosen in settings
+
 ## Later steps
 - Step 7: lock screen, dock, settings window, installer (the overview moved up)
 - Step 8: GIFs, WARP, capture tools, game overlay, on-screen keyboard
