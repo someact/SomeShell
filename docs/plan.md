@@ -126,6 +126,7 @@ Decisions and the approved mockup in `SomeShell.md` section 5 (Overview).
 - [x] Overview (`shell/overview/`): header (current workspace big, monitor map, barcode, index, keys), 10 pages with windows as boxes (icon, name, title), monitor pills, captions, footer that changes while dragging; keys (arrows, 1–0, Enter, Esc, Super+Tab again); click a page or a window; drag a window onto a page (moves it, stays open) or a page's monitor spot (also shows the workspace there, the focus stays); drag a page by its name row onto a monitor in the map. IPC `overview open|close|toggle|state`. Fixed while building: a crash from 13 wallpaper decodes at once (one shared decode now), a press handler stopped by an id clash (`win`), the dragged window's name drawn over its neighbour, a full page had no place to grab (the name row is the handle)
 - [x] Checked on the PC (2026-11-03): real keys and mouse (ydotool), both monitors, dark and light
 - [ ] Check on the tablet (one monitor: no monitor spots, a map of one)
+- [x] Tablet with a second monitor (user, 2026-11-03): DSI-1 plus an external monitor over USB-C to HDMI (shows as DP-1, 1920x1080@120) works like the PC with two monitors
 
 ## Later steps
 - Step 7: lock screen, dock, settings window, installer (the overview moved up)
