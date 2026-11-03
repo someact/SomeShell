@@ -63,9 +63,30 @@ Singleton {
     onOpenChanged: if (!open && monitor !== wantedMonitor) monitor = wantedMonitor
     Component.onCompleted: monitor = wantedMonitor
 
-    // Quiet: a game is playing, or a window is fullscreen on the island's monitor
+    // Quiet: a game is playing, or a window is fullscreen on the island's monitor.
+    // Hyprland's hasFullscreen is also true for a maximized window (Super+D),
+    // which leaves the island room, so read each window's mode: bit 2 is
+    // real fullscreen (1 maximized, 3 both).
     readonly property var monitorObject: Hyprland.monitors.values.find(m => m.name === monitor) ?? null
-    readonly property bool fullscreen: monitorObject?.activeWorkspace?.hasFullscreen ?? false
+    readonly property bool fullscreen: {
+        const ws = monitorObject?.activeWorkspace;
+        if (!ws?.hasFullscreen)
+            return false;
+        const wins = ws.toplevels?.values ?? [];
+        for (let i = 0; i < wins.length; i++)
+            if ((wins[i].lastIpcObject?.fullscreen ?? 0) & 2)
+                return true;
+        return false;
+    }
+    // A window's mode is only in its IPC object, which Quickshell does not
+    // reread on a fullscreen change
+    readonly property Connections fullscreenEvents: Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "fullscreen")
+                Hyprland.refreshToplevels();
+        }
+    }
     readonly property bool quiet: !open && (GameMode.active || fullscreen)
 
     // Edit mode (edit/EditWindow.qml): the desktop as a card with the
