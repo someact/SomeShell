@@ -28,6 +28,20 @@ Singleton {
     property var pending: null
     // Incoming files waiting for Accept / Decline: { id, name, size, peer }
     property var offers: []
+    // Devices asking to pair: { id, peer, device, passkey } (passkey "" : just a yes)
+    property var pairs: []
+    // Visible and pairable while a Bluetooth page is open. Counted: on a page
+    // switch the new page is made before the old one goes
+    property int visibleUsers: 0
+    readonly property bool discoverable: visibleUsers > 0 && ready
+    onDiscoverableChanged: write({ cmd: "visible", on: discoverable })
+    // The page also scans while open (without the helper too)
+    readonly property bool scanning: visibleUsers > 0 && (Bluetooth.defaultAdapter?.enabled ?? false)
+    onScanningChanged: {
+        const a = Bluetooth.defaultAdapter;
+        if (a && a.discovering !== scanning)
+            a.discovering = scanning;
+    }
 
     property int sendJob: 0
     property int receiveJob: 0
@@ -59,9 +73,17 @@ Singleton {
     }
     function answer(id, yes) {
         write({ cmd: yes ? "accept" : "decline", id: id });
+        const wasPair = pairs.some(p => p.id === id);
         offers = offers.filter(o => o.id !== id);
-        if (offers.length === 0 && Ui.pageId === "share" && !pending)
+        pairs = pairs.filter(p => p.id !== id);
+        if (offers.length === 0 && pairs.length === 0 && Ui.pageId === "share" && !pending && Ui.detail === "")
             Ui.close();
+        // Paired from the Share page: on to the Bluetooth page, to send next
+        if (wasPair && yes && Ui.pageId === "share" && pending)
+            refresh();
+    }
+    function setVisible(on) {
+        visibleUsers = Math.max(0, visibleUsers + (on ? 1 : -1));
     }
     function cancel() {
         write({ cmd: "cancel" });
@@ -106,7 +128,9 @@ Singleton {
                 root.event(e);
             }
         }
-        onRunningChanged: if (!running) root.ready = false
+        onRunningChanged: if (!running) {
+            root.ready = false;
+        }
     }
 
     function event(e) {
@@ -124,6 +148,16 @@ Singleton {
             break;
         case "declined":
             offers = offers.filter(o => o.id !== e.id);
+            break;
+        case "pair":
+            pairs = pairs.concat([{ id: e.id, peer: e.peer || e.device, device: e.device, passkey: e.passkey }]);
+            // The Bluetooth page shows it itself; anywhere else the Share page does
+            if (!(Ui.open && Ui.pageId === "control" && Ui.detail === "bt"))
+                Ui.openPage("share");
+            break;
+        case "pairDone":
+            pairs = pairs.filter(p => p.id !== e.id);
+            refresh();
             break;
         case "progress": {
             const title = e.count > 1 ? e.name + "  " + (e.index + 1) + "/" + e.count : e.name;

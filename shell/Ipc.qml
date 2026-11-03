@@ -158,7 +158,7 @@ Scope {
         function cancel(): void { Share.cancel(); }
         function accept(): void { if (Share.offers.length) Share.answer(Share.offers[0].id, true); }
         function decline(): void { if (Share.offers.length) Share.answer(Share.offers[0].id, false); }
-        function state(): string { return JSON.stringify({ available: Share.available, adapter: Share.adapter, installed: Share.installed, ready: Share.ready, targets: Share.targets.map(d => d.name), offers: Share.offers, pending: Share.pending }); }
+        function state(): string { return JSON.stringify({ available: Share.available, discoverable: Share.discoverable, pairs: Share.pairs, adapter: Share.adapter, installed: Share.installed, ready: Share.ready, targets: Share.targets.map(d => d.name), offers: Share.offers, pending: Share.pending }); }
     }
 
     IpcHandler {

@@ -3,16 +3,30 @@ import Quickshell
 import Quickshell.Bluetooth
 import qs.core
 import qs.components
+import qs.services
 
 // Bluetooth: on/off, scan, devices (click: connect, disconnect or pair;
-// right click: forget), and this computer's name as others see it.
+// right click: forget), and this computer's name as others see it. While
+// the page is open it scans, and this computer is visible and pairable (the
+// Quick Share helper; a phone's pairing code is asked here).
 Column {
     id: root
 
     readonly property var adapter: Bluetooth.defaultAdapter
+    // Connected first, then devices just found (a phone to pair must not
+    // fall below the list's end behind paired keyboards), then paired ones
+    function rank(d) {
+        return d.connected ? 0 : !d.paired ? 1 : 2;
+    }
+    // Nameless devices found nearby (shown by their address) are left out
     readonly property var devices: (adapter?.devices.values ?? []).slice()
-        .filter(d => d.paired || d.name)
-        .sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || a.name.localeCompare(b.name))
+        .filter(d => d.paired || (d.name && d.name !== d.address.replace(/:/g, "-")))
+        .sort((a, b) => (rank(a) - rank(b)) || a.name.localeCompare(b.name))
+
+    // Scanning and visible while open (Share counts the pages: on a page
+    // switch the new one is made before the old one goes)
+    Component.onCompleted: Share.setVisible(true)
+    Component.onDestruction: Share.setVisible(false)
     property bool renaming: false
 
     spacing: 6
@@ -47,6 +61,10 @@ Column {
                 color: parent.fg
             }
         }
+    }
+
+    PairPrompt {
+        width: root.width
     }
 
     Repeater {
@@ -92,7 +110,7 @@ Column {
         visible: root.adapter !== null
         icon: "computer"
         title: "This computer"
-        sub: root.adapter?.name ?? ""
+        sub: (root.adapter?.name ?? "") + (Share.discoverable ? "  ·  visible now" : "")
         clickable: false
         line: false
         Tap {

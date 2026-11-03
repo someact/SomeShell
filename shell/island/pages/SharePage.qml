@@ -36,9 +36,14 @@ Item {
         width: root.width
         spacing: 14
 
+        // A device asking to pair
+        PairPrompt {
+            width: parent.width
+        }
+
         // Incoming: who, what, Accept / Decline
         Column {
-            visible: root.incoming !== null
+            visible: root.incoming !== null && Share.pairs.length === 0
             width: parent.width
             spacing: 14
             Row {
@@ -93,7 +98,7 @@ Item {
 
         // Sending: what goes, then the devices
         Txt {
-            visible: root.incoming === null
+            visible: root.incoming === null && Share.pairs.length === 0
             width: parent.width
             text: !root.pending ? "Drop files on the island to share them"
                 : root.pending.url ? "Send the link  ·  " + root.pending.url
@@ -103,7 +108,7 @@ Item {
             color: Theme.ink.mute
         }
         Column {
-            visible: root.incoming === null
+            visible: root.incoming === null && Share.pairs.length === 0
             width: parent.width
             Repeater {
                 model: Share.targets
@@ -126,7 +131,7 @@ Item {
         }
         // No phone yet: where to pair one
         Row {
-            visible: root.incoming === null && Share.targets.length === 0
+            visible: root.incoming === null && Share.pairs.length === 0 && Share.targets.length === 0
             width: parent.width
             spacing: 14
             Txt {

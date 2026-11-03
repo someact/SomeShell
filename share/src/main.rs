@@ -8,11 +8,14 @@
 //!     {"cmd":"devices"}                                  paired devices
 //!     {"cmd":"send","device":"AA:BB:…","files":["/path",…]}
 //!     {"cmd":"cancel"}                                   stops the transfer running now
-//!     {"cmd":"accept","id":1} / {"cmd":"decline","id":1} answers an offer
+//!     {"cmd":"accept","id":1} / {"cmd":"decline","id":1} answers an offer or a pairing
+//!     {"cmd":"visible","on":true}                       visible and pairable (the Bluetooth page is open)
 //!   events
 //!     {"ev":"ready","folder":"…"}                        the agent is registered
 //!     {"ev":"devices","list":[{address,name,icon,connected,files}]}
 //!     {"ev":"offer","id":1,"name":"…","size":123,"device":"…","peer":"…"}
+//!     {"ev":"pair","id":2,"peer":"…","device":"…","passkey":"123456"}   (passkey "" : just a yes)
+//!     {"ev":"pairDone","id":2}                           the pairing question went away
 //!     {"ev":"progress","dir":"send"|"receive","name":"…","size":…,"done":…,"index":0,"count":2,"peer":"…"}
 //!     {"ev":"done","dir":"…","name":"…","path":"…","peer":"…"}  (path: where a received file is)
 //!     {"ev":"finished","dir":"send","sent":2,"count":2,"peer":"…"}
@@ -40,6 +43,7 @@ use zbus::{interface, Connection, Proxy};
 const OBEX: &str = "org.bluez.obex";
 const TRANSFER: &str = "org.bluez.obex.Transfer1";
 const AGENT_PATH: &str = "/org/someshell/share/agent";
+const PAIR_PATH: &str = "/org/someshell/share/pair";
 // Object Push
 const OPP_UUID: &str = "00001105-0000-1000-8000-00805f9b34fb";
 // obexd waits about a minute for the agent; answer before it gives up
@@ -263,6 +267,118 @@ impl Agent {
     }
 }
 
+#[derive(Debug, zbus::DBusError)]
+#[zbus(prefix = "org.bluez.Error")]
+enum PairError {
+    #[zbus(error)]
+    ZBus(zbus::Error),
+    Rejected(String),
+    Canceled(String),
+}
+
+/// bluez's pairing agent (system bus): a code to confirm goes to the shell,
+/// which asks on the island and answers with accept / decline
+struct PairAgent {
+    shared: Arc<Shared>,
+}
+
+impl PairAgent {
+    async fn ask(&self, device: &OwnedObjectPath, passkey: &str) -> Result<(), PairError> {
+        let sh = &self.shared;
+        let (address, peer) = device_name(&sh.system, device.as_str()).await;
+        let id = sh.next.fetch_add(1, Ordering::SeqCst);
+        let (tx, rx) = oneshot::channel();
+        sh.offers.lock().await.insert(id, tx);
+        emit(json!({"ev": "pair", "id": id, "peer": peer, "device": address, "passkey": passkey}));
+        let yes = matches!(tokio::time::timeout(OFFER_TIMEOUT, rx).await, Ok(Ok(true)));
+        sh.offers.lock().await.remove(&id);
+        emit(json!({"ev": "pairDone", "id": id}));
+        if yes {
+            // Trusted, so its file pushes and reconnects need no more questions
+            if let Some(sys) = &sh.system {
+                if let Ok(p) = Proxy::new(sys, "org.bluez", device.as_str().to_string(), "org.freedesktop.DBus.Properties").await {
+                    let _: zbus::Result<()> = p.call("Set", &("org.bluez.Device1", "Trusted", Value::from(true))).await;
+                }
+            }
+            Ok(())
+        } else {
+            Err(PairError::Rejected("Declined".into()))
+        }
+    }
+}
+
+#[interface(name = "org.bluez.Agent1")]
+impl PairAgent {
+    async fn release(&self) {}
+    async fn request_confirmation(&self, device: OwnedObjectPath, passkey: u32) -> Result<(), PairError> {
+        self.ask(&device, &format!("{passkey:06}")).await
+    }
+    async fn request_authorization(&self, device: OwnedObjectPath) -> Result<(), PairError> {
+        self.ask(&device, "").await
+    }
+    async fn authorize_service(&self, device: OwnedObjectPath, _uuid: String) -> Result<(), PairError> {
+        // A paired device using one of its services: yes; others are asked
+        let paired = match &self.shared.system {
+            Some(sys) => props(sys, "org.bluez", device.as_str(), "org.bluez.Device1").await.map(|p| flag(p.get("Paired"))).unwrap_or(false),
+            None => false,
+        };
+        if paired { Ok(()) } else { self.ask(&device, "").await }
+    }
+    async fn request_pin_code(&self, _device: OwnedObjectPath) -> Result<String, PairError> {
+        // Old devices that want a typed PIN: not supported from the island
+        Err(PairError::Rejected("A typed PIN is not supported".into()))
+    }
+    async fn request_passkey(&self, _device: OwnedObjectPath) -> Result<u32, PairError> {
+        Err(PairError::Rejected("A typed passkey is not supported".into()))
+    }
+    async fn display_passkey(&self, _device: OwnedObjectPath, _passkey: u32, _entered: u16) {}
+    async fn display_pin_code(&self, _device: OwnedObjectPath, _pincode: String) {}
+    async fn cancel(&self) {
+        for (id, tx) in self.shared.offers.lock().await.drain() {
+            let _ = tx.send(false);
+            emit(json!({"ev": "pairDone", "id": id}));
+        }
+    }
+}
+
+/// A device's address and name from its bluez path
+async fn device_name(system: &Option<Connection>, path: &str) -> (String, String) {
+    if let Some(sys) = system {
+        if let Ok(p) = props(sys, "org.bluez", path, "org.bluez.Device1").await {
+            let address = text(p.get("Address"));
+            let alias = text(p.get("Alias"));
+            return (address.clone(), if alias.is_empty() { address } else { alias });
+        }
+    }
+    (String::new(), path.rsplit('/').next().unwrap_or(path).trim_start_matches("dev_").replace('_', ":"))
+}
+
+/// The first adapter's path (hci0 on most machines)
+async fn adapter_path(sys: &Connection) -> Option<String> {
+    let om = zbus::fdo::ObjectManagerProxy::builder(sys).destination("org.bluez").ok()?.path("/").ok()?.build().await.ok()?;
+    let objects = om.get_managed_objects().await.ok()?;
+    let mut paths: Vec<String> = objects.iter().filter(|(_, i)| i.contains_key("org.bluez.Adapter1")).map(|(p, _)| p.as_str().to_string()).collect();
+    paths.sort();
+    paths.into_iter().next()
+}
+
+/// Visible and pairable while the Bluetooth page is open (no time limit
+/// then; off again when it closes)
+async fn visible(sh: &Shared, on: bool) {
+    let Some(sys) = &sh.system else { return };
+    let Some(path) = adapter_path(sys).await else { return };
+    let Ok(p) = Proxy::new(sys, "org.bluez", path, "org.freedesktop.DBus.Properties").await else { return };
+    if on {
+        let _: zbus::Result<()> = p.call("Set", &("org.bluez.Adapter1", "DiscoverableTimeout", Value::from(0u32))).await;
+        let _: zbus::Result<()> = p.call("Set", &("org.bluez.Adapter1", "PairableTimeout", Value::from(0u32))).await;
+    }
+    let _: zbus::Result<()> = p.call("Set", &("org.bluez.Adapter1", "Pairable", Value::from(on))).await;
+    let r: zbus::Result<()> = p.call("Set", &("org.bluez.Adapter1", "Discoverable", Value::from(on))).await;
+    if let Err(e) = r {
+        emit(json!({"ev": "error", "dir": "start", "message": format!("Could not make it visible: {}", short(&e))}));
+    }
+}
+
 async fn devices(sh: &Shared) -> Json {
     let mut list = vec![];
     if let Some(sys) = &sh.system {
@@ -412,6 +528,30 @@ async fn main() {
         Err(e) => emit(json!({"ev": "error", "dir": "start", "message": format!("obexd is missing: {e}")})),
     }
 
+    // The pairing agent (system bus), the default one, so a phone's code is
+    // asked on the island
+    if let Some(sys) = &shared.system {
+        let agent = PairAgent { shared: shared.clone() };
+        match sys.object_server().at(PAIR_PATH, agent).await {
+            Ok(_) => {
+                let pair_path = zbus::zvariant::ObjectPath::try_from(PAIR_PATH).unwrap();
+                match Proxy::new(sys, "org.bluez", "/org/bluez", "org.bluez.AgentManager1").await {
+                    Ok(m) => {
+                        let r: zbus::Result<()> = m.call("RegisterAgent", &(&pair_path, "DisplayYesNo")).await;
+                        match r {
+                            Ok(()) => {
+                                let _: zbus::Result<()> = m.call("RequestDefaultAgent", &(&pair_path,)).await;
+                            }
+                            Err(e) => emit(json!({"ev": "error", "dir": "start", "message": format!("Pairing agent: {}", short(&e))})),
+                        }
+                    }
+                    Err(e) => emit(json!({"ev": "error", "dir": "start", "message": format!("bluez: {e}")})),
+                }
+            }
+            Err(e) => emit(json!({"ev": "error", "dir": "start", "message": e.to_string()})),
+        }
+    }
+
     let mut lines = BufReader::new(tokio::io::stdin()).lines();
     while let Ok(Some(line)) = lines.next_line().await {
         let Ok(cmd) = serde_json::from_str::<Json>(&line) else { continue };
@@ -426,6 +566,7 @@ async fn main() {
                 tokio::spawn(send(shared.clone(), device, files));
             }
             "cancel" => cancel(&shared).await,
+            "visible" => visible(&shared, cmd["on"].as_bool().unwrap_or(false)).await,
             what @ ("accept" | "decline") => {
                 let id = cmd["id"].as_u64().unwrap_or(0) as u32;
                 if let Some(tx) = shared.offers.lock().await.remove(&id) {
@@ -435,7 +576,14 @@ async fn main() {
             _ => {}
         }
     }
-    // stdin closed: the shell has gone
+    // stdin closed: the shell has gone. Hidden again, agents away
+    visible(&shared, false).await;
+    if let Some(sys) = &shared.system {
+        if let Ok(m) = Proxy::new(sys, "org.bluez", "/org/bluez", "org.bluez.AgentManager1").await {
+            let pair_path = zbus::zvariant::ObjectPath::try_from(PAIR_PATH).unwrap();
+            let _: zbus::Result<()> = m.call("UnregisterAgent", &(&pair_path,)).await;
+        }
+    }
     if let Ok(m) = Proxy::new(&session, OBEX, "/org/bluez/obex", "org.bluez.obex.AgentManager1").await {
         let _: zbus::Result<()> = m.call("UnregisterAgent", &(&path,)).await;
     }
