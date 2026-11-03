@@ -27,6 +27,8 @@ Item {
         contentHeight: col.implicitHeight + 24
         clip: true
         boundsBehavior: Flickable.StopAtBounds
+        // Wheel and touch scroll; a mouse drag never does (it is for the controls)
+        acceptedButtons: Qt.NoButton
 
         Column {
             id: col
@@ -54,7 +56,7 @@ Item {
             Rectangle {
                 id: stage
                 width: parent.width
-                height: 250
+                height: 300
                 radius: 16
                 color: "transparent"
                 border.width: 1
@@ -71,7 +73,7 @@ Item {
                     }
                     return x0 > x1 ? { x0: 0, y0: 0, w: 1920, h: 1080 } : { x0: x0, y0: y0, w: x1 - x0, h: y1 - y0 };
                 }
-                readonly property real k: Math.min((width - 120) / (bounds.w + 600), (height - 50) / (bounds.h + 200))
+                readonly property real k: Math.min((width - 80) / (bounds.w + 400), (height - 60) / (bounds.h + 160))
                 readonly property real ox: (width - bounds.w * k) / 2 - bounds.x0 * k
                 readonly property real oy: (height - bounds.h * k) / 2 - bounds.y0 * k
 
@@ -157,10 +159,14 @@ Item {
 
                         MouseArea {
                             anchors.fill: parent
+                            // The page must not scroll while a monitor is dragged
+                            preventStealing: true
+                            hoverEnabled: true
                             cursorShape: box.dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
                             property point start
                             property real mx
                             property real my
+                            property bool pressing: false
                             onPressed: mouse => {
                                 root.chosen = box.modelData.desc;
                                 if (Displays.waiting)
@@ -171,16 +177,20 @@ Item {
                                 my = box.modelData.y;
                                 box.dragX = mx;
                                 box.dragY = my;
-                                box.dragging = true;
+                                pressing = true;
                             }
                             onPositionChanged: mouse => {
-                                if (!box.dragging)
+                                if (!pressing)
                                     return;
                                 const p = mapToItem(stage, mouse.x, mouse.y);
+                                // A click only chooses; moving 4 px starts the drag
+                                if (!box.dragging && Math.hypot(p.x - start.x, p.y - start.y) < 4)
+                                    return;
+                                box.dragging = true;
                                 let nx = mx + (p.x - start.x) / stage.k;
                                 let ny = my + (p.y - start.y) / stage.k;
                                 // Snap to the other monitors' edges
-                                const t = 14 / stage.k;
+                                const t = 12 / stage.k;
                                 let bx = null, by = null;
                                 for (const o of Displays.draft) {
                                     if (o.desc === box.modelData.desc)
@@ -202,11 +212,18 @@ Item {
                                 vGuide.visible = bx !== null;
                                 hGuide.visible = by !== null;
                                 if (bx !== null)
-                                    vGuide.x = stage.ox + (Math.abs(nx - bx) < 1 && bx !== null ? bx : nx) * stage.k;
+                                    vGuide.x = stage.ox + root.edgeX(bx, box.logi.w) * stage.k;
                                 if (by !== null)
-                                    hGuide.y = stage.oy + by * stage.k;
+                                    hGuide.y = stage.oy + root.edgeY(by, box.logi.h) * stage.k;
+                            }
+                            onCanceled: {
+                                pressing = false;
+                                box.dragging = false;
+                                vGuide.visible = false;
+                                hGuide.visible = false;
                             }
                             onReleased: {
+                                pressing = false;
                                 if (!box.dragging)
                                     return;
                                 vGuide.visible = false;
@@ -375,6 +392,27 @@ Item {
                 }
             }
         }
+    }
+
+    // The edge a snapped position touches (for the guide line): the other
+    // monitor's edge it lines up with
+    function edgeX(x, w) {
+        for (const o of Displays.draft) {
+            const O = Displays.logical(o);
+            for (const e of [o.x, o.x + O.w])
+                if (e === x || e === x + w)
+                    return e;
+        }
+        return x;
+    }
+    function edgeY(y, h) {
+        for (const o of Displays.draft) {
+            const O = Displays.logical(o);
+            for (const e of [o.y, o.y + O.h])
+                if (e === y || e === y + h)
+                    return e;
+        }
+        return y;
     }
 
     function inches(m) {

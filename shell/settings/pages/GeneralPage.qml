@@ -15,6 +15,8 @@ Flickable {
     contentHeight: col.implicitHeight + 40
     clip: true
     boundsBehavior: Flickable.StopAtBounds
+    // Wheel and touch scroll; a mouse drag never does (it is for the controls)
+    acceptedButtons: Qt.NoButton
 
     Column {
         id: col

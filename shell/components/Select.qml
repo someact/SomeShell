@@ -87,6 +87,9 @@ Item {
         width: Math.max(root.width, 180)
         height: Math.min(list.contentHeight + 12, 320)
         padding: 6
+        // A press on the field itself is left to its own click (which
+        // closes), so a second click closes instead of reopening
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
         // Below the field, or above it when the window has no room below
         onAboutToShow: {
             const win = root.Window.window;

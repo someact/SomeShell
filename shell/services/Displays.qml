@@ -116,11 +116,40 @@ Singleton {
             return n;
         });
     }
-    // Moved monitors: the layout starts at 0,0
+    // Moved monitors: dropped on top of another, it goes to the nearest free
+    // place touching one (never overlapping); the layout starts at 0,0
     function place(desc, x, y) {
         if (waiting)
             return;
-        let list = draft.map(m => m.desc === desc ? Object.assign({}, m, { x: Math.round(x), y: Math.round(y) }) : m);
+        const me = draft.find(m => m.desc === desc);
+        if (!me)
+            return;
+        const L = logical(me);
+        const others = draft.filter(m => m.desc !== desc && m.on && !m.mirror);
+        const overlaps = (px, py) => others.some(o => {
+            const O = logical(o);
+            return px < o.x + O.w && px + L.w > o.x && py < o.y + O.h && py + L.h > o.y;
+        });
+        x = Math.round(x);
+        y = Math.round(y);
+        if (overlaps(x, y)) {
+            let best = null, bestD = 1e12;
+            for (const o of others) {
+                const O = logical(o);
+                const cy = Math.max(o.y - L.h, Math.min(o.y + O.h, y));
+                const cx = Math.max(o.x - L.w, Math.min(o.x + O.w, x));
+                for (const [px, py] of [[o.x - L.w, cy], [o.x + O.w, cy], [cx, o.y - L.h], [cx, o.y + O.h]]) {
+                    const d = Math.hypot(px - x, py - y);
+                    if (d < bestD && !overlaps(px, py)) {
+                        bestD = d;
+                        best = [px, py];
+                    }
+                }
+            }
+            if (best)
+                [x, y] = best;
+        }
+        let list = draft.map(m => m.desc === desc ? Object.assign({}, m, { x: x, y: y }) : m);
         const minX = Math.min(...list.map(m => m.x)), minY = Math.min(...list.map(m => m.y));
         draft = list.map(m => Object.assign({}, m, { x: m.x - minX, y: m.y - minY }));
     }
