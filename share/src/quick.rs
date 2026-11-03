@@ -153,6 +153,12 @@ impl Quick {
         }
     }
 
+    /// Receiving: visible on the network (on) or not (off). Looking for
+    /// phones to send to goes on either way.
+    pub async fn set_receive(&self, on: bool) {
+        self.rqs.lock().await.change_visibility(if on { Visibility::Visible } else { Visibility::Invisible });
+    }
+
     /// Answers an offer; false when the number is not one of ours
     pub async fn answer(&self, id: u32, yes: bool) -> bool {
         let Some(rid) = self.ids.lock().await.remove(&id) else { return false };

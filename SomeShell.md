@@ -304,7 +304,12 @@ Widget ideas: clock (poster style, huge), now playing, calendar, notes, system, 
   >   - Video link (anything `yt-dlp` knows: YouTube and the like): Download video (`~/Videos`), Download audio (`~/Music`, m4a/opus as given), Open, Copy link. Progress on the right of rest, like a transfer; the alert at the end opens the file.
   >   - Other link: Open, Copy, Share (as a small `.url` file).
   >   - Text: Copy, Translate (Thai ↔ English, the capture's translate), Search the web, Save as a note file (`~/Documents/notes/`).
-  > - **Control tile Quick Share:** its page lists the devices and the last transfers; a right click / Shift+Enter opens the Bluetooth page.
+  > - **The Quick Share page** (user, 2026-11-03: "/quickshare should have own panel page: receive/send, on/off the receive, recent file history, send file can browse from folder; right click on the tile goes there too"): a tabless island page, opened by `/quickshare`, the tile's arrow or right click, Share on the Drop page, and incoming offers.
+  >   - Top: **Receiving** on/off (a chip; "Visible as <name>" when on) and the views **Send** and **Recent** as chips.
+  >   - **Send:** the files to send (from a drop, or **Choose files**), then the devices (Quick Share on the network first, Bluetooth after). Choose files opens a **browser** in the page: places (Home, Downloads, Pictures, Documents, Videos), Up, the folder's entries (folders first; a click opens a folder or ticks a file), "n chosen", **Done**.
+  >   - **Recent:** the last 30 transfers, both ways (name, received from / sent to, when, Wi-Fi or Bluetooth); a click opens the file, a right click / Shift+Enter shows it in its folder; **Clear**. Kept in `~/.local/state/someshell/share-history.json`.
+  >   - **Receiving off:** not visible on the network, incoming files refused (Wi-Fi and Bluetooth); sending still works; pairing still works. Kept per machine in `shell.json` (`share.receive`, on by default).
+  > - **Control tile Quick Share** (not in the default layout: Add tiles): a click turns receiving on or off; the arrow and a right click / Shift+Enter open the Quick Share page.
   > - IPC `share devices|send <device> <path…>|cancel|accept|decline|state`, `drop <text|uri…>` (to test without dragging), `download <url> video|audio`.
 - **Lock screen:** big clock in poster style, password dots that pop in and shake when wrong.
 - **Dock:** optional, hidden by default?

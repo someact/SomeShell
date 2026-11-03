@@ -274,21 +274,22 @@ Item {
             }
         }
     }
-    // Quick Share: the devices and how to send (Share page); the arrow and a
-    // right click open the Bluetooth page, where a phone is paired
+    // Quick Share: a click turns receiving on or off; the arrow (and a right
+    // click, Shift+Enter) opens the Quick Share page
     Component {
         id: share
         Tile {
             icon: "share"
             label: "Quick Share"
-            sub: !Share.available ? (Share.adapter ? "Not installed" : "No Bluetooth")
-                : Jobs.list.some(j => j.kind === "send" || j.kind === "receive") ? "Sending…"
-                : Share.targets.length === 1 ? Share.targets[0].name
-                : Share.targets.length + " devices"
-            enabled: Share.adapter
+            active: Share.alive && Share.receiving
+            sub: !Share.adapter ? "No Bluetooth"
+                : !Share.installed ? "Not installed"
+                : Jobs.list.some(j => j.kind === "send" || j.kind === "receive") ? "Sharing…"
+                : Share.receiving ? "Receiving on" : "Receiving off"
+            enabled: Share.adapter && Share.installed
             more: true
-            onClicked: Ui.openPage("share")
-            onOpened: Ui.detail = "bt"
+            onClicked: Share.toggleReceive()
+            onOpened: Share.openPage()
         }
     }
 }

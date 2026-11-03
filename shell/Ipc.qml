@@ -157,9 +157,11 @@ Scope {
         }
         function pick(paths: string): void { Share.offer(paths.trim().split(/\s+/), ""); }
         function cancel(): void { Share.cancel(); }
+        function page(view: string): void { Share.openPage(view || undefined); }
+        function receive(on: bool): void { Config.share.receive = on; }
         function accept(): void { if (Share.offers.length) Share.answer(Share.offers[0].id, true); }
         function decline(): void { if (Share.offers.length) Share.answer(Share.offers[0].id, false); }
-        function state(): string { return JSON.stringify({ available: Share.available, discoverable: Share.discoverable, pairs: Share.pairs, adapter: Share.adapter, installed: Share.installed, ready: Share.ready, quick: Share.quick, nearby: Share.nearby, targets: Share.targets.map(d => d.name + " (" + d.via + ")"), offers: Share.offers, pending: Share.pending }); }
+        function state(): string { return JSON.stringify({ available: Share.available, receiving: Share.receiving, view: Share.view, chosen: Share.chosen, history: Share.history.length, discoverable: Share.discoverable, pairs: Share.pairs, adapter: Share.adapter, installed: Share.installed, ready: Share.ready, quick: Share.quick, nearby: Share.nearby, targets: Share.targets.map(d => d.name + " (" + d.via + ")"), offers: Share.offers, pending: Share.pending }); }
     }
 
     IpcHandler {

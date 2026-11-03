@@ -58,6 +58,8 @@ Singleton {
             }
 
             property JsonObject share: JsonObject {
+                // Quick Share receiving (visible, phones can send here)
+                property bool receive: true
                 // Where received files go (empty = ~/Downloads)
                 property string folder: ""
             }

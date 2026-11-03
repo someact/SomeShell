@@ -9,6 +9,7 @@ import "../../lib/calc.js" as Calc
 // commands. The page is as tall as its results, so the island grows and
 // shrinks while you type.
 //   /emoji  emoji (Super+.)    /wall  wallpapers    /preset  presets    /edit  edit mode
+//   /quickshare  the Quick Share page
 //   /settings  the settings window
 // The clipboard history has its own page (Super+V), not a command here.
 Item {
@@ -37,6 +38,7 @@ Item {
         { cmd: "/wall", title: "Wallpaper", icon: "wallpaper", keys: "" },
         { cmd: "/preset", title: "Presets", icon: "dashboard_customize", keys: "" },
         { cmd: "/edit", title: "Edit desktop", icon: "edit", keys: "Ctrl+Super+E" },
+        { cmd: "/quickshare", title: "Quick Share", icon: "share", keys: "" },
         { cmd: "/settings", title: "Settings", icon: "settings", keys: "Super+I" }
     ]
 
@@ -92,6 +94,8 @@ Item {
         case "command":
             if (r.data.cmd === "/edit") {
                 Ui.edit();
+            } else if (r.data.cmd === "/quickshare") {
+                Share.openPage();
             } else if (r.data.cmd === "/settings") {
                 Ui.close();
                 Ui.showAlert("Settings", "The settings window comes in step 7.", "SomeShell", "settings");

@@ -35,6 +35,9 @@ FocusScope {
         const enter = event.key === Qt.Key_Return || event.key === Qt.Key_Enter;
         const shift = event.modifiers & Qt.ShiftModifier;
         const kb = Ui.kbItem;
+        // The marked thing went away (a list rebuilt: a folder opened): the
+        // arrows go on from where it was
+        const marking = kb !== null || root.lastMark !== null;
         if (event.key === Qt.Key_Escape) {
             if (Ui.controlEdit)
                 Ui.controlEdit = false;
@@ -63,7 +66,7 @@ FocusScope {
             const d = event.key === Qt.Key_Left ? -1 : 1;
             if (kb && typeof kb.kbStep === "function" && kb.kbStep(d)) {
                 // a slider took it
-            } else if (kb) {
+            } else if (marking) {
                 mark(d, 0);
             } else {
                 Ui.nextPage(d);
@@ -71,8 +74,10 @@ FocusScope {
         } else if (event.key === Qt.Key_Down) {
             mark(0, 1);
         } else if (event.key === Qt.Key_Up) {
-            if (kb && !mark(0, -1))
+            if (marking && !mark(0, -1)) {
                 Ui.kbItem = null;
+                root.lastMark = null;
+            }
         } else {
             return;
         }
@@ -104,12 +109,35 @@ FocusScope {
         walk(page);
         return out;
     }
+    // Where the mark was last (in this window), so a mark whose item went
+    // away is picked up again nearby; forgotten on a page change
+    property var lastMark: null
+    Connections {
+        target: Ui
+        function onPageIdChanged() { root.lastMark = null; }
+        function onDetailChanged() { root.lastMark = null; }
+        function onControlEditChanged() { root.lastMark = null; }
+        function onOpenChanged() { root.lastMark = null; }
+    }
+
     // Moves the mark one step (dx, dy); false when there is nothing that way
     function mark(dx, dy) {
         const items = navItems();
         const cur = items.includes(Ui.kbItem) ? Ui.kbItem : null;
         let best = null;
-        if (!cur) {
+        if (!cur && root.lastMark) {
+            // Its item went away: the nearest thing to where it was
+            const m = root.lastMark;
+            let bestD = Infinity;
+            for (const it of items) {
+                const r = it.mapToItem(root, 0, 0, it.width, it.height);
+                const d = Math.hypot(r.x + r.width / 2 - m.x, r.y + r.height / 2 - m.y);
+                if (d < bestD) {
+                    bestD = d;
+                    best = it;
+                }
+            }
+        } else if (!cur) {
             // Nothing marked: Down starts at the page's top left (the Edit
             // chip above it is reached with Up)
             if (dy <= 0)
@@ -142,6 +170,10 @@ FocusScope {
                 const side = dx !== 0
                     ? Math.max(0, Math.max(a.y, b.y) - Math.min(a.y + a.height, b.y + b.height))
                     : Math.max(0, Math.max(a.x, b.x) - Math.min(a.x + a.width, b.x + b.width));
+                // Left and right stay on the same line (a full-width row has
+                // nothing beside it, and must not jump to a chip rows away)
+                if (dx !== 0 && side > 0)
+                    continue;
                 const offCentre = dx !== 0 ? Math.abs(bcy - acy) : Math.abs(bcx - acx);
                 const score = Math.max(0, gap) + side * 3 + offCentre * 0.05;
                 if (score < bestScore) {
@@ -157,6 +189,8 @@ FocusScope {
             root.forceActiveFocus();
         Ui.kbItem = best;
         reveal(best);
+        const r = best.mapToItem(root, 0, 0, best.width, best.height);
+        root.lastMark = Qt.point(r.x + r.width / 2, r.y + r.height / 2);
         return true;
     }
     // Scrolls the list that holds `it` so it shows

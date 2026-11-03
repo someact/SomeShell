@@ -13,6 +13,7 @@
 //!     {"cmd":"accept","id":1} / {"cmd":"decline","id":1} answers an offer or a pairing
 //!     {"cmd":"visible","on":true}                       visible and pairable (the Bluetooth page is open)
 //!     {"cmd":"scan","on":true}                          look for Quick Share phones on the network
+//!     {"cmd":"receive","on":false}                      receiving off: invisible, pushes refused (sending still works)
 //!     {"cmd":"qsend","id":"…","name":"…","addr":"ip:port","files":[…]}   send by Quick Share
 //!   events
 //!     {"ev":"ready","folder":"…"}                        the agent is registered
@@ -596,6 +597,24 @@ async fn main() {
                 if !quick_stopped {
                     cancel(&shared).await;
                 }
+            }
+            "receive" => {
+                let on = cmd["on"].as_bool().unwrap_or(true);
+                if let Some(q) = &quick {
+                    q.set_receive(on).await;
+                }
+                // Bluetooth pushes: the agent is there only while on (without
+                // one obexd refuses them)
+                if let Ok(m) = Proxy::new(&session, OBEX, "/org/bluez/obex", "org.bluez.obex.AgentManager1").await {
+                    let r: zbus::Result<()> = m.call(if on { "RegisterAgent" } else { "UnregisterAgent" }, &(&path,)).await;
+                    if let Err(e) = r {
+                        let m = short(&e);
+                        if !m.contains("already") && !m.contains("not registered") && !m.contains("does not exist") {
+                            emit(json!({"ev": "error", "dir": "start", "message": format!("Bluetooth receiving: {m}")}));
+                        }
+                    }
+                }
+                emit(json!({"ev": "receiving", "on": on}));
             }
             "scan" => {
                 if let Some(q) = &quick {

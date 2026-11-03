@@ -19,7 +19,53 @@ Singleton {
     readonly property bool adapter: Bluetooth.defaultAdapter !== null
     property bool installed: false
     property bool ready: false
-    readonly property bool available: adapter && installed && ready
+    readonly property bool alive: adapter && installed && ready
+    // Sending works whenever the helper runs
+    readonly property bool available: alive
+    // Receiving on / off (the Quick Share page, the control tile): off is
+    // invisible and refuses incoming files; sending and pairing still work
+    readonly property bool receiving: Config.share.receive
+    onReceivingChanged: write({ cmd: "receive", on: receiving })
+    function toggleReceive() {
+        Config.share.receive = !Config.share.receive;
+        Ui.showAlert(Config.share.receive ? "Receiving on" : "Receiving off",
+            Config.share.receive ? "Phones can send here" : "Not visible; incoming files are refused",
+            "Quick Share", Config.share.receive ? "download" : "block");
+    }
+    // The page's view: "send", "browse" (choosing files) or "recent"
+    property string view: "send"
+    // The browser: the folder shown and the files ticked
+    property string browseDir: Paths.home + "/Pictures"
+    property var chosen: []
+    // Opens the Quick Share page (/quickshare, the tile)
+    function openPage(v) {
+        view = v ?? (pending ? "send" : view === "browse" ? "send" : view);
+        Ui.openPage("share");
+    }
+
+    // The last transfers, both ways: { dir, name, path, peer, via, time }
+    property var history: []
+    function record(entries) {
+        history = entries.concat(history).slice(0, 30);
+        historyFile.setText(JSON.stringify(history));
+    }
+    function clearHistory() {
+        history = [];
+        historyFile.setText("[]");
+    }
+    FileView {
+        id: historyFile
+        path: Paths.state + "/share-history.json"
+        // None until the first transfer
+        printErrors: false
+        onLoaded: {
+            try {
+                root.history = JSON.parse(text());
+            } catch (e) {}
+        }
+    }
+    // What the running send is, for the history: { files, via, peer }
+    property var sending: null
 
     // Paired devices: { address, name, icon, connected, files }
     property var devices: []
@@ -70,7 +116,7 @@ Singleton {
     function offer(paths, url) {
         pending = { files: paths ?? [], url: url ?? "" };
         refresh();
-        Ui.openPage("share");
+        openPage("send");
     }
     function refresh() {
         write({ cmd: "devices" });
@@ -92,6 +138,7 @@ Singleton {
         }
     }
     function sendFiles(t, files) {
+        sending = { files: files, via: t.via, peer: t.name };
         if (t.via === "quick")
             write({ cmd: "qsend", id: t.id, name: t.name, addr: t.addr, files: files });
         else
@@ -164,6 +211,9 @@ Singleton {
         case "ready":
             ready = true;
             quick = e.quick === true;
+            // Started receiving; switched off here when the setting says so
+            if (!receiving)
+                write({ cmd: "receive", on: false });
             refresh();
             if (scanningNearby)
                 write({ cmd: "scan", on: true });
@@ -228,6 +278,7 @@ Singleton {
             if (e.dir === "receive") {
                 endJob("receive");
                 const image = /\.(png|jpe?g|gif|webp|heic|avif)$/i.test(e.path);
+                record([{ dir: "receive", name: (e.count ?? 1) > 1 ? e.count + " files" : e.name, path: (e.count ?? 1) > 1 ? e.folder : e.path, peer: e.peer, via: e.via ?? "bluetooth", time: Date.now() }]);
                 if ((e.count ?? 1) > 1)
                     Ui.showAlert("Received from " + e.peer, e.count + " files · click to open the folder", "Quick Share", "download_done", { open: e.folder });
                 else
@@ -236,6 +287,9 @@ Singleton {
             break;
         case "finished":
             endJob("send");
+            if (sending && e.sent > 0)
+                record(sending.files.slice(0, e.sent).map(f => ({ dir: "send", name: f.split("/").pop(), path: f, peer: e.peer || sending.peer, via: sending.via, time: Date.now() })));
+            sending = null;
             if (e.sent > 0)
                 Ui.showAlert("Sent to " + e.peer, e.sent === 1 ? lastName : e.sent + " files", "Quick Share", "send");
             break;
