@@ -14,7 +14,9 @@ import qs.services
 //   Drag a window onto a page: move it there; onto a page's monitor spot:
 //   also show that workspace on that monitor. Drag a page onto a monitor in
 //   the header's map: show it there.
-//   Keys: arrows, 1-0, Enter, Esc (Super+Tab again closes too).
+//   The scratchpad (Super+S) is a drawer under the pages: click it to show
+//   it, drag windows in and out of it.
+//   Keys: arrows, 1-0, S (scratchpad), Enter, Esc (Super+Tab again closes too).
 PanelWindow {
     id: win
 
@@ -44,10 +46,15 @@ PanelWindow {
     property var monitors: []      // [{ name, x, y, w, h, active }], left to right
     property var wsMonitor: ({})   // workspace id -> monitor name
     property var windows: ({})     // workspace id -> [window]
+    property var scratch: []       // the scratchpad's windows, most recent first
+    readonly property string scratchName: "special:special"
+    readonly property string scratchOn: monitors.find(m => m.special === scratchName)?.name ?? ""
     property bool loaded: false
     readonly property var hereMon: monitors.find(m => m.name === here) ?? null
     readonly property int current: hereMon?.active ?? 1
-    property int sel: 1
+    property int sel: 1              // 1-10 a page, 11 the scratchpad
+    property int selCol: 1           // the column last selected (for Up/Down)
+    onSelChanged: if (sel <= 10) selCol = (sel - 1) % 5 + 1
 
     function load(text) {
         let d;
@@ -60,7 +67,7 @@ PanelWindow {
         const byId = {};
         for (const m of d.m) {
             const turned = m.transform % 2 === 1;
-            const g = { name: m.name, x: m.x, y: m.y, w: (turned ? m.height : m.width) / m.scale, h: (turned ? m.width : m.height) / m.scale, active: m.activeWorkspace?.id ?? 0 };
+            const g = { name: m.name, x: m.x, y: m.y, w: (turned ? m.height : m.width) / m.scale, h: (turned ? m.width : m.height) / m.scale, active: m.activeWorkspace?.id ?? 0, special: m.specialWorkspace?.name ?? "" };
             mons.push(g);
             byId[m.id] = g;
         }
@@ -69,9 +76,17 @@ PanelWindow {
         for (const w of d.w)
             wsm[w.id] = w.monitor;
         const wins = {};
-        const clients = d.c.filter(c => c.mapped && !c.hidden && c.workspace.id >= 1 && c.workspace.id <= 10)
+        const sp = [];
+        const clients = d.c.filter(c => c.mapped && !c.hidden)
             .sort((a, b) => b.focusHistoryID - a.focusHistoryID);
         for (const c of clients) {
+            if (c.workspace.name === scratchName) {
+                const entry = DesktopEntries.heuristicLookup(c.class);
+                sp.unshift({ address: c.address, name: entry?.name || c.class || "Window", icon: entry?.icon ?? "", title: c.title });
+                continue;
+            }
+            if (c.workspace.id < 1 || c.workspace.id > 10)
+                continue;
             const g = byId[c.monitor] ?? mons[0];
             if (!g)
                 continue;
@@ -91,6 +106,7 @@ PanelWindow {
         monitors = mons;
         wsMonitor = wsm;
         windows = wins;
+        scratch = sp;
         if (!loaded) {
             loaded = true;
             sel = current;
@@ -129,8 +145,24 @@ PanelWindow {
         close();
     }
     function focusWindow(w) {
+        // A scratchpad window: open the scratchpad on this monitor first
+        if (wsOf(w) === -1 && scratchOn !== here) {
+            dsp(`hl.dsp.focus({ monitor = "${here}" })`);
+            dsp(`hl.dsp.workspace.toggle_special("special")`);
+        }
         dsp(`hl.dsp.focus({ window = "address:${w.address}" })`);
         close();
+    }
+    // The scratchpad on this monitor (it moves here when open elsewhere)
+    function showScratch() {
+        if (scratchOn !== here) {
+            dsp(`hl.dsp.focus({ monitor = "${here}" })`);
+            dsp(`hl.dsp.workspace.toggle_special("special")`);
+        }
+        close();
+    }
+    function moveToScratch(w) {
+        dsp(`hl.dsp.window.move({ workspace = "${scratchName}", window = "address:${w.address}", follow = false })`);
     }
     function moveWindow(w, n) {
         dsp(`hl.dsp.window.move({ workspace = ${n}, window = "address:${w.address}", follow = false })`);
@@ -284,7 +316,7 @@ PanelWindow {
                     anchors.right: parent.right
                     spacing: 10 * win.u
                     Repeater {
-                        model: [["← → ↑ ↓", "Move"], ["1–0", "Pick"], ["Enter", "Go"], ["Esc", "Close"]]
+                        model: [["← → ↑ ↓", "Move"], ["1–0", "Pick"], ["S", "Scratchpad"], ["Enter", "Go"], ["Esc", "Close"]]
                         Rectangle {
                             id: pill
                             required property var modelData
@@ -386,6 +418,14 @@ PanelWindow {
                                     }
                                     Txt {
                                         anchors.horizontalCenter: parent.horizontalCenter
+                                        visible: !mapCell.target && mapCell.modelData.special === win.scratchName
+                                        text: "+ Scratchpad"
+                                        caps: true
+                                        size: Math.round(9 * win.u)
+                                        color: win.pal.fg
+                                    }
+                                    Txt {
+                                        anchors.horizontalCenter: parent.horizontalCenter
                                         visible: mapCell.target
                                         text: "Show " + String(ptr.page).padStart(2, "0") + " here"
                                         caps: true
@@ -411,14 +451,15 @@ PanelWindow {
                 id: grid
                 readonly property real gapX: 32 * win.u
                 readonly property real gapY: 46 * win.u
+                readonly property real drawerGap: 20 * win.u
                 readonly property real extra: (30 + 12 + 12 + 14) * win.u      // label, gaps, caption
-                readonly property real availH: footer.y - (headline.y + headline.height) - 52 * win.u - 40 * win.u
+                readonly property real availH: footer.y - (headline.y + headline.height) - 38 * win.u - 40 * win.u - drawer.height - drawerGap
                 readonly property real byWidth: (content.width - 4 * gapX) / 5
                 readonly property real byHeight: ((availH - gapY) / 2 - extra) * win.sw / win.sh
                 // (byHeight is NaN before the footer is laid out: fall back to the width)
                 readonly property real pw: Math.max(80, isFinite(byHeight) && byHeight > 0 ? Math.min(byWidth, byHeight) : byWidth)
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: headline.y + headline.height + 52 * win.u
+                y: headline.y + headline.height + 38 * win.u
                 columns: 5
                 columnSpacing: gapX
                 rowSpacing: gapY
@@ -445,6 +486,25 @@ PanelWindow {
                         hotZone: dropTarget ? ptr.overZone : ""
                     }
                 }
+            }
+
+            // The scratchpad, a drawer on the grid under the pages
+            Scratchpad {
+                id: drawer
+                x: grid.x
+                y: grid.y + grid.height + grid.drawerGap
+                width: grid.width
+                u: win.u
+                labelW: grid.pw
+                gap: grid.gapX
+                wins: win.scratch
+                shownOn: win.scratchOn
+                onHere: win.scratchOn !== "" && win.scratchOn === win.here
+                selected: win.sel === 11 && ptr.kind === ""
+                hovered: ptr.hoverScratch && ptr.kind === ""
+                hoverWin: ptr.hoverWin
+                dragWin: ptr.kind === "window" ? ptr.moving?.address ?? "" : ""
+                dropTarget: ptr.kind === "window" && ptr.hoverScratch && win.wsOf(ptr.moving) !== -1
             }
 
             // Footer: a hairline with crosshairs and what the mouse does
@@ -556,6 +616,8 @@ PanelWindow {
         property var moving: null        // the window being dragged
         property int page: 0
         property int hoverPage: 0
+        property bool hoverScratch: false
+        property bool pressScratch: false
         property string hoverWin: ""
         property string overZone: ""
         property string overMonitor: ""
@@ -565,6 +627,7 @@ PanelWindow {
             ptr.down = false;
             ptr.pressPage = 0;
             ptr.pressWin = null;
+            ptr.pressScratch = false;
             ptr.moving = null;
             ptr.page = 0;
             ptr.overZone = "";
@@ -574,7 +637,13 @@ PanelWindow {
 
     // The page, window, spot or map monitor under a point (view coordinates)
     function hit(px, py) {
-        const r = { page: 0, win: null, zone: "", monitor: "" };
+        const r = { page: 0, win: null, zone: "", monitor: "", scratch: false };
+        const b = drawer.band.mapFromItem(view, px, py);
+        if (b.x >= 0 && b.y >= 0 && b.x <= drawer.band.width && b.y <= drawer.band.height) {
+            r.scratch = true;
+            r.win = drawer.windowAt(b.x, b.y);
+            return r;
+        }
         for (let i = 0; i < 10; i++) {
             const p = pages.itemAt(i);
             if (!p)
@@ -604,11 +673,12 @@ PanelWindow {
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: ptr.kind !== "" ? Qt.ClosedHandCursor : ptr.hoverPage ? Qt.PointingHandCursor : Qt.ArrowCursor
+        cursorShape: ptr.kind !== "" ? Qt.ClosedHandCursor : ptr.hoverPage || ptr.hoverScratch ? Qt.PointingHandCursor : Qt.ArrowCursor
         onPositionChanged: m => {
             const h = win.hit(m.x, m.y);
             ptr.pos = Qt.point(m.x, m.y);
             ptr.hoverPage = h.page;
+            ptr.hoverScratch = h.scratch;
             ptr.hoverWin = h.win?.address ?? "";
             if (ptr.down && ptr.kind === "" && Math.hypot(m.x - ptr.start.x, m.y - ptr.start.y) > 6) {
                 if (ptr.pressWin) {
@@ -630,14 +700,18 @@ PanelWindow {
             ptr.pos = ptr.start;
             ptr.pressPage = h.page;
             ptr.pressWin = h.win;
+            ptr.pressScratch = h.scratch;
         }
         onReleased: m => {
             const h = win.hit(m.x, m.y);
             const kind = ptr.kind;
-            const w = ptr.moving, page = ptr.page, pressPage = ptr.pressPage, pressWin = ptr.pressWin;
+            const w = ptr.moving, page = ptr.page, pressPage = ptr.pressPage, pressWin = ptr.pressWin, pressScratch = ptr.pressScratch;
             ptr.reset();
             if (kind === "window") {
-                if (h.page && h.zone) {
+                if (h.scratch) {
+                    if (win.wsOf(w) !== -1)
+                        win.moveToScratch(w);
+                } else if (h.page && h.zone) {
                     if (h.page !== win.wsOf(w))
                         win.moveWindow(w, h.page);
                     win.showOn(h.page, h.zone, true);
@@ -651,10 +725,16 @@ PanelWindow {
                 win.focusWindow(pressWin);
             } else if (pressPage && h.page === pressPage) {
                 win.go(pressPage);
+            } else if (pressScratch && h.scratch) {
+                win.showScratch();
             }
         }
     }
     function wsOf(w) {
+        if (!w)
+            return 0;
+        if (scratch.some(x => x.address === w.address))
+            return -1;
         for (let n = 1; n <= 10; n++)
             if ((windows[n] ?? []).some(x => x.address === w.address))
                 return n;
@@ -673,17 +753,22 @@ PanelWindow {
                 else
                     win.close();
             } else if (k === Qt.Key_Left)
-                win.sel = (win.sel + 8) % 10 + 1;
+                win.sel = win.sel === 11 ? 10 : (win.sel + 8) % 10 + 1;
             else if (k === Qt.Key_Right)
-                win.sel = win.sel % 10 + 1;
-            else if (k === Qt.Key_Up || k === Qt.Key_Down)
-                win.sel = (win.sel + 4) % 10 + 1;
+                win.sel = win.sel === 11 ? 1 : win.sel % 10 + 1;
+            // Up and down pass through the scratchpad under row 2
+            else if (k === Qt.Key_Up)
+                win.sel = win.sel === 11 ? 5 + win.selCol : win.sel <= 5 ? 11 : win.sel - 5;
+            else if (k === Qt.Key_Down)
+                win.sel = win.sel === 11 ? win.selCol : win.sel <= 5 ? win.sel + 5 : 11;
+            else if (k === Qt.Key_S)
+                win.sel = 11;
             else if (k >= Qt.Key_1 && k <= Qt.Key_9)
                 win.sel = k - Qt.Key_0;
             else if (k === Qt.Key_0)
                 win.sel = 10;
             else if (k === Qt.Key_Return || k === Qt.Key_Enter)
-                win.go(win.sel);
+                win.sel === 11 ? win.showScratch() : win.go(win.sel);
             else
                 return;
             event.accepted = true;
