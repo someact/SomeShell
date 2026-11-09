@@ -16,12 +16,13 @@ import qs.services
 ShellRoot {
     // Services that must run from the start: the notification server, the
     // night light schedule, the battery alerts and the lock (it locks again
-    // after a crash while locked)
+    // after a crash while locked), and the Android slot check for the power page
     Component.onCompleted: {
         Notifications.dnd;
         NightLight.on;
         Battery.available;
         Locker.locked;
+        DualBoot.available;
     }
 
     Variants {

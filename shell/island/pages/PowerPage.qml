@@ -4,10 +4,12 @@ import Quickshell
 import Quickshell.Hyprland
 import qs.core
 import qs.components
+import qs.services
 
 // 07 Power. Hold a button to confirm: a line draws itself around its edge,
 // then the button inverts and the action runs; letting go early cancels. SOMESHELL_DRY_POWER=1 only says what would run
-// (for testing).
+// (for testing). "Android" (restart into Android's boot slot) shows only on
+// devices that dual boot through the A/B slots (services/DualBoot.qml).
 Item {
     id: root
 
@@ -17,12 +19,17 @@ Item {
         { name: "Lock", icon: "lock", hint: "Super+L", command: ["loginctl", "lock-session"] },
         { name: "Sleep", icon: "bedtime", hint: "Super+Shift+L", command: ["systemctl", "suspend"] },
         { name: "Log out", icon: "logout", hint: "", dispatch: "hl.dsp.exit()" },
-        { name: "Restart", icon: "restart_alt", hint: "", command: ["systemctl", "reboot"] },
+        { name: "Restart", icon: "restart_alt", hint: "", command: ["systemctl", "reboot"] }
+    ].concat(DualBoot.available ? [{ name: "Android", icon: "android", hint: "", android: true }] : [], [
         { name: "Shut down", icon: "power_settings_new", hint: "", command: ["systemctl", "poweroff"] }
-    ]
+    ])
 
     function run(a) {
         Ui.close();
+        if (a.android) {
+            dry ? DualBoot.plan() : DualBoot.go();
+            return;
+        }
         if (dry) {
             Ui.showAlert(a.name, "Would run: " + (a.command ? a.command.join(" ") : a.dispatch), "Power (test)", a.icon);
             return;

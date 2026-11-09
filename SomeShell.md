@@ -231,6 +231,10 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   > [!check] Decided (user, 2026-11-02: an accidental press of the tablet's power key shut it down; "it should just lock screen and black out light")
   > - The power key locks and turns the screens off, like a phone; pressed again it turns them back on (the lock screen shows). Shutting down stays on the power page.
   > - Hyprland holds logind's power-key block (`systemd-inhibit --what=handle-power-key`) for the session; without a session, logind's own setting applies. No system file changes.
+
+  > [!check] Decided (user, 2026-11-09: "switch to Android" on the power page, only on a device that dual boots Android and Arch through the A/B slots)
+  > - An **Android** button between Restart and Shut down, held to confirm like the others. It shows only where `lib/android.sh check` finds `boot_a`, `boot_b`, Android's `userdata` partition and `qbootctl`.
+  > - It reads the current slot, sets the other one active with `qbootctl -s` (only if it is marked bootable) and restarts. Root through `sudo -n`; without passwordless sudo it asks for the password in the terminal. Coming back to Linux is done from Android.
   > - Volume keys: raising the volume also unmutes it.
   > [!check] Decided (user, 2026-11-03: the rising fill "look cheap"): **the line draws the edge.** While a button is held, a 2 px line draws itself around its border from the top left, clockwise (like the posters' rules), the corner marks close in, and the caption counts down `RELEASE · 3 · 2 · 1` (rolling digits). At the end the whole button inverts in one snap (ink ↔ paper, the press motion) and the action runs. Letting go early pulls the line back fast (150 ms). The hold stays 0.8 s.
 

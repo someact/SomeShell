@@ -166,6 +166,7 @@ Decision in `SomeShell.md` section 5.
   - [ ] Touchpad rows on the laptop
 - [x] Power & lock page: lock / screens off / sleep after (minutes or never; `services/Idle.qml` writes `hypr/generated/hypridle.conf` and restarts hypridle with it; autostart uses that file when it exists), the power key (locks and screens off, sleeps, asks with the island's power page, nothing: `POWER_KEY` in keybinds.lua from hypr.json `power.key`, changed live), the SDDM theme (install or update colors in a terminal, since it needs sudo). Checked on the PC: lock after 15 and back to 10 (file and hypridle follow; Up key on a focused dropdown), power key ask and back (live and saved), dark and light
   - [ ] Lid (laptop only: sleep, lock or nothing; needs logind's lid inhibit like the power key)
+- [x] Power page: Android (user, 2026-11-09; decision in `SomeShell.md`): restart into the other A/B slot (`lib/android.sh`, `services/DualBoot.qml`), shown only on A/B dual-boot devices with qbootctl. Tested on the tablet with `SOMESHELL_DRY_POWER=1` by mouse: the button shows, a hold says "Would run: qbootctl -s a, then systemctl reboot", slots unchanged. The real switch is not run by the test; the desktop and laptop have no A/B slots
 - [ ] A polkit agent in the shell (none runs now: apps that ask for the admin password through polkit get no prompt; Quickshell has `Quickshell.Services.Polkit`)
 - [ ] Later pages: Night light, Apps, Sharing, About
 
