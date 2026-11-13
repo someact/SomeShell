@@ -179,7 +179,7 @@ The tablet (one screen, battery, Wi-Fi, backlight, ARM, 8 GB) and the PC (two mo
 - Tablet is fine for: step 5 (calendar page, system page with battery detail, music data and lyrics, browser extension in Zen), step 6 on one screen (grid editor, widgets, presets, workspace designs, control layout editing), step 7 lock screen and SDDM (the tablet is the SDDM test machine), overview, dock, settings window, the ARM half of the installer, step 8 on-screen keyboard (the tablet has a touch screen), GIFs, capture tools, Quick Share. Small items: shrink the top window (memory), undo a DNS change that resolves nothing
 - PC only: Blender pan/rotate after Super+number, removing the v1 worktree, DDC brightness, NVIDIA environment, game mode and the game overlay with real games, UGTablet pen, the x86 half of the installer
 - Laptop: touchpad gestures, hybrid graphics, 165 Hz panel
-- Unsure on ARM until tried: WARP (`warp-cli` for aarch64)
+- WARP on ARM works (tablet, 2026-11-13): no aarch64 package in the AUR (`cloudflare-warp-bin` lists only x86_64), but Cloudflare publishes an arm64 .deb of the same version; build the AUR PKGBUILD with `arch+=('aarch64')` and a `source_aarch64` pointing at `cloudflare-warp_<ver>_arm64.deb` (checksum from `pkg.cloudflareclient.com/dists/resolute/main/binary-arm64/Packages`). Accept the terms once in a terminal (`warp-cli status`, answer y): `--accept-tos` does not save it, and without `~/.local/share/warp/accepted-tos.txt` the tile's `warp-cli -l status` fails silently. `cloudflared` is in the ALARM repo
 
 ## Notes
 - Hypridle times and the tablet area: the UGTablet trim lived in v1's config; in the new one devices come from `hypr.json` (`devices`), added to this machine's file at the switch.
