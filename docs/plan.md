@@ -53,7 +53,7 @@ Switch notes:
 - [ ] Live for a day, then remove the v1 worktree
 
 ## Tablet (added 2026-11-02)
-An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard and mouse, touch is not a priority. Setup steps are in CLAUDE.md ("Setting up a machine").
+An ARM tablet (Snapdragon, Arch Linux ARM) joins as the third machine; keyboard and mouse first, touch since 2026-11-17 (see "Touchscreen"). Setup steps are in CLAUDE.md ("Setting up a machine").
 - [x] Note the exact chip and how Arch was installed in CLAUDE.md (Xiaomi Pad 6 8/256, A/B slot dual boot with Android, 128/128)
 - [x] Packages on aarch64: Hyprland 0.56+ (Lua config), Quickshell, matugen (build from the AUR or source where Arch Linux ARM has none). All installed; Hyprland is 0.57.0
 - [x] Set up, log in, check the base works (island, search, control, media, notifications). Checked 2026-11-02 by IPC, real keys and mouse (ydotool), dark and light; fixes below
@@ -171,13 +171,28 @@ Decision in `SomeShell.md` section 5.
 - [ ] A polkit agent in the shell (none runs now: apps that ask for the admin password through polkit get no prompt; Quickshell has `Quickshell.Services.Polkit`)
 - [ ] Later pages: Night light, Apps, Sharing, About
 
+## Touchscreen (user, 2026-11-17)
+Goal: with no mouse connected, everything works by finger: no pointer to drag across the screen. Built and tested on the tablet (`nvtcapacitivetouchscreen`, and the pen `nvtcapacitivepen`); detect touch devices at runtime (`hyprctl devices -j`, `.touch`), never assume one. Today the touch mapping (`touchdevice` output and transform in `hypr/generated/monitors.lua`) was written by hand, and many actions need hover, a right or middle click, or the wheel. Qt turns a tap into a click for a `MouseArea`, but a `HoverHandler` sees nothing.
+- [ ] Decide in `SomeShell.md` first: the gestures (edge swipes, long press, swipes inside the island), how hover-only things are reached by touch, touch target sizes, and the on-screen keyboard (built in the shell or an existing one such as wvkbd/squeekboard; US and Thai)
+- [ ] Detect: a service with `hasTouch`, `hasMouse` (real mice, not the ydotool device; follows plugging in and out) and `touchMode` (the last input was a finger), so touch-only extras show only when they help
+- [ ] Hyprland: the touch screen and pen follow their panel's monitor and rotation from the Displays page (written into `monitors.lua`, not by hand); screen-edge swipes (Hyprland has no touchscreen gestures of its own: a plugin such as hyprgrass, or the shell reading them): from the top opens the island, from the bottom shows the dock, three fingers sideways switch workspaces, three fingers up opens the overview
+- [ ] Island by touch: a tap at rest opens it (hover peek has no touch), a touch-opened island does not close on the hover-leave timer, a tap outside closes it, swipe sideways switches pages (now the wheel), swipe up closes
+- [ ] Long press = right click everywhere a right or middle click does something: `ListRow`, `Tile` (already), `Tap`, `DockApps`, `Tray`, `WidgetFrame`, desktop (already); a press with a finger never needs a second button
+- [ ] Wheel-only places get a swipe or flick: the badge (workspaces), calendar months (page and widget), lists and pages in the island, edit-mode tabs (wallpapers, presets), settings pages (already scroll by touch: check)
+- [ ] Drags by finger: sliders (`BarSlider`, `SetSlider`), Control quick edit (drag, resize handle), edit mode (widgets move and resize, drawer drop), overview (windows, pages, scratchpad), Displays (monitor boxes), power hold, capture picker (box drag, tap a window)
+- [ ] Keyboard-only actions get a button in touch mode: capture picker (whole monitor, cancel), edit mode Undo (already on the strip: check), overview open without Super+Tab
+- [ ] On-screen keyboard (pulled forward from step 8): shows when a text field takes focus and no physical keyboard is connected (search, Wi-Fi password, settings fields, lock screen); US and Thai; never covers the field
+- [ ] Lock screen and SDDM by touch: tap wakes, the keyboard comes up for the password
+- [ ] Settings, Input page: touch screen rows (on/off, monitor it maps to) only with a touch screen
+- [ ] Test on the tablet with the mouse unplugged (and the keyboard, for the on-screen keyboard), dark and light. ydotool sends no touch: a virtual touch device (uinput) for scripted tests, else by finger (user)
+
 ## Later steps
 - Step 7: lock screen, dock, settings window, installer (the overview moved up)
 - Step 8: GIFs, WARP, capture tools, game overlay, on-screen keyboard
 
 ## Where each part can be built
 The tablet (one screen, battery, Wi-Fi, backlight, ARM, 8 GB) and the PC (two monitors, DDC, NVIDIA, Ethernet, games, pen) test different things. Build on either; check the "PC" or "tablet" parts on that machine before ticking.
-- Tablet is fine for: step 5 (calendar page, system page with battery detail, music data and lyrics, browser extension in Zen), step 6 on one screen (grid editor, widgets, presets, workspace designs, control layout editing), step 7 lock screen and SDDM (the tablet is the SDDM test machine), overview, dock, settings window, the ARM half of the installer, step 8 on-screen keyboard (the tablet has a touch screen), GIFs, capture tools, Quick Share. Small items: shrink the top window (memory), undo a DNS change that resolves nothing
+- Tablet is fine for: step 5 (calendar page, system page with battery detail, music data and lyrics, browser extension in Zen), step 6 on one screen (grid editor, widgets, presets, workspace designs, control layout editing), step 7 lock screen and SDDM (the tablet is the SDDM test machine), overview, dock, settings window, the ARM half of the installer, touchscreen and the on-screen keyboard (only the tablet has a touch screen), GIFs, capture tools, Quick Share. Small items: shrink the top window (memory), undo a DNS change that resolves nothing
 - PC only: Blender pan/rotate after Super+number, removing the v1 worktree, DDC brightness, NVIDIA environment, game mode and the game overlay with real games, UGTablet pen, the x86 half of the installer
 - Laptop: touchpad gestures, hybrid graphics, 165 Hz panel
 - WARP on ARM works (tablet, 2026-11-13): no aarch64 package in the AUR (`cloudflare-warp-bin` lists only x86_64), but Cloudflare publishes an arm64 .deb of the same version; build the AUR PKGBUILD with `arch+=('aarch64')` and a `source_aarch64` pointing at `cloudflare-warp_<ver>_arm64.deb` (checksum from `pkg.cloudflareclient.com/dists/resolute/main/binary-arm64/Packages`). Accept the terms once in a terminal (`warp-cli status`, answer y): `--accept-tos` does not save it, and without `~/.local/share/warp/accepted-tos.txt` the tile's `warp-cli -l status` fails silently. `cloudflared` is in the ALARM repo
