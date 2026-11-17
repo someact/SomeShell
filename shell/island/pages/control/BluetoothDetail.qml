@@ -13,15 +13,18 @@ Column {
     id: root
 
     readonly property var adapter: Bluetooth.defaultAdapter
-    // Connected first, then devices just found (a phone to pair must not
-    // fall below the list's end behind paired keyboards), then paired ones
+    // Connected first, then paired ones by name, then devices found nearby in
+    // the order they turned up: a new one joins at the end, so rows never
+    // move under a finger while scanning (the list scrolls, so a phone to
+    // pair is never cut off)
     function rank(d) {
-        return d.connected ? 0 : !d.paired ? 1 : 2;
+        return d.connected ? 0 : d.paired ? 1 : 2;
     }
-    // Nameless devices found nearby (shown by their address) are left out
+    // Nameless devices found nearby (shown by their address) are left out.
+    // The sort is stable: found ones keep bluez's order (first seen first)
     readonly property var devices: (adapter?.devices.values ?? []).slice()
         .filter(d => d.paired || (d.name && d.name !== d.address.replace(/:/g, "-")))
-        .sort((a, b) => (rank(a) - rank(b)) || a.name.localeCompare(b.name))
+        .sort((a, b) => (rank(a) - rank(b)) || (rank(a) < 2 ? a.name.localeCompare(b.name) : 0))
 
     // Scanning and visible while open (Share counts the pages: on a page
     // switch the new one is made before the old one goes)
