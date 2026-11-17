@@ -13,6 +13,9 @@ Item {
     property string sub
     property bool clickable: true
     property bool line: true
+    // A long press (a finger has no right button) = right click; off where
+    // the right click deletes something
+    property bool holdIsRight: true
     default property alias trailing: right.data
     readonly property bool hovered: mouse.containsMouse
 
@@ -45,6 +48,12 @@ Item {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: event => event.button === Qt.RightButton ? root.rightClicked() : root.clicked()
+        pressAndHoldInterval: 500
+        // Connected only for that: a held press then gives no click
+        onPressAndHold: event => {
+            if (root.holdIsRight && event.button === Qt.LeftButton)
+                root.rightClicked();
+        }
     }
 
     Icon {

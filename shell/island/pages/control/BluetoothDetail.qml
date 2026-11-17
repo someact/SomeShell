@@ -67,33 +67,115 @@ Column {
         width: root.width
     }
 
-    Repeater {
-        model: root.adapter?.enabled ? root.devices.slice(0, 7) : []
+    // Every device, six rows tall at most, then it scrolls (a finger drags it;
+    // the keyboard mark scrolls it too). A paired device's ⋯ (or a right
+    // click, a long press, Shift+Enter) shows Connect / Disconnect and Forget,
+    // so forgetting never needs a second mouse button.
+    property string menuFor: ""  // address of the device showing its actions
+    onDevicesChanged: if (menuFor && !devices.some(d => d.address === menuFor && d.paired)) menuFor = ""
 
-        ListRow {
-            required property var modelData
-            icon: modelData.icon?.includes("headset") || modelData.icon?.includes("headphone") ? "headphones"
-                : modelData.icon?.includes("mouse") ? "mouse" : modelData.icon?.includes("keyboard") ? "keyboard"
-                : modelData.icon?.includes("phone") ? "smartphone" : modelData.icon?.includes("audio") ? "speaker" : "bluetooth"
-            title: modelData.name
-            // Two devices with one name (a keyboard paired on two channels):
-            // the end of the address tells them apart
-            readonly property bool twin: root.devices.filter(d => d.name === modelData.name).length > 1
-            sub: (modelData.pairing ? "Pairing…" : modelData.connected ? "Connected" : modelData.paired ? "Paired" : "Found nearby")
-                + (twin ? "  ·  " + modelData.address.slice(-5) : "")
-            onClicked: modelData.connected ? modelData.disconnect() : modelData.paired ? modelData.connect() : modelData.pair()
-            onRightClicked: if (modelData.paired) modelData.forget()
+    Flickable {
+        id: list
+        width: root.width
+        height: Math.min(rows.implicitHeight, 52 * 6)
+        contentHeight: rows.implicitHeight
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
 
-            Txt {
-                visible: modelData.batteryAvailable
-                anchors.verticalCenter: parent.verticalCenter
-                text: Math.round(modelData.battery * 100) + "%"
-                caps: true
-                color: Theme.ink.mute
-            }
-            Tag {
-                visible: modelData.connected
-                text: "Connected"
+        Column {
+            id: rows
+            width: list.width
+
+            Repeater {
+                model: root.adapter?.enabled ? root.devices : []
+
+                ListRow {
+                    id: row
+                    required property var modelData
+                    readonly property bool menuOpen: root.menuFor === modelData.address
+                    function toggleMenu() {
+                        if (modelData.paired)
+                            root.menuFor = menuOpen ? "" : modelData.address;
+                    }
+                    icon: modelData.icon?.includes("headset") || modelData.icon?.includes("headphone") ? "headphones"
+                        : modelData.icon?.includes("mouse") ? "mouse" : modelData.icon?.includes("keyboard") ? "keyboard"
+                        : modelData.icon?.includes("phone") ? "smartphone" : modelData.icon?.includes("audio") ? "speaker" : "bluetooth"
+                    title: modelData.name
+                    // Two devices with one name (a keyboard paired on two channels):
+                    // the end of the address tells them apart
+                    readonly property bool twin: root.devices.filter(d => d.name === modelData.name).length > 1
+                    sub: (modelData.pairing ? "Pairing…  ·  tap to stop" : modelData.connected ? "Connected" : modelData.paired ? "Paired" : "Found nearby  ·  tap to pair")
+                        + (twin ? "  ·  " + modelData.address.slice(-5) : "")
+                    onClicked: {
+                        if (menuOpen)
+                            root.menuFor = "";
+                        else if (modelData.pairing)
+                            modelData.cancelPair();
+                        else if (modelData.connected)
+                            modelData.disconnect();
+                        else if (modelData.paired)
+                            modelData.connect();
+                        else
+                            modelData.pair();
+                    }
+                    onRightClicked: toggleMenu()
+
+                    Txt {
+                        visible: row.modelData.batteryAvailable && !row.menuOpen
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Math.round(row.modelData.battery * 100) + "%"
+                        caps: true
+                        color: Theme.ink.mute
+                    }
+                    Tag {
+                        visible: row.modelData.connected && !row.menuOpen
+                        text: "Connected"
+                    }
+                    Tap {
+                        visible: row.menuOpen
+                        width: 112
+                        height: 34
+                        outlined: true
+                        onClicked: {
+                            root.menuFor = "";
+                            row.modelData.connected ? row.modelData.disconnect() : row.modelData.connect();
+                        }
+                        Txt {
+                            anchors.centerIn: parent
+                            text: row.modelData.connected ? "Disconnect" : "Connect"
+                            caps: true
+                            color: parent.fg
+                        }
+                    }
+                    Tap {
+                        visible: row.menuOpen
+                        width: 84
+                        height: 34
+                        outlined: true
+                        onClicked: {
+                            root.menuFor = "";
+                            row.modelData.forget();
+                        }
+                        Txt {
+                            anchors.centerIn: parent
+                            text: "Forget"
+                            caps: true
+                            color: parent.pressed ? parent.fg : Theme.ink.error
+                        }
+                    }
+                    // ⋯ / ×: big enough for a finger
+                    Tap {
+                        visible: row.modelData.paired
+                        width: 40
+                        height: 40
+                        onClicked: row.toggleMenu()
+                        Icon {
+                            anchors.centerIn: parent
+                            name: row.menuOpen ? "close" : "more_horiz"
+                            color: parent.fg
+                        }
+                    }
+                }
             }
         }
     }

@@ -26,6 +26,31 @@ pub struct Quick {
     // The outbound transfer running now (to cancel it)
     current: Mutex<Option<String>>,
     scanning: Mutex<bool>,
+    // The Quick Share broadcast while looking for phones (dropping it stops it)
+    advert: Mutex<Option<bluer::adv::AdvertisementHandle>>,
+}
+
+// What rqs_lib broadcasts so that phones nearby show up (service data for
+// Quick Share's UUID 0xFE2C, copied from its BleAdvertiser)
+const ADVERT_DATA: [u8; 24] = [
+    252, 18, 142, 1, 66, 0, 0, 0, 0, 0, 0, 0, 0, 0, 191, 45, 91, 160, 225, 216, 117, 36, 202, 0,
+];
+
+/// Broadcasts only: no scan, and never powers the adapter on (Bluetooth off
+/// stays off; the network search still runs)
+async fn advertise() -> Option<bluer::adv::AdvertisementHandle> {
+    let session = bluer::Session::new().await.ok()?;
+    let adapter = session.default_adapter().await.ok()?;
+    if !adapter.is_powered().await.unwrap_or(false) {
+        return None;
+    }
+    let uuid = bluer::Uuid::from_u128(0x0000fe2c_0000_1000_8000_00805f9b34fb);
+    let adv = bluer::adv::Advertisement {
+        advertisement_type: bluer::adv::Type::Broadcast,
+        service_data: [(uuid, ADVERT_DATA.to_vec())].into(),
+        ..Default::default()
+    };
+    adapter.advertise(adv).await.ok()
 }
 
 fn names(m: &rqs_lib::channel::ChannelMessage) -> (String, String, u64, u64) {
@@ -52,6 +77,7 @@ impl Quick {
             ids: Mutex::new(HashMap::new()),
             current: Mutex::new(None),
             scanning: Mutex::new(false),
+            advert: Mutex::new(None),
         }))
     }
 
@@ -181,8 +207,10 @@ impl Quick {
         let mut rqs = self.rqs.lock().await;
         if !on {
             rqs.stop_discovery();
+            self.advert.lock().await.take();
             return;
         }
+        *self.advert.lock().await = advertise().await;
         let (tx, mut rx) = broadcast::channel::<EndpointInfo>(20);
         if let Err(e) = rqs.discovery(tx) {
             emit(json!({"ev": "error", "dir": "start", "message": format!("Quick Share discovery: {e}")}));
