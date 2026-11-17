@@ -172,18 +172,19 @@ Decision in `SomeShell.md` section 5.
 - [ ] Later pages: Night light, Apps, Sharing, About
 
 ## Touchscreen (user, 2026-11-17)
-Goal: with no mouse connected, everything works by finger: no pointer to drag across the screen. Built and tested on the tablet (`nvtcapacitivetouchscreen`, and the pen `nvtcapacitivepen`); detect touch devices at runtime (`hyprctl devices -j`, `.touch`), never assume one. Today the touch mapping (`touchdevice` output and transform in `hypr/generated/monitors.lua`) was written by hand, and many actions need hover, a right or middle click, or the wheel. Qt turns a tap into a click for a `MouseArea`, but a `HoverHandler` sees nothing.
-- [ ] Decide in `SomeShell.md` first: the gestures (edge swipes, long press, swipes inside the island), how hover-only things are reached by touch, touch target sizes, and the on-screen keyboard (built in the shell or an existing one such as wvkbd/squeekboard; US and Thai)
-- [ ] Detect: a service with `hasTouch`, `hasMouse` (real mice, not the ydotool device; follows plugging in and out) and `touchMode` (the last input was a finger), so touch-only extras show only when they help
-- [ ] Hyprland: the touch screen and pen follow their panel's monitor and rotation from the Displays page (written into `monitors.lua`, not by hand); screen-edge swipes (Hyprland has no touchscreen gestures of its own: a plugin such as hyprgrass, or the shell reading them): from the top opens the island, from the bottom shows the dock, three fingers sideways switch workspaces, three fingers up opens the overview
-- [ ] Island by touch: a tap at rest opens it (hover peek has no touch), a touch-opened island does not close on the hover-leave timer, a tap outside closes it, swipe sideways switches pages (now the wheel), swipe up closes
-- [ ] Long press = right click everywhere a right or middle click does something: `ListRow`, `Tile` (already), `Tap`, `DockApps`, `Tray`, `WidgetFrame`, desktop (already); a press with a finger never needs a second button
-- [ ] Wheel-only places get a swipe or flick: the badge (workspaces), calendar months (page and widget), lists and pages in the island, edit-mode tabs (wallpapers, presets), settings pages (already scroll by touch: check)
-- [ ] Drags by finger: sliders (`BarSlider`, `SetSlider`), Control quick edit (drag, resize handle), edit mode (widgets move and resize, drawer drop), overview (windows, pages, scratchpad), Displays (monitor boxes), power hold, capture picker (box drag, tap a window)
-- [ ] Keyboard-only actions get a button in touch mode: capture picker (whole monitor, cancel), edit mode Undo (already on the strip: check), overview open without Super+Tab
-- [ ] On-screen keyboard (pulled forward from step 8): shows when a text field takes focus and no physical keyboard is connected (search, Wi-Fi password, settings fields, lock screen); US and Thai; never covers the field
-- [ ] Lock screen and SDDM by touch: tap wakes, the keyboard comes up for the password
-- [ ] Settings, Input page: touch screen rows (on/off, monitor it maps to) only with a touch screen
+Goal: with no mouse connected, everything works by finger. Decision in `SomeShell.md` section 5 ("Touch"). Built and tested on the tablet (`NVTCapacitiveTouchScreen`, pen `NVTCapacitivePen`); detect touch devices at runtime (`hyprctl devices -j`, `.touch`), never assume one. Qt turns a tap into a click for a `MouseArea`, but a `HoverHandler` sees nothing.
+- [x] Decide in `SomeShell.md`: pen and touch, edges, the island by touch, long press, drags and scrolling, on-screen keyboard, lock screen (2026-11-17)
+- [ ] Pen vs touch (user: "sometime cursor appear and cannot use touch"): libinput turns touch off while the pen is near (touch arbitration, `ignore-rect` in the Hyprland log, 304 switches in one session); the pen also moves the cursor. Nothing comes from the pen while idle (5 s check). Find what brings it near (a real pen, or the panel reporting one: log both devices while it happens), then fix: Pen on/off for machines without one, touch back as soon as the pen leaves
+- [ ] `services/Touch.qml`: `hasTouch`, the touch monitor, `hasMouse` (real mice, not the ydotool device; follows plugging in and out), `touchMode` (last input was a finger)
+- [ ] The touch mapping is written with the monitors (`Displays`, `generated/monitors.lua` keeps `touchdevice` output and transform; now written by hand and lost when Displays rewrites the file); `gestures.workspace_swipe_touch` for the side edges
+- [ ] Edge strips on the touch monitor: top pull-down opens the island on Control (follows the finger), bottom swipe up shows the dock, a long one opens the overview
+- [ ] Island by touch: tap at rest opens, no hover-leave close, tap outside closes, swipe up closes, swipe sideways switches pages; alert tap and swipe-up dismiss
+- [ ] Long press = right click (500 ms, ink ring): `ListRow`, `Tap`, `DockApps`, `Tray`, `WidgetFrame`, `Chip`; already `Tile` and the desktop. Tap targets at least 40 px
+- [ ] Finger drags scroll lists and pages (mouse drags still do not); swipes for the badge, calendar months (page and widget), edit tabs
+- [ ] Drags by finger work: sliders (`BarSlider`, `SetSlider`), Control quick edit, edit mode (widgets, drawer drop), overview (windows, pages, scratchpad), Displays boxes, power hold, capture picker (box, tap a window) plus its whole-monitor and cancel buttons
+- [ ] On-screen keyboard (pulled forward from step 8): the shell's own, key codes through ydotool (layout decides the letter: US and Thai), opens on a finger-focused shell field, tray button and Control tile for other apps, reserves space at the bottom
+- [ ] Lock screen and SDDM: tap wakes, keys inside the page (other layers do not show while locked)
+- [ ] Settings, Input page: Touch screen section (on/off, monitor, pen on/off) only with a touch screen
 - [ ] Test on the tablet with the mouse unplugged (and the keyboard, for the on-screen keyboard), dark and light. ydotool sends no touch: a virtual touch device (uinput) for scripted tests, else by finger (user)
 
 ## Later steps
