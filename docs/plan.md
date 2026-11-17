@@ -10,6 +10,7 @@ Written new in `hypr/`; v1 stays live (`~/.config/hypr` → `../SomeShell-v1`) u
 - [x] Environment (GPU detection), input (layouts from settings, touchpad, gestures), look (rounded like the island, thin border in the wallpaper color, small gaps, no dim), motion (springs), misc
 - [x] Window, app, game and layer rules
 - [x] Keybinds: the same keys as v1; shell actions as `someshell:` global shortcuts with a fallback while the shell is down; workspaces 1–10 per monitor. Number keys bind by key code only (any layout, one action per press)
+- [x] Resize by keyboard (user, 2026-11-17): Super+Alt+arrows, 40 px a step, repeating; Right/Down grow, Left/Up shrink (a tiled window moves its split). `hl.dsp.window.resize` needs `relative = true`, else `{x, y}` is an exact size. Tested on the tablet with real keys (ydotool), tiled pair and floating
 - [x] Super tap in Hyprland: opens the island only when Super is pressed and released alone within 450 ms; Super press and release still reach apps (Blender)
 - [x] Game mode (effects off while a game is the focused fullscreen window)
 - [x] Autostart (skipped with `SOMESHELL_NO_AUTOSTART=1`), hypridle (lock 10 min, screen off 15 min, sleep 30 min), hyprlock backup lock, `scripts/shell.sh`, `scripts/lock.sh`

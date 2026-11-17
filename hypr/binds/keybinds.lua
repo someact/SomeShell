@@ -119,6 +119,14 @@ for i = 1, 4 do
     hl.bind("SUPER + " .. arrows[i], hl.dsp.focus({ direction = dirs[i] }), { description = "Window: Focus " .. arrows[i]:lower() })
     hl.bind("SUPER + SHIFT + " .. arrows[i], hl.dsp.window.move({ direction = dirs[i] }), { description = "Window: Move " .. arrows[i]:lower() })
 end
+-- Resize by keyboard: Right/Down grow, Left/Up shrink (a tiled window moves its split)
+local RESIZE_STEP = 40
+local resize_by = { { -RESIZE_STEP, 0 }, { RESIZE_STEP, 0 }, { 0, -RESIZE_STEP }, { 0, RESIZE_STEP } }
+local resize_names = { "Narrower", "Wider", "Shorter", "Taller" }
+for i = 1, 4 do
+    hl.bind("SUPER + ALT + " .. arrows[i], hl.dsp.window.resize({ x = resize_by[i][1], y = resize_by[i][2], relative = true }),
+        { repeating = true, description = "Window: " .. resize_names[i] })
+end
 hl.bind("SUPER + BracketLeft", hl.dsp.focus({ direction = "l" }))
 hl.bind("SUPER + BracketRight", hl.dsp.focus({ direction = "r" }))
 
