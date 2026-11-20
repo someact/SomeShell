@@ -49,7 +49,10 @@ Singleton {
     }
 
     // ── Reading ──
-    function refresh() { reader.running = true; }
+    function refresh() {
+        devReader.running = true;
+        reader.running = true;
+    }
 
     // A mode as Hyprland writes it in a rule: 1920x1080@100.00
     function modeOf(m) {
@@ -83,12 +86,15 @@ Singleton {
     }
 
     function fromHyprland(list) {
-        const kept = profiles[list.map(m => m.description).sort().join(" | ")] ?? [];
+        const kept = profiles[list.map(m => m.description || m.name).sort().join(" | ")] ?? [];
         return list.map(m => {
-            const k = kept.find(p => p.desc === m.description) ?? {};
+            const k = kept.find(p => p.desc === (m.description || m.name)) ?? {};
             return {
                 name: m.name,
-                desc: m.description,
+                // A built-in panel can have no description (the tablet's DSI
+                // panel): then the connector name stands in, as id and output
+                desc: m.description || m.name,
+                out: m.description ? "desc:" + m.description : m.name,
                 make: m.make,
                 model: m.model,
                 mm: [m.physicalWidth, m.physicalHeight],
@@ -239,7 +245,7 @@ Singleton {
 
     // ── Applying ──
     function luaRule(m) {
-        const out = "desc:" + m.desc;
+        const out = m.out ?? ("desc:" + m.desc);
         if (!m.on)
             return "hl.monitor({ output = " + JSON.stringify(out) + ", disabled = true })";
         // `disabled = false` is needed: without it a monitor that was off stays off
@@ -263,7 +269,40 @@ Singleton {
         const main = list.find(m => m.main && m.on);
         if (main)
             lines.push("hl.config({ cursor = { default_monitor = " + JSON.stringify(main.name) + " } })");
+        const touch = touchLua(list);
+        if (touch)
+            lines.push(touch);
         return lines.join("\n");
+    }
+    // A touch screen and a pen belong to the built-in panel: they follow its
+    // connector and rotation (else a turned panel takes taps at the wrong
+    // place). Only said when such devices exist.
+    function touchLua(list) {
+        const panel = list.find(m => m.on && /^(eDP|DSI|LVDS)-/.test(m.name));
+        if (!panel || !(hasTouch || hasPen))
+            return "";
+        const map = "{ output = " + JSON.stringify(panel.name) + ", transform = " + panel.transform + " }";
+        const parts = [];
+        if (hasTouch)
+            parts.push("touchdevice = " + map);
+        if (hasPen)
+            parts.push("tablet = " + map);
+        return "hl.config({ input = { " + parts.join(", ") + " } })";
+    }
+    property bool hasTouch: false
+    property bool hasPen: false
+    property string touchSent: ""
+    // Sent whenever the panel or its rotation changes, and once at start
+    function sendTouch() {
+        const t = touchLua(live);
+        if (!t || t === touchSent)
+            return;
+        touchSent = t;
+        Quickshell.execDetached(["hyprctl", "eval", t]);
+        // A layout written before this existed gets the mapping too
+        const g = generated.text();
+        if (g && g.indexOf(t) < 0 && !waiting)
+            writeGenerated(live);
     }
     // A change of ours makes Hyprland drop and add monitors for a moment
     // (undoing a mirror does): those are not a new set of monitors
@@ -339,6 +378,20 @@ Singleton {
     }
 
     // ── Hyprland ──
+    Process {
+        id: devReader
+        command: ["hyprctl", "devices", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const d = JSON.parse(text);
+                    root.hasTouch = (d.touch ?? []).length > 0;
+                    root.hasPen = (d.tablets ?? []).length > 0;
+                } catch (e) {}
+                root.sendTouch();
+            }
+        }
+    }
     property var rawLive: []
     property string lastKey: ""
     Process {
@@ -372,8 +425,10 @@ Singleton {
                         }
                     }
                 }
-                if (!root.waiting)
+                if (!root.waiting) {
                     root.draft = root.live;
+                    root.sendTouch();
+                }
             }
         }
     }
@@ -411,5 +466,10 @@ Singleton {
     FileView {
         id: generated
         path: Paths.hypr + "/generated/monitors.lua"
+        // Read after the first check: check again with the file in hand
+        onLoaded: {
+            root.touchSent = "";
+            root.sendTouch();
+        }
     }
 }

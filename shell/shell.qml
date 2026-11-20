@@ -17,7 +17,8 @@ ShellRoot {
     // Services that must run from the start: the notification server, the
     // night light schedule, the battery alerts and the lock (it locks again
     // after a crash while locked), the Android slot check for the power page, and
-    // keep awake (Always, or a session's, holds its idle block from the start)
+    // keep awake (Always, or a session's, holds its idle block from the start),
+    // and the displays (the touch screen and pen follow the built-in panel)
     Component.onCompleted: {
         KeepAwake.on;
         Notifications.dnd;
@@ -26,6 +27,7 @@ ShellRoot {
         Locker.locked;
         DualBoot.available;
         Auth.registered;
+        Displays.saved;
     }
 
     Variants {
