@@ -11,6 +11,8 @@ import qs.core
 // with Google Lens in the browser), "translate" (Thai <-> English on the
 // island), "color" (copy a pixel's color). `screen()` takes the whole monitor
 // at once, with no picker (PrtSc). `session` is set while picking.
+// `Config.capture.cursor` puts the mouse cursor in screenshots (the freeze
+// always takes both pictures, so the switch works while picking).
 Singleton {
     id: root
 
@@ -79,7 +81,7 @@ Singleton {
         if (!name)
             return;
         worker.kind = "shot";
-        worker.command = [script, "screen", name];
+        worker.command = Config.capture.cursor ? [script, "screen", name, "cursor"] : [script, "screen", name];
         worker.running = true;
     }
     Process {
@@ -96,6 +98,11 @@ Singleton {
                 }
             }
         }
+    }
+
+    // The picker's Cursor switch (C)
+    function toggleCursor() {
+        Config.capture.cursor = !Config.capture.cursor;
     }
 
     function monitor(name) {
@@ -115,7 +122,9 @@ Singleton {
         if (w < 2 || h < 2)
             return cleaner.running = true;
         worker.kind = kind;
-        worker.command = [script, kind, m.file, String(x), String(y), String(w), String(h)];
+        // Only a screenshot takes the picture with the cursor
+        const file = kind === "shot" && Config.capture.cursor && m.cursorFile ? m.cursorFile : m.file;
+        worker.command = [script, kind, file, String(x), String(y), String(w), String(h)];
         worker.running = true;
     }
 

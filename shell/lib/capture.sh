@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Capture tools for the shell's picker (services/Capture.qml).
 #   capture.sh freeze
-#       Takes a picture of every monitor at once and prints one JSON line:
-#       {"dir":…, "monitors":[{name,x,y,w,h,scale,file}], "windows":[{x,y,w,h,title,monitor}]}
+#       Takes a picture of every monitor at once, with and without the cursor,
+#       and prints one JSON line:
+#       {"dir":…, "monitors":[{name,x,y,w,h,scale,file,cursorFile}], "windows":[{x,y,w,h,title,monitor}]}
 #       Geometry is in layout (logical) pixels; the pictures are full size.
 #   capture.sh shot <picture> <x> <y> <w> <h>
 #       Cuts the box (picture pixels), saves it to ~/Pictures/Screenshots,
 #       copies it and prints the saved path.
-#   capture.sh screen <monitor>
+#   capture.sh screen <monitor> [cursor]
 #       Takes the whole monitor (PrtSc), saves, copies and prints the path.
+#   Saved shots are listed in ~/.local/state/someshell/shots.tsv (sha1 of the
+#   file, tab, path), so the clipboard page can find a copied shot's file.
 #   capture.sh text <picture> <x> <y> <w> <h>
 #       Reads the text in the box (English and Thai), copies it and prints it.
 #   capture.sh translate <picture> <x> <y> <w> <h>
@@ -23,6 +26,46 @@
 #       Deletes the frozen pictures.
 set -u
 dir=${XDG_RUNTIME_DIR:-/tmp}/someshell-capture
+shots=${XDG_STATE_HOME:-$HOME/.local/state}/someshell/shots.tsv
+
+# Run a command with a software cursor. With hardware cursors (NVIDIA) grim -c
+# only gets the cursor for a moment after the mouse moved; a software cursor
+# is drawn into every frame. The setting goes back to what it was.
+with_cursor() {
+    local before
+    before=$(hyprctl -j getoption cursor:no_hardware_cursors 2>/dev/null | jq -r '.int // empty')
+    if [ -n "$before" ] && [ "$before" != 1 ]; then
+        hyprctl eval 'hl.config({ cursor = { no_hardware_cursors = 1 } })' >/dev/null
+        sleep 0.1
+        "$@"
+        local status=$?
+        hyprctl eval "hl.config({ cursor = { no_hardware_cursors = $before } })" >/dev/null
+        return $status
+    fi
+    "$@"
+}
+
+# Every monitor at once, with and without the cursor
+freeze_all() {
+    local name
+    for name in "$@"; do
+        grim -t ppm -o "$name" "$dir/$name.ppm" &
+        grim -t ppm -c -o "$name" "$dir/$name.cursor.ppm" &
+    done
+    wait
+}
+
+# Remember a saved shot by the hash of its bytes (what the clipboard holds);
+# the list keeps the last 500
+record_shot() {
+    local sum
+    sum=$(sha1sum < "$1" | cut -d' ' -f1)
+    mkdir -p "${shots%/*}"
+    printf '%s\t%s\n' "$sum" "$1" >> "$shots"
+    if (( $(wc -l < "$shots") > 600 )); then
+        tail -n 500 "$shots" > "$shots.tmp" && mv "$shots.tmp" "$shots"
+    fi
+}
 
 # The text in a box of a picture (English and Thai), on stdout
 read_text() {
@@ -70,10 +113,9 @@ freeze)
     mkdir -p "$dir"
     monitors=$(hyprctl monitors -j)
     # All at once, so every monitor shows the same moment; PPM skips compression
-    for name in $(jq -r '.[].name' <<<"$monitors"); do
-        grim -t ppm -o "$name" "$dir/$name.ppm" &
-    done
-    wait
+    # (a second picture with the cursor, for the picker's Cursor switch)
+    # shellcheck disable=SC2046
+    with_cursor freeze_all $(jq -r '.[].name' <<<"$monitors")
     # Windows on the shown workspaces (normal and special), as boxes to pick
     hyprctl clients -j | jq -c --arg dir "$dir" --argjson mons "$monitors" '
         ([$mons[] | .activeWorkspace.id, .specialWorkspace.id] | map(select(. != 0))) as $shown
@@ -84,7 +126,8 @@ freeze)
                 x, y,
                 w: ((if .transform % 2 == 1 then .height else .width end) / .scale),
                 h: ((if .transform % 2 == 1 then .width else .height end) / .scale),
-                file: ($dir + "/" + .name + ".ppm")
+                file: ($dir + "/" + .name + ".ppm"),
+                cursorFile: ($dir + "/" + .name + ".cursor.ppm")
             }],
             windows: [.[] | select(.mapped and (.hidden | not) and (.workspace.id as $w | $shown | index($w)))
                 | {x: .at[0], y: .at[1], w: .size[0], h: .size[1], title, monitor: (.monitor as $m | [$mons[] | select(.id == $m) | .name][0]), focus: .focusHistoryID}]
@@ -98,14 +141,20 @@ shot)
     out="$out_dir/Screenshot_$(LC_ALL=C date '+%Y-%m-%d_%H.%M.%S').png"
     magick "$src" -crop "${w}x${h}+${x}+${y}" +repage "$out" || exit 1
     wl-copy --type image/png < "$out"
+    record_shot "$out"
     printf '%s\n' "$out"
     ;;
 screen)
     out_dir="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots"
     mkdir -p "$out_dir"
     out="$out_dir/Screenshot_$(LC_ALL=C date '+%Y-%m-%d_%H.%M.%S').png"
-    grim -o "$2" "$out" || exit 1
+    if [ "${3:-}" = cursor ]; then
+        with_cursor grim -c -o "$2" "$out" || exit 1
+    else
+        grim -o "$2" "$out" || exit 1
+    fi
     wl-copy --type image/png < "$out"
+    record_shot "$out"
     printf '%s\n' "$out"
     ;;
 text)
@@ -148,7 +197,7 @@ clean)
     rm -rf "$dir"
     ;;
 *)
-    echo "usage: capture.sh freeze | shot|text|translate|lens <picture> <x> <y> <w> <h> | color <picture> <x> <y> | screen <monitor> | clean" >&2
+    echo "usage: capture.sh freeze | shot|text|translate|lens <picture> <x> <y> <w> <h> | color <picture> <x> <y> | screen <monitor> [cursor] | clean" >&2
     exit 2
     ;;
 esac

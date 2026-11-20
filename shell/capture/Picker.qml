@@ -10,7 +10,7 @@ import qs.services
 // chosen box. Hover lights a window, a click takes it, a drag draws a box,
 // Enter takes the whole monitor, Esc or a right click cancels. The bar at the
 // bottom switches the mode (Screenshot, Text, Lens, Translate, Color; also
-// Tab, Shift+Tab, 1-5). Color: a magnifier follows the pointer, a click takes
+// Tab, Shift+Tab, 1-5) and the Cursor switch (C). Color: a magnifier follows the pointer, a click takes
 // the pixel.
 PanelWindow {
     id: win
@@ -21,6 +21,7 @@ PanelWindow {
     readonly property string mode: Capture.session?.mode ?? "shot"
     readonly property var modeInfo: Capture.modes.find(m => m.id === mode) ?? Capture.modes[0]
     readonly property bool colorMode: mode === "color"
+    readonly property bool withCursor: mode === "shot" && Config.capture.cursor
     // Where the pointer is (for the magnifier); -1 when it is not here
     property point pointer: Qt.point(-1, -1)
 
@@ -64,7 +65,8 @@ PanelWindow {
 
     Image {
         anchors.fill: parent
-        source: win.mon ? "file://" + win.mon.file : ""
+        // Screenshot with the Cursor switch on: the picture with the cursor
+        source: !win.mon ? "" : "file://" + (win.withCursor && win.mon.cursorFile ? win.mon.cursorFile : win.mon.file)
         fillMode: Image.Stretch
         smooth: true
         mipmap: true
@@ -234,6 +236,21 @@ PanelWindow {
                     onClicked: Capture.setMode(modelData.id)
                 }
             }
+            Rectangle {
+                width: 1
+                height: 22
+                anchors.verticalCenter: parent.verticalCenter
+                color: Theme.ink.fg
+                opacity: 0.25
+            }
+            // Mouse cursor in the screenshot (only Screenshot uses it)
+            Chip {
+                icon: "arrow_selector_tool"
+                label: "C  Cursor"
+                active: Config.capture.cursor
+                opacity: win.mode === "shot" ? 1 : 0.4
+                onClicked: Capture.toggleCursor()
+            }
         }
     }
 
@@ -250,6 +267,8 @@ PanelWindow {
                 Capture.stepMode(-1);
             else if (event.key >= Qt.Key_1 && event.key <= Qt.Key_5)
                 Capture.setMode(Capture.modes[event.key - Qt.Key_1].id);
+            else if (event.key === Qt.Key_C)
+                Capture.toggleCursor();
             else
                 return;
             event.accepted = true;

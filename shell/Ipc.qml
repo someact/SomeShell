@@ -262,7 +262,9 @@ Scope {
         function cancel(): void { Capture.cancel(); }
         // Take a box (layout pixels on that monitor) without the mouse
         function box(monitor: string, x: int, y: int, w: int, h: int): void { Capture.finish(monitor, { x: x, y: y, w: w, h: h }); }
-        function state(): string { return JSON.stringify({ picking: Capture.picking, mode: Capture.session?.mode ?? null, monitors: (Capture.session?.monitors ?? []).map(m => m.name), windows: (Capture.session?.windows ?? []).length }); }
+        // The mouse cursor in screenshots: on, off or toggle
+        function cursor(value: string): void { if (value === "toggle" || !value) Capture.toggleCursor(); else Config.capture.cursor = value === "on"; }
+        function state(): string { return JSON.stringify({ picking: Capture.picking, mode: Capture.session?.mode ?? null, cursor: Config.capture.cursor, monitors: (Capture.session?.monitors ?? []).map(m => m.name), windows: (Capture.session?.windows ?? []).length }); }
     }
 
     IpcHandler {

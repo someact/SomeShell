@@ -17,6 +17,7 @@ Singleton {
     property alias share: adapter.share
     property alias lock: adapter.lock
     property alias idle: adapter.idle
+    property alias capture: adapter.capture
     readonly property bool loaded: file.loaded
 
     FileView {
@@ -61,6 +62,12 @@ Singleton {
                 property int lock: 10
                 property int screenOff: 15
                 property int sleep: 30
+            }
+
+            property JsonObject capture: JsonObject {
+                // Screenshots include the mouse cursor (the picker's Cursor
+                // switch, C; PrtSc follows it too)
+                property bool cursor: false
             }
 
             property JsonObject theme: JsonObject {

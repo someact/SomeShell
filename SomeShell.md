@@ -144,6 +144,7 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   > Decision (user, 2026-11-02): the clipboard history is its own island page, not `/clip` in search. It has no tab and no number (the header shows `Super+V`); only Super+V opens it, Super+V again closes it, Tab or a tab click goes back to the tab row.
   > - A filter field (text only; images show while it is empty), the history newest first (scrolls, up to 200), and the chosen entry in full beside it: the whole text (read with `cliphist decode`) or the picture. Images list their size.
   > - Enter or a click copies it back and closes; Delete or a right click removes it from the history.
+  > [!check] Decided (user, 2026-11-20): **a screenshot in the history knows its file.** The capture tools list each saved shot by the hash of its bytes (`~/.local/state/someshell/shots.tsv`); a clipboard image with the same bytes shows the file name under its picture and **Open**, **Folder** (show in folder), **Path** (copy the path), also Ctrl+O / Ctrl+F / Ctrl+P. A moved or deleted file shows nothing; shots from before this have no file.
 
 **Control panel** (like Android and iOS)
 - A snap grid with block sizes **1×1, 2×1, 1×2, 2×2**. Long-press or the pencil enters edit mode: blocks wiggle, drag to move, pull a corner to resize, remove or add from a drawer. The same editor arranges the island and the desktop (section 4).
@@ -171,6 +172,7 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   > - **Lens:** the box is uploaded to Google Lens and the result opens in the browser (the picture goes to Google).
   > - **Translate:** Tesseract reads the box, Google Translate's free web endpoint translates it (Thai ↔ English: to English when the text is Thai, else to Thai); the island shows the original and the translation and copies the translation. Nothing opens.
   > - **Color:** the picker shows a loupe at the pointer; a click copies the pixel's hex color and the island shows a swatch with it.
+  > [!check] Decided (user, 2026-11-20): **mouse cursor on or off.** A **Cursor** switch at the end of the mode bar (C key), off by default, kept in `shell.json` (`capture.cursor`); PrtSc follows it too. The freeze takes every monitor with and without the cursor, so the switch works while picking; the picker then shows the picture with the cursor (only Screenshot uses it). With hardware cursors (NVIDIA) `grim -c` gets the cursor only right after the mouse moved, so the capture switches Hyprland to a software cursor for that moment and back.
 
 **Media**
 - A browser extension (Zen/Firefox, later Chrome) sends the page info to the shell: site, title, full-size cover, and whether it's music.

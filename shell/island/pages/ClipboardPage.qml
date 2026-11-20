@@ -7,7 +7,8 @@ import qs.services
 // Clipboard (Super+V). A page of its own with no tab: only the shortcut
 // opens it. Type to filter, arrows choose, Enter copies the entry back and
 // closes, Delete drops it from the history. The chosen entry shows in full
-// beside the list (text, or the picture).
+// beside the list (text, or the picture). A saved screenshot also shows its
+// file with Open, Folder and Path (Ctrl+O, Ctrl+F, Ctrl+P).
 Item {
     id: root
 
@@ -48,6 +49,17 @@ Item {
             return;
         Clipboard.remove(e);
         sel = Math.max(0, Math.min(i, results.length - 1));
+    }
+
+    // The chosen screenshot's file: open it, show it in its folder, copy its path
+    function fileAction(what) {
+        const e = chosen;
+        if (!e?.file)
+            return;
+        if (what === "open") Clipboard.openFile(e);
+        else if (what === "folder") Clipboard.showFile(e);
+        else Clipboard.copyPath(e);
+        Ui.close();
     }
 
     onChosenChanged: Clipboard.readFull(chosen)
@@ -106,6 +118,9 @@ Item {
                     else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) root.activate(root.sel);
                     // Delete removes the entry once the filter is empty or the cursor is at its end
                     else if (event.key === Qt.Key_Delete && input.cursorPosition === input.text.length) root.removeAt(root.sel);
+                    else if ((event.modifiers & Qt.ControlModifier) && root.chosen?.file && event.key === Qt.Key_O) root.fileAction("open");
+                    else if ((event.modifiers & Qt.ControlModifier) && root.chosen?.file && event.key === Qt.Key_F) root.fileAction("folder");
+                    else if ((event.modifiers & Qt.ControlModifier) && root.chosen?.file && event.key === Qt.Key_P) root.fileAction("path");
                     else return;
                     event.accepted = true;
                 }
@@ -178,7 +193,7 @@ Item {
                         Image {
                             anchors.fill: parent
                             visible: !!row.modelData.image
-                            source: row.modelData.image ? "file://" + row.modelData.image : ""
+                            source: row.modelData.image ? "file://" + row.modelData.image + "?" + Clipboard.decoded : ""
                             sourceSize: Qt.size(72, 72)
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
@@ -223,8 +238,9 @@ Item {
                 Image {
                     anchors.fill: parent
                     anchors.margins: 10
+                    anchors.bottomMargin: fileBar.visible ? fileBar.height + 20 : 10
                     visible: !!root.chosen?.image
-                    source: root.chosen?.image ? "file://" + root.chosen.image : ""
+                    source: root.chosen?.image ? "file://" + root.chosen.image + "?" + Clipboard.decoded : ""
                     sourceSize: Qt.size(root.previewWidth * 2, 800)
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
@@ -241,6 +257,43 @@ Item {
                     elide: Text.ElideRight
                     textFormat: Text.PlainText
                 }
+                // A saved screenshot: its file name and what to do with it
+                Column {
+                    id: fileBar
+                    visible: !!root.chosen?.file
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 12
+                    spacing: 8
+                    Txt {
+                        width: parent.width
+                        text: (root.chosen?.file ?? "").replace(/^.*\//, "")
+                        size: Theme.font.small
+                        color: Theme.ink.mute
+                        elide: Text.ElideMiddle
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 6
+                        Chip {
+                            icon: "open_in_new"
+                            label: "Open"
+                            onClicked: root.fileAction("open")
+                        }
+                        Chip {
+                            icon: "folder_open"
+                            label: "Folder"
+                            onClicked: root.fileAction("folder")
+                        }
+                        Chip {
+                            icon: "content_copy"
+                            label: "Path"
+                            onClicked: root.fileAction("path")
+                        }
+                    }
+                }
                 Icon {
                     anchors.centerIn: parent
                     visible: !root.chosen
@@ -255,7 +308,7 @@ Item {
         Row {
             spacing: 20
             Repeater {
-                model: ["↑ ↓ choose", "Enter copies", "Del removes", "Esc close"]
+                model: root.chosen?.file ? ["↑ ↓ choose", "Enter copies", "Ctrl+O · F · P file", "Esc close"] : ["↑ ↓ choose", "Enter copies", "Del removes", "Esc close"]
                 Txt {
                     required property string modelData
                     text: modelData
