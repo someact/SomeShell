@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import qs.core
 
 // Screen brightness, 0-100. A laptop panel through brightnessctl (backlight),
 // desktop monitors through DDC (ddcutil). DDC is slow, so changes are queued
@@ -116,21 +117,37 @@ Singleton {
         }
     }
 
-    // Find screens at start
+    // The screens found last time, shown at once while the finder runs
+    // (DDC answers in ~2 s, but much slower while monitors wake up)
+    FileView {
+        id: known
+        path: Paths.cache + "/brightness.json"
+        onLoaded: {
+            try {
+                const list = JSON.parse(text());
+                if (Array.isArray(list) && root.screens.length === 0 && finder.running)
+                    root.screens = list;
+            } catch (e) {}
+        }
+    }
+
+    // Find screens at start. Each DDC monitor is read at the same time.
     Process {
         id: finder
         running: true
         command: ["sh", "-c",
             "if ls /sys/class/backlight/* >/dev/null 2>&1; then echo \"backlight|Display|$(brightnessctl -m | cut -d, -f4 | tr -d %)\"; fi; "
             + "command -v ddcutil >/dev/null || exit 0; "
-            + "ddcutil detect --brief 2>/dev/null | awk '/I2C bus:/{split($3,a,\"-\"); bus=a[2]} /DRM connector:/{sub(/^card[0-9]+-/,\"\",$3); con=$3} /Monitor:/{print bus\"|\"con}' | while IFS='|' read -r bus con; do "
-            + "v=$(ddcutil --bus $bus getvcp 10 --brief 2>/dev/null | awk '{print $4}'); [ -n \"$v\" ] && echo \"ddc|$con|$v|$bus\"; done"]
+            + "ddcutil detect --brief 2>/dev/null | awk '/I2C bus:/{split($3,a,\"-\"); bus=a[2]} /DRM connector:/{sub(/^card[0-9]+-/,\"\",$3); con=$3} /Monitor:/{print bus\"|\"con}' | { while IFS='|' read -r bus con; do "
+            + "{ v=$(ddcutil --bus $bus getvcp 10 --brief 2>/dev/null | awk '{print $4}'); [ -n \"$v\" ] && echo \"ddc|$con|$v|$bus\"; } & done; wait; }"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.screens = text.split("\n").filter(Boolean).map(l => {
                     const f = l.split("|");
                     return { kind: f[0], name: f[1], value: parseInt(f[2]) || 50, bus: f[3] ?? "" };
                 });
+                if (root.screens.length)
+                    known.setText(JSON.stringify(root.screens) + "\n");
             }
         }
     }
