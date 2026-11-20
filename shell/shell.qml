@@ -51,6 +51,16 @@ ShellRoot {
         }
     }
 
+    // Touch screen edges, only while a touch screen exists, on its monitor
+    // (every monitor when it maps to none in particular)
+    LazyLoader {
+        active: Touch.hasTouch
+        Variants {
+            model: Quickshell.screens.filter(s => !Touch.monitor || s.name === Touch.monitor)
+            TouchEdges {}
+        }
+    }
+
     // Edit mode, only while editing
     LazyLoader {
         active: Ui.editing

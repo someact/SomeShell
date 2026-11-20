@@ -40,10 +40,11 @@ PanelWindow {
         Region { item: island.hitArea }
     }
 
-    // A click outside the open island closes it
+    // A click outside the open island closes it (not while a finger pulls
+    // it down from the edge: that finger is on the edge's window)
     HyprlandFocusGrab {
         windows: [win]
-        active: win.islandHere && Ui.open
+        active: win.islandHere && Ui.open && Ui.pull < 0
         onCleared: Ui.close()
     }
 

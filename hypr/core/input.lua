@@ -27,6 +27,8 @@ hl.config({
         workspace_swipe_min_speed_to_force = 5,
         workspace_swipe_direction_lock = true,
         workspace_swipe_create_new = true,
+        -- A finger from the left or right edge of a touch screen (no effect without one)
+        workspace_swipe_touch = true,
     },
 })
 

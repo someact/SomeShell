@@ -18,8 +18,30 @@ PanelWindow {
     readonly property bool autoHide: Desktop.dock.autoHide
     readonly property bool empty: (workspace?.toplevels?.values.length ?? 1) === 0
     readonly property bool shown: !(workspace?.hasFullscreen ?? false)
-        && (!autoHide || empty || hovering)
+        && (!autoHide || empty || hovering || touched)
     property bool hovering: false
+    // Shown by a swipe up from the bottom edge (top/TouchEdges.qml): stays a
+    // few seconds, longer while it is used
+    property bool touched: false
+    Connections {
+        target: Ui
+        function onDockReveal(monitorName, byTouch) {
+            if (monitorName !== win.monitor?.name)
+                return;
+            if (byTouch) {
+                win.touched = true;
+                touchTimer.restart();
+            } else {
+                win.hovering = true;
+                leave.restart();
+            }
+        }
+    }
+    Timer {
+        id: touchTimer
+        interval: 4000
+        onTriggered: win.touched = false
+    }
 
     screen: modelData
     anchors.bottom: true
@@ -80,6 +102,11 @@ PanelWindow {
         DockApps {
             id: apps
             anchors.centerIn: parent
+        }
+        // A finger on the bar keeps a touch-shown dock up a while longer
+        PointHandler {
+            acceptedDevices: PointerDevice.TouchScreen
+            onActiveChanged: if (win.touched) touchTimer.restart()
         }
     }
 

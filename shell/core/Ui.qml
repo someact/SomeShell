@@ -151,11 +151,11 @@ Singleton {
 
     property bool overview: false
     property string overviewMonitor: ""
-    function openOverview() {
+    function openOverview(monitorName) {
         if (editing)
             return;
         close();
-        overviewMonitor = followed || monitor;
+        overviewMonitor = monitorName || followed || monitor;
         overview = true;
     }
     function closeOverview() {
@@ -219,6 +219,31 @@ Singleton {
         hidden = false;
         open = true;
     }
+    // Touch (top/TouchEdges.qml): a finger pulling the island down from the
+    // top edge. `pull` is how far (px; -1 when no finger pulls): the open
+    // island is cut to it and springs after it. `pullFull` is the open
+    // island's whole height (Island writes it), to decide on release.
+    property real pull: -1
+    property real pullFull: 0
+    // Pulled from the top edge of `monitorName`: opens Control there
+    function pullStart(monitorName) {
+        if (editing || overview)
+            return;
+        if (monitorName)
+            monitor = monitorName;
+        pull = 0;
+        openPage("control", false);
+    }
+    function pullEnd() {
+        const keep = pull >= Math.max(40, pullFull / 3);
+        pull = -1;
+        if (!keep)
+            close();
+    }
+    // A swipe up from the bottom edge, or the mouse on it: the dock of that
+    // monitor shows (Dock.qml); by touch it stays a few seconds
+    signal dockReveal(string monitorName, bool byTouch)
+
     function close() {
         kbItem = null;
         open = false;

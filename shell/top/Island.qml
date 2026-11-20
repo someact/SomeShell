@@ -50,7 +50,18 @@ Item {
     readonly property alias hitArea: hit
 
     width: content.item ? content.item.implicitWidth : 0
-    height: mode === "none" ? 0 : content.item ? content.item.implicitHeight : 0
+    // The open island's whole height; while a finger pulls it down from the
+    // top edge (Ui.pull) it is cut to the finger, never shorter than at rest
+    readonly property real full: content.item ? content.item.implicitHeight : 0
+    height: mode === "none" ? 0
+        : mode === "open" && Ui.pull >= 0 && !docked ? Math.max(restHeight, Math.min(full, Ui.pull))
+        : full
+    Binding {
+        target: Ui
+        property: "pullFull"
+        value: root.full
+        when: root.here && root.mode === "open"
+    }
     y: docked ? bottomLine - height : floating && mode !== "quiet" ? Theme.shape.floatGap : 0
     visible: mode !== "none"
 
