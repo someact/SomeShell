@@ -108,6 +108,85 @@ Item {
                 duration: Motion.fast
             }
         }
+
+        // Finger swipes on the open island and on an alert (SomeShell.md
+        // section 5): sideways switches pages, up closes (Dock style: down,
+        // the way it came). Above the content but only watching: a tap still
+        // reaches the buttons below, and a slider (preventStealing) keeps its
+        // drag. A swipe that starts on a list that scrolls only goes sideways.
+        Item {
+            id: swipe
+            anchors.fill: parent
+            z: 10
+            enabled: (root.mode === "open" && !Ui.controlEdit) || root.mode === "alert"
+
+            property real dx: 0
+            property real dy: 0
+            // The items under a point, outermost first
+            function chainAt(x, y) {
+                const out = [];
+                let it = content.item;
+                let p = swipe.mapToItem(it, x, y);
+                while (it) {
+                    out.push(it);
+                    const c = it.childAt(p.x, p.y);
+                    if (!c)
+                        break;
+                    p = it.mapToItem(c, p.x, p.y);
+                    it = c;
+                }
+                return out;
+            }
+            PointHandler {
+                acceptedDevices: PointerDevice.TouchScreen
+                onActiveChanged: {
+                    if (!active)
+                        return;
+                    swipe.dx = 0;
+                    swipe.dy = 0;
+                    let fixed = false, scrollsY = false, scrollsX = false;
+                    for (const it of swipe.chainAt(point.position.x, point.position.y)) {
+                        if (it.preventStealing === true)
+                            fixed = true;
+                        if (it.contentHeight !== undefined && it.flickableDirection !== undefined) {
+                            if (it.contentHeight > it.height + 1)
+                                scrollsY = true;
+                            if (it.contentWidth > it.width + 1)
+                                scrollsX = true;
+                        }
+                    }
+                    drag.xAxis.enabled = !fixed && !scrollsX && root.mode === "open";
+                    drag.yAxis.enabled = !fixed && !scrollsY;
+                }
+            }
+            DragHandler {
+                id: drag
+                target: null
+                acceptedDevices: PointerDevice.TouchScreen
+                onTranslationChanged: {
+                    if (active) {
+                        swipe.dx = translation.x;
+                        swipe.dy = translation.y;
+                    }
+                }
+                onActiveChanged: {
+                    if (active)
+                        return;
+                    // translation reads 0 again by now: the kept values
+                    const dx = swipe.dx, dy = swipe.dy;
+                    const away = root.docked ? dy : -dy;
+                    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) >= 60 && root.mode === "open")
+                        Ui.nextPage(dx < 0 ? 1 : -1);
+                    // An alert is short: a shorter swipe dismisses it
+                    else if (Math.abs(dy) >= Math.abs(dx) && away >= (root.mode === "open" ? 60 : 30)) {
+                        if (root.mode === "open")
+                            Ui.close();
+                        else
+                            Ui.alert = null;
+                    }
+                }
+            }
+        }
     }
 
     // Ears: the tab curves into the screen edge on both sides
