@@ -49,10 +49,7 @@ Singleton {
     }
 
     // ── Reading ──
-    function refresh() {
-        devReader.running = true;
-        reader.running = true;
-    }
+    function refresh() { reader.running = true; }
 
     // A mode as Hyprland writes it in a rule: 1920x1080@100.00
     function modeOf(m) {
@@ -278,7 +275,7 @@ Singleton {
     // connector and rotation (else a turned panel takes taps at the wrong
     // place). Only said when such devices exist.
     function touchLua(list) {
-        const panel = list.find(m => m.on && /^(eDP|DSI|LVDS)-/.test(m.name));
+        const panel = list.find(m => m.on && builtIn(m.name));
         if (!panel || !(hasTouch || hasPen))
             return "";
         const map = "{ output = " + JSON.stringify(panel.name) + ", transform = " + panel.transform + " }";
@@ -289,8 +286,13 @@ Singleton {
             parts.push("tablet = " + map);
         return "hl.config({ input = { " + parts.join(", ") + " } })";
     }
-    property bool hasTouch: false
-    property bool hasPen: false
+    // The built-in panel (laptop, tablet), on: "" without one
+    function builtIn(name) { return /^(eDP|DSI|LVDS)-/.test(name); }
+    readonly property string panel: live.find(m => m.on && builtIn(m.name))?.name ?? ""
+    readonly property bool hasTouch: Touch.hasTouch
+    readonly property bool hasPen: Touch.hasPen
+    onHasTouchChanged: sendTouch()
+    onHasPenChanged: sendTouch()
     property string touchSent: ""
     // Sent whenever the panel or its rotation changes, and once at start
     function sendTouch() {
@@ -378,20 +380,6 @@ Singleton {
     }
 
     // ── Hyprland ──
-    Process {
-        id: devReader
-        command: ["hyprctl", "devices", "-j"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const d = JSON.parse(text);
-                    root.hasTouch = (d.touch ?? []).length > 0;
-                    root.hasPen = (d.tablets ?? []).length > 0;
-                } catch (e) {}
-                root.sendTouch();
-            }
-        }
-    }
     property var rawLive: []
     property string lastKey: ""
     Process {

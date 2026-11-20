@@ -368,4 +368,16 @@ Scope {
         }
         function cancel(): void { Auth.cancel(); }
     }
+
+    IpcHandler {
+        target: "touch"
+
+        // Touch screens, the touch monitor, and what was used last
+        function state(): string {
+            return JSON.stringify({ hasTouch: Touch.hasTouch, monitor: Touch.monitor, hasPen: Touch.hasPen,
+                hasMouse: Touch.hasMouse, touchMode: Touch.touchMode, last: Touch.last, access: Touch.access,
+                touchScreens: Touch.touchScreens, pens: Touch.pens,
+                pointers: Touch.pointers.map(p => p.name + (Touch.used[p.id] ? " (used)" : "")), keyboards: Touch.keyboards });
+        }
+    }
 }
