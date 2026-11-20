@@ -160,7 +160,6 @@ Item {
                     radius: 14
                     highlighted: index === root.sel
                     onClicked: root.activate(index)
-                    holdIsRight: false  // a resting finger must not delete
                     onRightClicked: root.removeAt(index)
                     onHoveredChanged: if (hovered) root.sel = index
 
