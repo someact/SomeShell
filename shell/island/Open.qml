@@ -164,8 +164,18 @@ FocusScope {
                 // Its centre must lie that way
                 if ((bcx - acx) * dx + (bcy - acy) * dy <= 2)
                     continue;
-                // The gap along the way, and how far off to the side
-                const gap = dx > 0 ? b.x - (a.x + a.width) : dx < 0 ? a.x - (b.x + b.width)
+                // The gap along the way, and how far off to the side. An item
+                // that holds the marked one (a row around its own buttons)
+                // counts from its far edge, so the buttons between come first
+                const holds = b.x <= a.x && b.y <= a.y && b.x + b.width >= a.x + a.width && b.y + b.height >= a.y + a.height;
+                const inside = a.x <= b.x && a.y <= b.y && a.x + a.width >= b.x + b.width && a.y + a.height >= b.y + b.height;
+                const gap = holds
+                    ? (dx > 0 ? b.x + b.width - (a.x + a.width) : dx < 0 ? a.x - b.x
+                        : dy > 0 ? b.y + b.height - (a.y + a.height) : a.y - b.y)
+                    : inside
+                    ? (dx > 0 ? b.x - a.x : dx < 0 ? a.x + a.width - (b.x + b.width)
+                        : dy > 0 ? b.y - a.y : a.y + a.height - (b.y + b.height))
+                    : dx > 0 ? b.x - (a.x + a.width) : dx < 0 ? a.x - (b.x + b.width)
                     : dy > 0 ? b.y - (a.y + a.height) : a.y - (b.y + b.height);
                 const side = dx !== 0
                     ? Math.max(0, Math.max(a.y, b.y) - Math.min(a.y + a.height, b.y + b.height))
