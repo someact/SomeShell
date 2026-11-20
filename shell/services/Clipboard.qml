@@ -42,6 +42,14 @@ Singleton {
         id: removal
     }
 
+    // Empty the whole history (and the cached pictures)
+    function clear() {
+        entries = [];
+        files = {};
+        removal.command = ["sh", "-c", "cliphist wipe; rm -rf \"$1\"", "sh", Paths.cache + "/clipboard"];
+        removal.running = true;
+    }
+
     // The whole text of one entry (the list only has its start), for a preview
     property string fullId: ""
     property string fullText: ""

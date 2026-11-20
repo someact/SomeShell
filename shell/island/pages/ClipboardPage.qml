@@ -8,7 +8,8 @@ import qs.services
 // opens it. Type to filter, arrows choose, Enter copies the entry back and
 // closes, Delete drops it from the history. The chosen entry shows in full
 // beside the list (text, or the picture). A saved screenshot also shows its
-// file with Open, Folder and Path (Ctrl+O, Ctrl+F, Ctrl+P).
+// file with Open, Folder and Path (Ctrl+O, Ctrl+F, Ctrl+P). Clear (or
+// Ctrl+Shift+Delete) empties the history after a second press.
 Item {
     id: root
 
@@ -62,6 +63,23 @@ Item {
         Ui.close();
     }
 
+    // Clear asks once: the first press arms it for a few seconds
+    property bool clearArmed: false
+    function clearAll() {
+        if (!clearArmed) {
+            clearArmed = true;
+            disarm.restart();
+            return;
+        }
+        clearArmed = false;
+        Clipboard.clear();
+    }
+    Timer {
+        id: disarm
+        interval: 3000
+        onTriggered: root.clearArmed = false
+    }
+
     onChosenChanged: Clipboard.readFull(chosen)
     onSelChanged: list.positionViewAtIndex(sel, ListView.Contain)
 
@@ -94,7 +112,7 @@ Item {
             }
             TextInput {
                 id: input
-                width: parent.width - glass.width - count.width - 28
+                width: parent.width - glass.width - count.width - clearBtn.width - 42
                 anchors.verticalCenter: parent.verticalCenter
                 color: Theme.ink.fg
                 selectionColor: Theme.ink.accent
@@ -117,6 +135,7 @@ Item {
                     else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier)) root.removeAt(root.sel);
                     else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) root.activate(root.sel);
                     // Delete removes the entry once the filter is empty or the cursor is at its end
+                    else if (event.key === Qt.Key_Delete && (event.modifiers & Qt.ControlModifier) && (event.modifiers & Qt.ShiftModifier)) root.clearAll();
                     else if (event.key === Qt.Key_Delete && input.cursorPosition === input.text.length) root.removeAt(root.sel);
                     else if ((event.modifiers & Qt.ControlModifier) && root.chosen?.file && event.key === Qt.Key_O) root.fileAction("open");
                     else if ((event.modifiers & Qt.ControlModifier) && root.chosen?.file && event.key === Qt.Key_F) root.fileAction("folder");
@@ -140,6 +159,16 @@ Item {
                 text: Clipboard.loading && !Clipboard.entries.length ? "" : root.results.length + (root.results.length === 1 ? " item" : " items")
                 caps: true
                 color: Theme.ink.mute
+            }
+            Chip {
+                id: clearBtn
+                anchors.verticalCenter: parent.verticalCenter
+                icon: "delete_sweep"
+                label: root.clearArmed ? "Clear all?" : "Clear"
+                active: root.clearArmed
+                enabled: Clipboard.entries.length > 0
+                opacity: enabled ? 1 : 0.4
+                onClicked: root.clearAll()
             }
         }
 

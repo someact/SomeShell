@@ -69,7 +69,7 @@ Design mockup, **approved** 2026-11-02 (round 2): https://claude.ai/artifact/6Lr
 > - **Page switch (user, 2026-11-02): slide + wipe.** The old page fades out fast (~90 ms); the new page slides in 24 px from the side you moved toward (Tab or a tab to the right: from the right; Shift+Tab or a tab to the left: from the left) while it is wiped in top to bottom (~240 ms, ease-out). The tab underline slides to the new tab. The size spring settles without a visible bounce.
 > - Island shape (tab with ears, plain tab, floating) and island color (always ink, or opposite of the desktop) both become options in Edit desktop. Default: tab with ears, always ink.
 > - The mockup is a design reference, not code to copy. Its layouts break (overlap, content outside the island) because every page was drawn at a fixed size and the island was resized around it afterwards.
-> - **Mouse wheel switches pages** (user, 2026-11-03): over the tab row, or over a page that has nothing to scroll; a page that scrolls (search results, clipboard, lyrics) keeps the wheel. One step per wheel notch, in the same slide + wipe.
+> - **Mouse wheel switches pages** (user, 2026-11-03): over the tab row, or over a page that has nothing to scroll; a page that scrolls (search results, clipboard, lyrics) keeps the wheel. One step per wheel notch, in the same slide + wipe. Pages with no tab (clipboard, drop, share) switch only over the tab row (user, 2026-11-20: the wheel at the end of the clipboard list left the page).
 
 > [!warning] Lessons from the mockup (2026-11-02)
 > - **The content sizes the island, never the other way round.** Each page lays itself out and reports its size; the island animates to that size. No fixed widths or heights for pages.
@@ -144,6 +144,7 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
   > Decision (user, 2026-11-02): the clipboard history is its own island page, not `/clip` in search. It has no tab and no number (the header shows `Super+V`); only Super+V opens it, Super+V again closes it, Tab or a tab click goes back to the tab row.
   > - A filter field (text only; images show while it is empty), the history newest first (scrolls, up to 200), and the chosen entry in full beside it: the whole text (read with `cliphist decode`) or the picture. Images list their size.
   > - Enter or a click copies it back and closes; Delete or a right click removes it from the history.
+  > [!check] Decided (user, 2026-11-20): **Clear** beside the item count empties the whole history (`cliphist wipe` and the cached pictures). The first press turns it into "Clear all?" for 3 s; a second press clears. Also Ctrl+Shift+Delete (twice).
   > [!check] Decided (user, 2026-11-20): **a screenshot in the history knows its file.** The capture tools list each saved shot by the hash of its bytes (`~/.local/state/someshell/shots.tsv`); a clipboard image with the same bytes shows the file name under its picture and **Open**, **Folder** (show in folder), **Path** (copy the path), also Ctrl+O / Ctrl+F / Ctrl+P. A moved or deleted file shows nothing; shots from before this have no file.
 
 **Control panel** (like Android and iOS)

@@ -218,11 +218,18 @@ FocusScope {
     // The mouse wheel switches pages. Pages that scroll (lists, lyrics, the
     // calendar's month, sliders) take the wheel first, so this only gets it
     // over the tab row and over pages with nothing to scroll. One page per
-    // notch; a touchpad adds up to a notch.
+    // notch; a touchpad adds up to a notch. A page with no tab (clipboard,
+    // drop, share) switches only over the tab row: a list scrolled to its end
+    // passes the wheel on, and that left the page by accident.
     WheelHandler {
+        id: pageWheel
         property real acc: 0
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
+            if (Ui.extra !== "" && pageWheel.point.position.y > tabs.y + tabs.height + 4) {
+                acc = 0;
+                return;
+            }
             const d = Math.abs(event.angleDelta.y) >= Math.abs(event.angleDelta.x) ? event.angleDelta.y : event.angleDelta.x;
             acc += d;
             while (Math.abs(acc) >= 120) {
