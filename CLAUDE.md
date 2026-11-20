@@ -48,7 +48,7 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - Keyboard in the open island (`Open.qml`): anything clickable on a page sets `kbNav` and `kbClick()` (optional `kbAlt()` for Shift+Enter, `kbHold(bool)`, `kbStep(d)` for Left/Right, `kbLeaf`, `kbField`) and holds a `KeyRing`; `Tap`, `Chip`, `ListRow`, `Tile`, `BarSlider` and `Field` already do. A bare `MouseArea` on a page is invisible to the keyboard.
 - Island pages are loaded by URL, so a type in a folder under `island/pages/` (or next to a page) is "not a type" there: put a shared type in `components/` (`ControlTile`). The page's own sub-pages load by `source`.
 - Qt's JavaScript has no `Array.prototype.flatMap`; build arrays with a loop. A property named `top`, `bottom`, `left`, `right` etc. on an Item clashes with its anchor lines ("Cannot override FINAL property").
-- After many live reloads, `qs kill` can segfault in a Wayland destructor, and Quickshell's crash handler relaunches the shell as `quickshell` (a second copy draws over the first). `hypr/scripts/shell.sh` now stops every copy (and leftover crash reporters) before it starts, so always restart through it.
+- After many live reloads, `qs kill` can segfault in a Wayland destructor, and Quickshell's crash handler relaunches the shell as `quickshell` (a second copy draws over the first). `hypr/scripts/shell.sh` now stops every copy (with its child processes, which otherwise live on under systemd, and leftover crash reporters) before it starts, so always restart through it.
 
 ## Quickshell and Qt gotchas (learned on v1)
 - Focus: a layer with `Exclusive` focus keeps it, so a `HyprlandFocusGrab` never clears on an outside click; switch to `OnDemand` once the grab is active.
