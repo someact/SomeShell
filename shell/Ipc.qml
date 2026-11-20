@@ -95,6 +95,17 @@ Scope {
         function back(): void { Displays.revert(); }
         function undo(): void { Displays.undo(); }
         function identify(): void { Displays.identify(); }
+        // One monitor's brightness (0-100), as the Displays page in Control sets it
+        function brightness(name: string, value: int): void {
+            const sc = Brightness.forMonitor(name);
+            if (sc)
+                Brightness.setScreen(sc.name, value);
+        }
+        // Control's quick changes: toggle <monitor>, extend, mirror <monitor>
+        function quick(kind: string, name: string): void {
+            const m = Displays.live.find(d => d.name === name);
+            Displays.quick(kind, kind === "toggle" ? (m?.desc ?? "") : name);
+        }
     }
 
     IpcHandler {

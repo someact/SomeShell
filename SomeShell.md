@@ -156,6 +156,7 @@ Pages in the open island, tabs along the top, switched with Tab or arrows, numbe
     > - While joining the row says "Connecting…"; a failure stays on the form with the reason (wrong password, timeout). A failed new network leaves no broken saved profile behind.
     > - Right-click on a saved network shows **Edit** (enter the password or login again, the profile is kept) and **Forget**. Nothing is deleted by one click: Forget is its own button.
   - **Bluetooth:** pair, connect, rename, switch the audio device.
+  - **Brightness → Displays** (user, 2026-11-20): a click or the arrow opens a page with every monitor: its brightness slider (DDC or backlight, each monitor on its own; the tile's slider still sets all), an On/Off button (the last monitor on stays on), and **Extend** / **Mirror <the island's monitor>**. Monitor changes go through Displays with the 15 s countdown: a Keep / Back bar on the page, else it goes back. A Settings button opens Settings → Displays for the rest.
   - **Keep awake:** forever or for a time.
   - **Night light:** on/off, how warm, schedule (sunset to sunrise or set times).
   - **Do not disturb:** no notifications and no island alerts. Until a time, or while a game or screen share runs.

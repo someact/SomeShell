@@ -77,6 +77,7 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 - Springs: `hl.curve(name, { type = "spring", mass, stiffness, dampening })`, used as `spring = name`.
 - `--verify-config` runs `config.reloaded` handlers; an `hl.dispatch` there segfaults it (exit 139). A reload resets Lua state without an event, so the shell rereads state on `configreloaded`.
 - `hyprctl eval '<lua>'` runs code; `hyprctl repl 'return <expr>'` reads globals.
+- `hl.monitor` only changes what it names: a monitor that was off stays off without `disabled = false`, and an old mirror stays without `mirror = ""`. `mirrorOf` in `hyprctl monitors` is the mirrored monitor's id, not its name. Undoing a mirror drops and adds the monitor (monitorremoved/added events).
 
 ## Verify
 Every new screen is checked on the real desktop (screenshot), in dark and light mode. Never edit `~/.config/hypr.pre-somehypr`, `~/.config/*.pre-someshell` or `~/.config/quickshell/ii` (the rollback).

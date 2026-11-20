@@ -14,6 +14,9 @@ import qs.core
 // connects; the one in use is written to hypr/generated/monitors.lua for the
 // next start. Every monitor always gets its own rule: a rule for one monitor
 // moves the others while they are on "auto".
+// `quick()` is for Control's Displays page: one monitor on or off, extend,
+// mirror; built from what Hyprland has now and applied with the same
+// countdown (Keep or it goes back).
 Singleton {
     id: root
 
@@ -65,6 +68,20 @@ Singleton {
         return best || (m.width + "x" + m.height + "@" + m.refreshRate.toFixed(2));
     }
 
+    // A switched-off monitor Hyprland reports as 0x0: its biggest mode, fastest rate
+    function bestMode(m) {
+        let best = null;
+        for (const s of m.availableModes ?? []) {
+            const mm = /^(\d+)x(\d+)@([\d.]+)Hz$/.exec(s);
+            if (!mm)
+                continue;
+            const c = [+mm[1] * +mm[2], +mm[3], mm[1] + "x" + mm[2] + "@" + mm[3]];
+            if (!best || c[0] > best[0] || (c[0] === best[0] && c[1] > best[1]))
+                best = c;
+        }
+        return best ? best[2] : "preferred";
+    }
+
     function fromHyprland(list) {
         const kept = profiles[list.map(m => m.description).sort().join(" | ")] ?? [];
         return list.map(m => {
@@ -76,13 +93,15 @@ Singleton {
                 model: m.model,
                 mm: [m.physicalWidth, m.physicalHeight],
                 modes: (m.availableModes ?? []).map(s => s.replace(/Hz$/, "")),
-                mode: m.disabled && k.mode ? k.mode : modeOf(m),
+                mode: m.disabled ? (k.mode ?? bestMode(m)) : modeOf(m),
                 scale: m.disabled && k.scale ? k.scale : Math.round(m.scale * 1e6) / 1e6,
                 transform: m.disabled && k.transform !== undefined ? k.transform : m.transform,
                 x: m.disabled && k.x !== undefined ? k.x : m.x,
                 y: m.disabled && k.y !== undefined ? k.y : m.y,
                 on: !m.disabled,
-                mirror: m.mirrorOf && m.mirrorOf !== "none" ? m.mirrorOf : "",
+                // Hyprland reports the mirrored monitor's id; rules take its name
+                mirror: !m.mirrorOf || m.mirrorOf === "none" ? ""
+                    : (list.find(o => String(o.id) === String(m.mirrorOf))?.name ?? String(m.mirrorOf)),
                 // Hyprland does not report the rule's VRR or main monitor:
                 // what was kept, else the defaults (VRR for games only)
                 vrr: k.vrr ?? 2,
@@ -176,13 +195,57 @@ Singleton {
         return out;
     }
 
+    // How the monitors are used now: "single" (one connected), "mirror",
+    // "extend" (all on) or "some" (some off)
+    readonly property string arrangement: live.length < 2 ? "single"
+        : live.some(m => m.on && m.mirror) ? "mirror"
+        : live.every(m => m.on) ? "extend" : "some"
+
+    // ── Quick changes (Control) ──
+    //   quick("toggle", desc)  that monitor on or off (never the last one on)
+    //   quick("extend")        every monitor on, side by side
+    //   quick("mirror", name)  every monitor shows `name` (a connector name)
+    function quick(kind, arg) {
+        if (waiting || rawLive.length === 0)
+            return false;
+        const now = fromHyprland(rawLive);
+        let list = now;
+        if (kind === "toggle") {
+            const me = now.find(m => m.desc === arg);
+            if (!me || (me.on && now.filter(m => m.on).length <= 1))
+                return false;
+            list = now.map(m => m.desc === arg ? Object.assign({}, m, { on: !m.on, mirror: "" })
+                // Mirrors of a monitor that goes off show their own picture
+                : m.mirror === me.name && me.on ? Object.assign({}, m, { mirror: "" }) : m);
+        } else if (kind === "extend") {
+            list = now.map(m => Object.assign({}, m, { on: true, mirror: "" }));
+        } else if (kind === "mirror") {
+            if (!now.some(m => m.name === arg))
+                return false;
+            list = now.map(m => Object.assign({}, m, { on: true, mirror: m.name === arg ? "" : arg }));
+        } else {
+            return false;
+        }
+        draft = list;
+        // A monitor that comes back (was off or a mirror) must not land on another
+        for (const m of list) {
+            const was = now.find(n => n.desc === m.desc);
+            if (m.on && !m.mirror && (!was.on || was.mirror))
+                place(m.desc, m.x, m.y);
+        }
+        apply();
+        return true;
+    }
+
     // ── Applying ──
     function luaRule(m) {
         const out = "desc:" + m.desc;
         if (!m.on)
             return "hl.monitor({ output = " + JSON.stringify(out) + ", disabled = true })";
+        // `disabled = false` is needed: without it a monitor that was off stays off
         const parts = [
             "output = " + JSON.stringify(out),
+            "disabled = false",
             "mode = " + JSON.stringify(m.mode),
             "position = " + JSON.stringify(m.x + "x" + m.y),
             "scale = " + m.scale,
@@ -191,8 +254,8 @@ Singleton {
         ];
         if (m.bits === 10)
             parts.push("bitdepth = 10");
-        if (m.mirror)
-            parts.push("mirror = " + JSON.stringify(m.mirror));
+        // Always said: a rule without it keeps an old mirror
+        parts.push("mirror = " + JSON.stringify(m.mirror || ""));
         return "hl.monitor({ " + parts.join(", ") + " })";
     }
     function lua(list) {
@@ -202,7 +265,11 @@ Singleton {
             lines.push("hl.config({ cursor = { default_monitor = " + JSON.stringify(main.name) + " } })");
         return lines.join("\n");
     }
+    // A change of ours makes Hyprland drop and add monitors for a moment
+    // (undoing a mirror does): those are not a new set of monitors
+    property real lastSend: 0
     function send(list) {
+        lastSend = Date.now();
         Quickshell.execDetached(["hyprctl", "eval", lua(list)]);
     }
 
@@ -220,8 +287,11 @@ Singleton {
             return;
         countdown.stop();
         waiting = false;
+        // Saved for the monitors in the draft (one may be missing from
+        // Hyprland's list for a moment while it changes)
+        const key = draft.map(m => m.desc).sort().join(" | ");
         const p = Object.assign({}, profiles);
-        p[setKey] = draft.map(m => ({ desc: m.desc, mode: m.mode, scale: m.scale, transform: m.transform, x: m.x, y: m.y, on: m.on, mirror: m.mirror, vrr: m.vrr, bits: m.bits, main: m.main }));
+        p[key] = draft.map(m => ({ desc: m.desc, mode: m.mode, scale: m.scale, transform: m.transform, x: m.x, y: m.y, on: m.on, mirror: m.mirror, vrr: m.vrr, bits: m.bits, main: m.main }));
         profiles = p;
         store.setText(JSON.stringify({ profiles: p }, null, 2) + "\n");
         writeGenerated(draft);
@@ -284,12 +354,16 @@ Singleton {
                 }
                 root.rawLive = list;
                 root.live = root.fromHyprland(list);
-                // A new set of monitors with a kept layout: use it
+                // A new set of monitors with a kept layout: use it. Only
+                // after a real plug or unplug (or at start), never while a
+                // change of ours settles
                 const key = root.setKey;
+                const plugged = root.hotplug;
+                root.hotplug = false;
                 if (key !== root.lastKey) {
                     root.lastKey = key;
                     const kept = root.profiles[key];
-                    if (kept && root.profilesRead) {
+                    if (kept && root.profilesRead && plugged && !root.waiting) {
                         const want = root.live.map(m => Object.assign({}, m, kept.find(p => p.desc === m.desc) ?? {}));
                         if (JSON.stringify(want) !== JSON.stringify(root.live)) {
                             root.send(want);
@@ -306,12 +380,17 @@ Singleton {
     Connections {
         target: Hyprland
         function onRawEvent(event) {
-            if (["monitoradded", "monitoraddedv2", "monitorremoved", "monitorremovedv2", "configreloaded"].includes(event.name))
-                settle.restart();
+            if (!["monitoradded", "monitoraddedv2", "monitorremoved", "monitorremovedv2", "configreloaded"].includes(event.name))
+                return;
+            if (event.name !== "configreloaded" && !root.waiting && Date.now() - root.lastSend > 8000)
+                root.hotplug = true;
+            settle.restart();
         }
     }
 
     property bool profilesRead: false
+    // A monitor was plugged in or out (not by a change of ours)
+    property bool hotplug: false
     FileView {
         id: store
         path: Paths.config + "/displays.json"
@@ -321,6 +400,7 @@ Singleton {
             } catch (e) {}
             root.profilesRead = true;
             root.lastKey = "";
+            root.hotplug = true;
             root.refresh();
         }
         onLoadFailed: {

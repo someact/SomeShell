@@ -2,10 +2,13 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 
 // Screen brightness, 0-100. A laptop panel through brightnessctl (backlight),
 // desktop monitors through DDC (ddcutil). DDC is slow, so changes are queued
 // and only the last one is sent. Monitors without either are left out.
+// `set()` changes every screen (the tile), `setScreen()` one monitor (the
+// Displays page in Control); `forMonitor()` finds a Hyprland monitor's screen.
 Singleton {
     id: root
 
@@ -19,9 +22,31 @@ Singleton {
     function set(v) {
         v = Math.round(Math.max(1, Math.min(100, v)));
         screens = screens.map(s => Object.assign({}, s, { value: v }));
-        pending = v;
+        const p = Object.assign({}, pending);
+        for (const s of screens)
+            p[s.name] = v;
+        pending = p;
         if (!writer.running)
             flush();
+    }
+    // Set one screen (its `name`)
+    function setScreen(name, v) {
+        v = Math.round(Math.max(1, Math.min(100, v)));
+        if (!screens.some(s => s.name === name))
+            return;
+        screens = screens.map(s => s.name === name ? Object.assign({}, s, { value: v }) : s);
+        const p = Object.assign({}, pending);
+        p[name] = v;
+        pending = p;
+        if (!writer.running)
+            flush();
+    }
+    // The screen of a Hyprland monitor: DDC by its connector, the backlight
+    // for a built-in panel (eDP, DSI, LVDS)
+    function forMonitor(monitor) {
+        return screens.find(s => s.kind === "ddc" && s.name === monitor)
+            ?? (/^(eDP|DSI|LVDS)/.test(monitor) ? screens.find(s => s.kind === "backlight") : undefined)
+            ?? null;
     }
     function step(delta) {
         set(value + delta);
@@ -30,7 +55,7 @@ Singleton {
     // Read the backlight again (another tool may have changed it); the
     // Control page asks when it opens. DDC is too slow to read each time.
     function refresh() {
-        if (screens.some(s => s.kind === "backlight") && !reader.running && !writer.running && pending < 0)
+        if (screens.some(s => s.kind === "backlight") && !reader.running && !writer.running && Object.keys(pending).length === 0)
             reader.running = true;
     }
     Process {
@@ -39,21 +64,23 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 const v = parseInt(text);
-                if (!isNaN(v) && root.pending < 0)
+                if (!isNaN(v) && Object.keys(root.pending).length === 0)
                     root.screens = root.screens.map(s => s.kind === "backlight" ? Object.assign({}, s, { value: v }) : s);
             }
         }
     }
 
-    property int pending: -1
+    // Values waiting to be sent, by screen name
+    property var pending: ({})
     function flush() {
-        if (pending < 0)
+        const want = pending;
+        const names = Object.keys(want);
+        if (names.length === 0)
             return;
-        const v = pending;
-        pending = -1;
-        const cmds = screens.map(s => s.kind === "backlight"
-            ? "brightnessctl -q s " + v + "%"
-            : "ddcutil --noverify --bus " + s.bus + " setvcp 10 " + v);
+        pending = {};
+        const cmds = screens.filter(s => names.includes(s.name)).map(s => s.kind === "backlight"
+            ? "brightnessctl -q s " + want[s.name] + "%"
+            : "ddcutil --noverify --bus " + s.bus + " setvcp 10 " + want[s.name]);
         writer.command = ["sh", "-c", cmds.join(" & ") + "; wait"];
         writer.running = true;
     }
@@ -62,8 +89,28 @@ Singleton {
         onExited: root.flush()
     }
 
-    // Find screens once at start
+    // Look for screens again: a monitor came, or one that is on has no
+    // control (DDC can fail while monitors change). Slow (~15 s), in the background.
+    function detect() {
+        if (!finder.running)
+            finder.running = true;
+    }
+    Timer {
+        id: redetect
+        interval: 3000
+        onTriggered: root.detect()
+    }
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (["monitoradded", "monitoraddedv2"].includes(event.name))
+                redetect.restart();
+        }
+    }
+
+    // Find screens at start
     Process {
+        id: finder
         running: true
         command: ["sh", "-c",
             "if ls /sys/class/backlight/* >/dev/null 2>&1; then echo \"backlight|Display|$(brightnessctl -m | cut -d, -f4 | tr -d %)\"; fi; "

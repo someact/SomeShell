@@ -388,6 +388,6 @@ Item {
         id: detailLoader
         visible: !!Ui.detail
         width: parent.width
-        source: Ui.detail ? "control/" + ({ net: "NetworkDetail", bt: "BluetoothDetail", sound: "SoundDetail", night: "NightDetail", warp: "WarpDetail" })[Ui.detail] + ".qml" : ""
+        source: Ui.detail ? "control/" + ({ net: "NetworkDetail", bt: "BluetoothDetail", sound: "SoundDetail", night: "NightDetail", warp: "WarpDetail", display: "DisplayDetail" })[Ui.detail] + ".qml" : ""
     }
 }

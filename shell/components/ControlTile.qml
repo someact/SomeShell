@@ -115,7 +115,12 @@ Item {
             sub: !Brightness.available ? "Not available"
                 : root.sideSlider ? Brightness.value + "%  ·  " + Brightness.label
                 : root.big ? Brightness.label : Brightness.value + "%"
-            enabled: Brightness.available
+            // The page (per-monitor brightness, monitors on/off, extend,
+            // mirror) is useful without brightness too
+            enabled: Brightness.available || Displays.live.length > 1
+            more: true
+            onClicked: Ui.detail = "display"
+            onOpened: Ui.detail = "display"
             reserveRight: root.sideSlider ? root.sideSliderWidth + 14 : 0
             reserveBottom: root.bottomSlider ? 34 : 0
             Digits {
