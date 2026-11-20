@@ -101,6 +101,6 @@ Singleton {
 
     Process {
         running: root.on
-        command: ["systemd-inhibit", "--what=idle", "--who=SomeShell", "--why=Keep awake is on", "sleep", "infinity"]
+        command: ["systemd-inhibit", "--no-ask-password", "--what=idle", "--who=SomeShell", "--why=Keep awake is on", "sleep", "infinity"]
     }
 }

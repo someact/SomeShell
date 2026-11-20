@@ -355,4 +355,17 @@ Scope {
         // ink or inverse
         function color(color: string): void { Desktop.island.color = color; }
     }
+
+    IpcHandler {
+        target: "auth"
+
+        // The polkit request now (test with `pkexec true`, never a real admin action)
+        function state(): string {
+            const f = Auth.flow;
+            return JSON.stringify({ registered: Auth.registered, asking: Auth.asking, error: Auth.error,
+                message: f?.message ?? "", action: f?.actionId ?? "", prompt: f?.inputPrompt ?? "",
+                needsAnswer: f?.isResponseRequired ?? false, users: (f?.identities ?? []).map(i => i.displayName || i.name) });
+        }
+        function cancel(): void { Auth.cancel(); }
+    }
 }

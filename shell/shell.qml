@@ -25,6 +25,7 @@ ShellRoot {
         Battery.available;
         Locker.locked;
         DualBoot.available;
+        Auth.registered;
     }
 
     Variants {

@@ -22,7 +22,8 @@ Singleton {
     readonly property var extraPages: [
         { id: "clipboard", label: "Clipboard", icon: "content_paste", keys: "Super+V" },
         { id: "drop", label: "Dropped", icon: "move_to_inbox", keys: "Drag & drop" },
-        { id: "share", label: "Quick Share", icon: "share", keys: "Wi-Fi · Bluetooth" }
+        { id: "share", label: "Quick Share", icon: "share", keys: "Wi-Fi · Bluetooth" },
+        { id: "auth", label: "Password", icon: "lock", keys: "An app asks" }
     ]
 
     property bool open: false
