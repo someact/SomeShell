@@ -18,6 +18,7 @@ Singleton {
     property alias lock: adapter.lock
     property alias idle: adapter.idle
     property alias capture: adapter.capture
+    property alias keepAwake: adapter.keepAwake
     readonly property bool loaded: file.loaded
 
     FileView {
@@ -62,6 +63,12 @@ Singleton {
                 property int lock: 10
                 property int screenOff: 15
                 property int sleep: 30
+            }
+
+            property JsonObject keepAwake: JsonObject {
+                // Keep awake stays on, also after a reboot (a session's
+                // keep awake lives in services/KeepAwake.qml)
+                property bool always: false
             }
 
             property JsonObject capture: JsonObject {

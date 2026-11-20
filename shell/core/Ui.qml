@@ -32,7 +32,7 @@ Singleton {
     readonly property string pageId: extra || pages[page].id
     readonly property var pageInfo: extraPages.find(p => p.id === extra) ?? pages[page]
     // A tile's own page on the control page ("net", "bt", "sound", "night",
-    // "warp", "display")
+    // "warp", "display", "awake")
     property string detail: ""
     // Quick edit of the control page's tiles
     property bool controlEdit: false

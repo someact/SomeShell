@@ -126,6 +126,8 @@ Item {
             Digits {
                 visible: root.big && Brightness.available
                 anchors.right: parent.right
+                // Clear of the page arrow
+                anchors.rightMargin: 34
                 anchors.top: parent.top
                 anchors.topMargin: -4
                 text: String(Brightness.value)
@@ -172,9 +174,11 @@ Item {
         Tile {
             icon: "coffee"
             label: "Keep awake"
-            sub: KeepAwake.on ? "On" : "Off"
+            sub: KeepAwake.status
             active: KeepAwake.on
+            more: true
             onClicked: KeepAwake.toggle()
+            onOpened: Ui.detail = "awake"
         }
     }
     Component {

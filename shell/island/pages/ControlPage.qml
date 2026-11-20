@@ -159,12 +159,14 @@ Item {
                     NumberAnimation { duration: slot.on ? Motion.normal : Motion.quick }
                 }
 
-                // The tile; sinks a little in edit, pops in when added
+                // The tile; pops in when added. It keeps its size in edit
+                // (user, 2026-11-20: shrinking looked odd): only the dashed
+                // outline shows edit
                 Loader {
                     id: tile
                     anchors.fill: parent
                     active: slot.visible
-                    scale: (slot.on ? 1 : 0.85) * (root.editing && !slot.lifted ? 0.95 : 1)
+                    scale: slot.on ? 1 : 0.85
                     Behavior on scale {
                         NumberAnimation { duration: Motion.normal; easing.type: Motion.easing }
                     }
@@ -388,6 +390,6 @@ Item {
         id: detailLoader
         visible: !!Ui.detail
         width: parent.width
-        source: Ui.detail ? "control/" + ({ net: "NetworkDetail", bt: "BluetoothDetail", sound: "SoundDetail", night: "NightDetail", warp: "WarpDetail", display: "DisplayDetail" })[Ui.detail] + ".qml" : ""
+        source: Ui.detail ? "control/" + ({ net: "NetworkDetail", bt: "BluetoothDetail", sound: "SoundDetail", night: "NightDetail", warp: "WarpDetail", display: "DisplayDetail", awake: "AwakeDetail" })[Ui.detail] + ".qml" : ""
     }
 }

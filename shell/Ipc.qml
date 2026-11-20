@@ -265,6 +265,18 @@ Scope {
         function state(): string { return JSON.stringify(Jobs.list); }
     }
 
+    // awake: keep awake. on (until turned off), off, minutes <n>, always,
+    // state
+    IpcHandler {
+        target: "awake"
+
+        function on(): void { KeepAwake.forMinutes(0); }
+        function off(): void { KeepAwake.off(); }
+        function minutes(n: int): void { KeepAwake.forMinutes(n); }
+        function always(): void { KeepAwake.setAlways(true); }
+        function state(): string { return JSON.stringify({ on: KeepAwake.on, always: KeepAwake.always, session: KeepAwake.session, until: KeepAwake.until, status: KeepAwake.status }); }
+    }
+
     IpcHandler {
         target: "capture"
 

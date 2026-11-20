@@ -15,16 +15,24 @@ Singleton {
     // { kind: "backlight"|"ddc", bus, name, value }
     property var screens: []
     readonly property bool available: screens.length > 0
-    readonly property int value: screens.length ? screens[0].value : 0
-    readonly property string label: screens.length > 1 ? screens.length + " screens" : screens.length ? screens[0].name : "Not available"
+    // The screens of monitors that are on (the backlight always counts):
+    // what the tile shows and sets
+    readonly property var shown: {
+        const on = Hyprland.monitors.values.map(m => m.name);
+        const list = screens.filter(s => s.kind === "backlight" || on.includes(s.name));
+        return list.length ? list : screens;
+    }
+    readonly property int value: shown.length ? shown[0].value : 0
+    readonly property string label: shown.length > 1 ? shown.length + " screens" : shown.length ? shown[0].name : "Not available"
 
-    // Set every screen (the tile's slider)
+    // Set every screen of a monitor that is on (the tile's slider)
     function set(v) {
         v = Math.round(Math.max(1, Math.min(100, v)));
-        screens = screens.map(s => Object.assign({}, s, { value: v }));
+        const names = shown.map(s => s.name);
+        screens = screens.map(s => names.includes(s.name) ? Object.assign({}, s, { value: v }) : s);
         const p = Object.assign({}, pending);
-        for (const s of screens)
-            p[s.name] = v;
+        for (const n of names)
+            p[n] = v;
         pending = p;
         if (!writer.running)
             flush();
