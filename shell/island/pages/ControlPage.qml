@@ -36,7 +36,7 @@ Item {
     }
     readonly property bool editing: Ui.controlEdit
     // The kinds this machine can show (WARP only with warp-cli)
-    readonly property var available: ControlTiles.kinds.filter(k => !k.needs || (k.needs === "warp" && Warp.installed))
+    readonly property var available: ControlTiles.kinds.filter(k => !k.needs || (k.needs === "warp" && Warp.installed) || (k.needs === "battery" && Battery.available))
 
     implicitWidth: 4 * cell + 3 * gap
     // The backlight may have been changed by another tool since
@@ -390,6 +390,6 @@ Item {
         id: detailLoader
         visible: !!Ui.detail
         width: parent.width
-        source: Ui.detail ? "control/" + ({ net: "NetworkDetail", bt: "BluetoothDetail", sound: "SoundDetail", night: "NightDetail", warp: "WarpDetail", display: "DisplayDetail", awake: "AwakeDetail" })[Ui.detail] + ".qml" : ""
+        source: Ui.detail ? "control/" + ({ net: "NetworkDetail", bt: "BluetoothDetail", sound: "SoundDetail", night: "NightDetail", warp: "WarpDetail", display: "DisplayDetail", awake: "AwakeDetail", battery: "BatteryDetail" })[Ui.detail] + ".qml" : ""
     }
 }

@@ -32,6 +32,8 @@ Singleton {
         { id: "preset", label: "Preset", icon: "dashboard_customize", size: "1x1" },
         { id: "lock", label: "Lock", icon: "lock", size: "1x1" },
         { id: "share", label: "Quick Share", icon: "share", size: "1x1" },
+        // Only on a machine with a battery
+        { id: "battery", label: "Battery", icon: "battery_full", size: "1x1", needs: "battery" },
         // Only offered with warp-cli installed (the page checks `needs`)
         { id: "warp", label: "WARP", icon: "vpn_lock", size: "1x1", needs: "warp" }
     ]

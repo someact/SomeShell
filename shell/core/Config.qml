@@ -19,6 +19,7 @@ Singleton {
     property alias idle: adapter.idle
     property alias capture: adapter.capture
     property alias keepAwake: adapter.keepAwake
+    property alias battery: adapter.battery
     readonly property bool loaded: file.loaded
 
     FileView {
@@ -69,6 +70,13 @@ Singleton {
                 // Keep awake stays on, also after a reboot (a session's
                 // keep awake lives in services/KeepAwake.qml)
                 property bool always: false
+            }
+
+            property JsonObject battery: JsonObject {
+                // Charge limit (services/ChargeLimit.qml): stop charging at
+                // `limit` percent (100 = no limit), start again at `start`
+                property int limit: 100
+                property int start: 75
             }
 
             property JsonObject capture: JsonObject {

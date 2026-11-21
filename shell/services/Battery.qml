@@ -21,8 +21,11 @@ Singleton {
 
     // UPower gives 0..1
     readonly property int percent: testing ? testPercent : Math.round((device?.percentage ?? 0) * 100)
-    readonly property bool charging: testing ? testCharging
-        : device?.state === UPowerDeviceState.Charging || device?.state === UPowerDeviceState.PendingCharge
+    // The charge limit is holding it (plugged in, not charging; the driver
+    // may still say charging)
+    readonly property bool held: ChargeLimit.holding
+    readonly property bool charging: !held && (testing ? testCharging
+        : device?.state === UPowerDeviceState.Charging || device?.state === UPowerDeviceState.PendingCharge)
     readonly property bool full: !testing && device?.state === UPowerDeviceState.FullyCharged
     readonly property bool low: !charging && !full && percent <= 20
 
@@ -30,6 +33,8 @@ Singleton {
     readonly property int minutes: testing ? 0 : Math.round(((charging ? device?.timeToFull : device?.timeToEmpty) ?? 0) / 60)
 
     readonly property string icon: {
+        if (held)
+            return "power";
         if (charging || full) {
             const steps = [20, 30, 50, 60, 80, 90];
             const s = steps.find(v => percent <= v);
@@ -47,7 +52,7 @@ Singleton {
     function check() {
         if (!available && !testing)
             return;
-        if (charging || full) {
+        if (charging || full || held) {
             alerted = 100;
             return;
         }
@@ -63,6 +68,7 @@ Singleton {
     onPercentChanged: check()
     onChargingChanged: check()
     onAvailableChanged: check()
+    onHeldChanged: check()
 
     function simulate(p, chargingNow) {
         testCharging = chargingNow;

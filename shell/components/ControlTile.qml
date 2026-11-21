@@ -35,7 +35,7 @@ Item {
             net: net, bt: bt, sound: sound, night: night, dnd: dnd, awake: awake, game: game,
             brightness: brightness, shot: shot, record: record,
             dark: dark, mic: mic, picker: picker, clipboard: clipboard, wallpaper: wallpaper, preset: preset, lock: lock, share: share,
-            warp: warp
+            warp: warp, battery: battery
         })[root.kind] ?? null
     }
     Connections {
@@ -307,6 +307,24 @@ Item {
             more: true
             onClicked: Share.toggleReceive()
             onOpened: Share.openPage()
+        }
+    }
+    // Battery: a click turns Power saver on or off; the arrow opens the
+    // Battery page (mode, charge limit)
+    Component {
+        id: battery
+        Tile {
+            icon: PowerMode.saver ? "energy_savings_leaf" : Battery.icon
+            label: "Battery"
+            sub: {
+                const p = Battery.percent + "%";
+                const state = Battery.held ? "Held" : Battery.charging ? "Charging" : PowerMode.available ? PowerMode.label : "";
+                return state ? p + "  ·  " + state : p;
+            }
+            active: PowerMode.saver
+            more: true
+            onClicked: PowerMode.available ? PowerMode.toggleSaver() : Ui.detail = "battery"
+            onOpened: Ui.detail = "battery"
         }
     }
     // WARP: a click connects or disconnects; the arrow (and a right click,

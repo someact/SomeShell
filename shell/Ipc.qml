@@ -202,6 +202,17 @@ Scope {
         // Stand in for the hardware (alerts, colors); `real` goes back
         function simulate(percent: int, charging: bool): void { Battery.simulate(percent, charging); }
         function real(): void { Battery.testPercent = -1; }
+        // Charge limit and power mode
+        function charge(): string {
+            return JSON.stringify({
+                info: ChargeLimit.info, limit: ChargeLimit.limit, start: ChargeLimit.start, holding: ChargeLimit.holding,
+                denied: ChargeLimit.denied, status: ChargeLimit.status, held: Battery.held,
+                mode: PowerMode.available ? PowerMode.current.id : null, modes: PowerMode.modes.map(m => m.id)
+            });
+        }
+        // `stop` 100 = no limit
+        function limit(stop: int, from: int): void { ChargeLimit.set(stop, from); }
+        function mode(id: string): void { PowerMode.set(id); }
     }
 
     IpcHandler {
