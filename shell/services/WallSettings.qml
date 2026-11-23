@@ -40,6 +40,36 @@ Singleton {
         return (infos[path]?.props ?? []).find(p => p.key === key)?.value;
     }
 
+    // Wallpaper Engine colors are "r g b" from 0 to 1
+    function hexOf(rgb) {
+        const v = String(rgb ?? "").trim().split(/[\s,]+/).map(Number);
+        if (v.length < 3 || v.some(isNaN))
+            return "";
+        return "#" + v.slice(0, 3).map(x => Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16).padStart(2, "0")).join("");
+    }
+    function rgbOf(hex) {
+        const m = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
+        if (!m)
+            return "";
+        const n = parseInt(m[1], 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(x => String(Math.round(x / 255 * 100000) / 100000)).join(" ");
+    }
+    // A property's condition ("clock.value == true") with the values now;
+    // one that cannot be read counts as met
+    function conditionMet(path, cond) {
+        if (!cond)
+            return true;
+        const vals = propValues(path);
+        const expr = String(cond).replace(/\b([A-Za-z_]\w*)\.value\b/g, (m, k) => JSON.stringify(vals[k] ?? null));
+        if (/[A-Za-z_$][\w$]*\s*\(|=>|\bnew\b|[;{}`]/.test(expr))
+            return true;
+        try {
+            return !!(new Function("return (" + expr + ");"))();
+        } catch (e) {
+            return true;
+        }
+    }
+
     // A label for a property: Wallpaper Engine's own keys ("ui_browse_properties_scheme_color") in words
     function label(text) {
         if (!text || !text.startsWith("ui_"))
@@ -78,8 +108,9 @@ Singleton {
         });
     }
 
-    // fit, speed, fps, scale; the default value (or null) removes it
-    readonly property var defaults: ({ fit: "fill", speed: 1, fps: 0, scale: 0 })
+    // fit, speed, fps, scale, colors ("picture", or "scheme": the colors
+    // from its `schemecolor`); the default value (or null) removes it
+    readonly property var defaults: ({ fit: "fill", speed: 1, fps: 0, scale: 0, colors: "picture" })
     function setValue(path, name, value) {
         if (!(name in defaults))
             return;

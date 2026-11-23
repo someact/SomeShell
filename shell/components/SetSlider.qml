@@ -13,7 +13,8 @@ Item {
     property real step: 0.01
     property real value: 0
     property var format: v => String(v)
-    readonly property var c: Theme.paper
+    // Colors: the paper set (settings window), or Theme.ink on the island and in edit mode
+    property var c: Theme.paper
     // While dragging: the value under the knob (not yet sent)
     property real shown: value
     property bool dragging: false

@@ -11,7 +11,8 @@ Item {
     property var options: []
     property var value
     property string placeholder: "Choose"
-    readonly property var c: Theme.paper
+    // Colors: the paper set (settings window), or Theme.ink on the island and in edit mode
+    property var c: Theme.paper
     signal picked(var value)
 
     function valueOf(o) { return typeof o === "object" ? o.value : o; }

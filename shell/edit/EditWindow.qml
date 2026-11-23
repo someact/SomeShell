@@ -54,8 +54,18 @@ PanelWindow {
         opacity: win.zoom
     }
 
-    // Where the card ends up: centred at the top, as large as the panel allows
-    readonly property real panelHeight: main ? 280 : 0
+    // Where the card ends up: centred at the top, as large as the panel allows.
+    // The Wallpaper tab has the taller, wider panel (library and the chosen
+    // wallpaper side by side): the card zooms out further while it shows.
+    readonly property bool widePanel: main && Ui.editTab === "wallpaper"
+    // 0: the usual panel, 1: the Wallpaper tab's (one value, so height,
+    // width and the card move together)
+    property real wideness: widePanel ? 1 : 0
+    Behavior on wideness {
+        NumberAnimation { duration: Motion.slow; easing.type: Easing.InOutCubic }
+    }
+    readonly property real panelHeight: main ? 280 + 140 * wideness : 0
+    readonly property real panelWidth: target.width + Math.max(0, Math.min(sw - 160, 1440) - target.width) * wideness
     readonly property real cardScale: Math.min(0.66, (sh - panelHeight - 140) / sh)
     readonly property rect target: Qt.rect((sw - sw * cardScale) / 2, 72, sw * cardScale, sh * cardScale)
 
@@ -74,8 +84,8 @@ PanelWindow {
     Item {
         visible: win.main
         opacity: win.zoom
-        x: card.x
-        width: card.width
+        x: Math.min(card.x, panel.x)
+        width: Math.max(card.width, panel.width)
         height: 72
         Row {
             anchors.left: parent.left
@@ -166,9 +176,9 @@ PanelWindow {
         id: panel
         visible: win.main
         opacity: win.zoom
-        x: card.x
+        x: (win.sw - width) / 2
         y: win.target.y + win.target.height + 20
-        width: win.target.width
+        width: win.panelWidth
         height: win.panelHeight
     }
 

@@ -18,7 +18,8 @@ Singleton {
     // The posters that ship with the shell are listed too
     readonly property string bundled: Quickshell.shellDir + "/assets/wallpapers"
     readonly property string thumbDir: Paths.cache + "/thumbs"
-    // { path, name, thumb, kind: image | video | scene | unsupported }
+    // { path, name, thumb, kind: image | video | scene | unsupported,
+    //   preview: the picture the thumbnail is made from (maybe a gif), added: seconds }
     property var files: []
     // Thumbnails that exist, by path: each shows as soon as it is made
     property var ready: ({})
@@ -54,7 +55,7 @@ Singleton {
 
     Process {
         id: find
-        // kind, path, name, picture for the thumbnail (lib/wallpapers.sh)
+        // kind, path, name, picture for the thumbnail, when added (lib/wallpapers.sh)
         command: [Quickshell.shellPath("lib/wallpapers.sh"), root.folder, root.bundled]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -70,7 +71,7 @@ Singleton {
                     const name = parts[2];
                     const preview = parts[3];
                     const thumb = root.thumbFor(path);
-                    list.push({ path: path, name: name, thumb: thumb, kind: kind });
+                    list.push({ path: path, name: name, thumb: thumb, kind: kind, preview: preview, added: Number(parts[4] ?? 0) || 0 });
                     args.push(preview || path, thumb);
                 }
                 root.files = list;

@@ -312,13 +312,18 @@ Singleton {
 
     // The wallpaper matugen last ran for
     property string colored: ""
+    // The colors' wallpaper may give its own color instead of its picture
+    // (a Wallpaper Engine `schemecolor`, chosen in the tab): its hex, else ""
+    readonly property string schemeHex: (WallSettings.forPath(path).colors ?? "") === "scheme"
+        ? WallSettings.hexOf(WallSettings.propValues(path).schemecolor) : ""
+    onSchemeHexChanged: if (file.loaded && colored) recolor()
     // Run matugen for the colors' wallpaper, mode and scheme. A run already
     // going is replaced, so only the last change counts.
     function recolor() {
         if (!path)
             return;
         colored = path;
-        if (!stillPath) {
+        if (!stillPath && !schemeHex) {
             pendingRecolor = true;
             return;
         }
@@ -326,7 +331,7 @@ Singleton {
     }
     property bool pendingRecolor: false
     function recolorNow() {
-        if (!stillPath)
+        if (!stillPath && !schemeHex)
             return;
         if (matugen.running) {
             pending = true;
@@ -343,8 +348,10 @@ Singleton {
         property string image: ""
         function begin() {
             image = root.stillPath;
-            command = ["matugen", "image", image, "-c", Paths.matugenConfig,
-                "-t", Config.theme.scheme, "-m", Config.theme.mode, "--source-color-index", "0"];
+            command = root.schemeHex
+                ? ["matugen", "color", "hex", root.schemeHex, "-c", Paths.matugenConfig, "-t", Config.theme.scheme, "-m", Config.theme.mode]
+                : ["matugen", "image", image, "-c", Paths.matugenConfig,
+                    "-t", Config.theme.scheme, "-m", Config.theme.mode, "--source-color-index", "0"];
             running = true;
         }
         stderr: StdioCollector {
@@ -365,7 +372,8 @@ Singleton {
     function checkPalette() {
         if (!file.loaded || !Theme.paletteRead || !stillPath)
             return;
-        if (Theme.image !== stillPath)
+        // From a color, matugen writes the image as "Null"
+        if (Theme.image !== (schemeHex ? "Null" : stillPath))
             recolor();
         else
             colored = path;

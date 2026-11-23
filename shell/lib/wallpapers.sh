@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Every wallpaper in the given folders, subfolders included (services/Wallpapers.qml).
 #   wallpapers.sh <folder>...
-# One line each, tab-separated: kind, path, name, picture for the thumbnail.
+# One line each, tab-separated: kind, path, name, picture for the thumbnail
+# (a Wallpaper Engine preview may be a gif), when it was added (seconds).
 #   kind  image | video | scene | unsupported
 #   path  the file, or the Wallpaper Engine folder (somewall loads the folder)
 # A Wallpaper Engine item is a folder with project.json (dropped into the
@@ -37,7 +38,7 @@ while IFS= read -r -d '' pj; do
             [ -n "$pic" ] || pic="$d/$file" ;;
         *) kind=unsupported ;;
     esac
-    printf '%s\t%s\t%s\t%s\n' "$kind" "$d" "$title" "$pic"
+    printf '%s\t%s\t%s\t%s\t%s\n' "$kind" "$d" "$title" "$pic" "$(stat -L -c %Y "$pj" 2>/dev/null || echo 0)"
 done < <(find -L "$@" -maxdepth 4 -type f -name project.json -print0 2>/dev/null | sort -z)
 
 # Pictures and videos, except those inside a Wallpaper Engine folder
@@ -55,6 +56,6 @@ while IFS= read -r -d '' f; do
         *.mp4|*.webm|*.mkv|*.mov) kind=video ;;
         *) kind=image ;;
     esac
-    printf '%s\t%s\t%s\t%s\n' "$kind" "$f" "${base%.*}" "$f"
+    printf '%s\t%s\t%s\t%s\t%s\n' "$kind" "$f" "${base%.*}" "$f" "$(stat -L -c %Y "$f" 2>/dev/null || echo 0)"
 done < <(find -L "$@" -maxdepth 4 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \
     -o -iname '*.webp' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' -o -iname '*.mov' \) -print0 2>/dev/null | sort -z)
