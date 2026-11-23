@@ -8,32 +8,55 @@ import qs.core
 // Whether the animated wallpaper should stand still on each monitor, from the
 // rules in Config.wallpaper.pause: a fullscreen window or a game (on by
 // default), windows covering the desktop, on battery, while locked.
-// `paused` maps a monitor's name to true/false; Wallpaper sends the changes.
+// `state` has each monitor's conditions (locked, battery, fullscreen,
+// covered); `pausedWith(state, rules)` judges them, so a wallpaper's own
+// rules (WallSettings `pause`) can override the shell's. `paused` is the
+// result with the shell's rules alone.
 Singleton {
     id: root
 
     readonly property var rules: Config.wallpaper.pause
     readonly property bool onBattery: UPower.onBattery
 
-    readonly property var paused: {
+    // Windows are only looked at while some rule asks for it
+    readonly property bool watchCovered: rules.covered || WallSettings.anyCovered
+
+    readonly property var state: {
         const out = {};
         const mons = Hyprland.monitors.values;
-        for (let i = 0; i < mons.length; i++)
-            out[mons[i].name] = pausedOn(mons[i]);
+        for (let i = 0; i < mons.length; i++) {
+            const m = mons[i];
+            const ws = m.activeWorkspace;
+            out[m.name] = {
+                locked: Locker.locked,
+                battery: onBattery,
+                fullscreen: GameMode.active || fullscreenOn(ws),
+                covered: watchCovered && !!ws && coveredBy(ws, m)
+            };
+        }
         return out;
     }
 
-    function pausedOn(m) {
-        if (rules.locked && Locker.locked)
-            return true;
-        if (rules.battery && onBattery)
-            return true;
-        const ws = m.activeWorkspace;
-        if (rules.fullscreen && (GameMode.active || fullscreenOn(ws)))
-            return true;
-        if (rules.covered && ws && coveredBy(ws, m))
-            return true;
-        return false;
+    function pausedWith(st, r) {
+        if (!st)
+            return false;
+        return (r.locked && st.locked) || (r.battery && st.battery)
+            || (r.fullscreen && st.fullscreen) || (r.covered && st.covered);
+    }
+    // The shell's rules with a wallpaper's own on top
+    function rulesWith(own) {
+        const r = { locked: rules.locked, battery: rules.battery, fullscreen: rules.fullscreen, covered: rules.covered };
+        for (const k in own ?? {})
+            r[k] = own[k];
+        return r;
+    }
+
+    readonly property var paused: {
+        const out = {};
+        const r = rulesWith({});
+        for (const name in state)
+            out[name] = pausedWith(state[name], r);
+        return out;
     }
 
     // Real fullscreen only: Hyprland's hasFullscreen is also true for a
@@ -72,7 +95,7 @@ Singleton {
     // and only while the rule is on
     Connections {
         target: Hyprland
-        enabled: root.rules.covered
+        enabled: root.watchCovered
         function onRawEvent(event) {
             switch (event.name) {
             case "openwindow":
@@ -91,11 +114,5 @@ Singleton {
         interval: 150
         onTriggered: Hyprland.refreshToplevels()
     }
-    Connections {
-        target: root.rules
-        function onCoveredChanged() {
-            if (root.rules.covered)
-                Hyprland.refreshToplevels();
-        }
-    }
+    onWatchCoveredChanged: if (watchCovered) Hyprland.refreshToplevels()
 }

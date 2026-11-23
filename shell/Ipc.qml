@@ -122,10 +122,28 @@ Scope {
         function colorsFrom(monitor: string): void { Wallpaper.setColorsFrom(monitor); }
         function walls(): string { return JSON.stringify(Wallpaper.snapshot()); }
         function recolor(): void { Wallpaper.recolor(); }
-        function setProp(key: string, value: string): void { Wallpaper.setProp(key, value); }
+        // A wallpaper's own settings (with "each": the focused monitor's; the
+        // On forms name the monitor). Values: true/false, numbers, text.
+        function setProp(key: string, value: string): void { Wallpaper.setProp(key, value, ""); }
+        function setPropOn(monitor: string, key: string, value: string): void { Wallpaper.setProp(key, value, monitor); }
+        // fit (fill|fit|stretch|center), speed, fps, scale, pause.<rule>; "default" removes it
+        function setting(name: string, value: string): void { Wallpaper.setting(name, value, ""); }
+        function settingOn(monitor: string, name: string, value: string): void { Wallpaper.setting(name, value, monitor); }
+        function resetSettings(monitor: string): void { Wallpaper.resetSettings(monitor); }
+        // The wallpaper's title, kind, properties with their values, and its settings (JSON)
+        function props(monitor: string): string {
+            const p = Wallpaper.targetPath(monitor);
+            const i = WallSettings.infos[p] ?? {};
+            const values = WallSettings.propValues(p);
+            return JSON.stringify({ path: p, key: WallSettings.keyFor(p), title: i.title ?? "", type: i.type ?? "",
+                settings: WallSettings.forPath(p),
+                props: (i.props ?? []).map(x => ({ key: x.key, type: x.type, label: WallSettings.label(x.text), value: values[x.key], default: x.value })) });
+        }
         function pause(on: bool): void { Wallpaper.setPaused(on); }
         // Each somewall (its monitors, wallpaper, decoder) and the pause state (JSON)
         function engine(): string { return JSON.stringify(Wallpaper.engineState()); }
+        // Ask every somewall for a fresh report (read it with `engine` a moment later)
+        function engineStatus(): void { for (const k in Wallpaper.engines) Wallpaper.engines[k].send({ cmd: "status" }); }
     }
 
     IpcHandler {

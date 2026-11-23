@@ -154,7 +154,6 @@ Singleton {
             }
         return out;
     }
-    onAllPathsChanged: resolveStills()
     function resolveStills() {
         const add = Object.assign({}, stills);
         const missing = [];
@@ -396,16 +395,52 @@ Singleton {
         userPaused = on;
     }
 
-    // A Wallpaper Engine property, live, on every somewall
-    function setProp(key, rawValue) {
-        if (!key)
-            return;
-        let v = rawValue;
-        if (rawValue === "true") v = true;
-        else if (rawValue === "false") v = false;
-        else if (typeof rawValue === "string" && rawValue !== "" && !isNaN(Number(rawValue))) v = Number(rawValue);
-        for (const k in engines)
-            engines[k].send({ cmd: "set_prop", key: key, value: v });
+    // ── Each wallpaper's settings (WallSettings) ───────────────────────
+
+    // The wallpaper a change is for: the monitor's, else with "each" the
+    // focused monitor's, else the one on every monitor
+    function targetPath(monitor) {
+        if (monitor)
+            return pathFor(monitor);
+        if (mode === "each")
+            return pathFor(Hyprland.focusedMonitor?.name ?? colorsMonitor);
+        return state.path;
+    }
+    // Text from IPC: true/false and numbers as such, the rest as text
+    function parseValue(raw) {
+        if (typeof raw !== "string")
+            return raw;
+        if (raw === "true")
+            return true;
+        if (raw === "false")
+            return false;
+        if (raw !== "" && !isNaN(Number(raw)))
+            return Number(raw);
+        return raw;
+    }
+    // A Wallpaper Engine property; saved, live on the wallpaper's somewall
+    function setProp(key, value, monitor) {
+        if (key)
+            WallSettings.setProp(targetPath(monitor), key, parseValue(value));
+    }
+    // fit, speed, fps, scale, or pause.<rule> ("default" removes it)
+    function setting(name, value, monitor) {
+        const p = targetPath(monitor);
+        const v = value === "default" ? null : parseValue(value);
+        if (name.startsWith("pause."))
+            WallSettings.setPause(p, name.slice(6), v);
+        else
+            WallSettings.setValue(p, name, v);
+    }
+    function resetSettings(monitor) {
+        WallSettings.reset(targetPath(monitor));
+    }
+    // project.json of every wallpaper shown, read ahead (titles, properties)
+    onAllPathsChanged: {
+        resolveStills();
+        for (const p of allPaths)
+            if (isAnimatedPath(p))
+                WallSettings.describe(p);
     }
 
     // For `ipc call wallpaper engine`
@@ -413,7 +448,7 @@ Singleton {
         const list = [];
         for (const key in engines) {
             const e = engines[key];
-            list.push({ outputs: e.outputs, path: e.path, ready: e.ready, info: e.info, sent: e.sentPause });
+            list.push({ outputs: e.outputs, path: e.path, ready: e.ready, info: e.info, sent: e.sentPause, settings: e.settings });
         }
         return { mode: mode, colorsFrom: colorsMonitor, colors: path, still: stillPath, colored: colored, stills: stills, rules: WallPause.paused, user: userPaused, engines: list };
     }

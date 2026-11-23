@@ -45,6 +45,8 @@ public:
 
     void set_paused(bool paused);
     bool is_paused() const { return paused_.load(); }
+    // Playback speed: frames are paced at fps * speed
+    void set_speed(float speed) { speed_.store(speed); }
 
     // Upload the latest decoded frame (if a new one is ready) and convert it
     // into the output texture. GL thread only. True when a new frame arrived.
@@ -72,6 +74,7 @@ private:
     std::thread thread_;
     std::atomic<bool> running_{false};
     std::atomic<bool> paused_{false};
+    std::atomic<float> speed_{1.0f};
     std::mutex pause_mtx_;
     std::condition_variable pause_cv_;
 

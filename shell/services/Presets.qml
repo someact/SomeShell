@@ -56,6 +56,8 @@ Singleton {
             // The colors' wallpaper (older presets have only this) and the whole choice
             wallpaper: Wallpaper.path,
             walls: Wallpaper.snapshot(),
+            // The settings of the wallpapers it shows
+            wallSettings: WallSettings.entriesFor(Wallpaper.allPaths),
             theme: { mode: Config.theme.mode, scheme: Config.theme.scheme },
             desktop: Desktop.snapshot()
         };
@@ -100,6 +102,7 @@ Singleton {
                 return Ui.showAlert("Preset not readable", path, "Presets", "error");
             Desktop.load(p.desktop ?? {}, p.name ?? "");
             Editor.matched();
+            WallSettings.merge(p.wallSettings ?? {});
             Wallpaper.applyLook(p.walls ?? p.wallpaper ?? "", p.theme?.mode ?? "", p.theme?.scheme ?? "");
         }
         onLoadFailed: if (path) Ui.showAlert("No such preset", path.split("/").slice(-2, -1)[0], "Presets", "error")

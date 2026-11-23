@@ -159,6 +159,12 @@ std::string TextureCache::video_decoders() const {
     return out;
 }
 
+void TextureCache::set_speed(float speed) {
+    for (auto& [k, t] : cache_) {
+        if (t && t->video) t->video->set_speed(speed);
+    }
+}
+
 void TextureCache::set_paused(bool paused) {
     for (auto& [k, t] : cache_) {
         if (t && t->video) t->video->set_paused(paused);

@@ -223,6 +223,19 @@ void Scene::set_paused(bool paused) {
     if (tex_cache_) tex_cache_->set_paused(paused);
 }
 
+Scene::Fit Scene::parse_fit(const std::string& s) {
+    if (s == "fit") return Fit::Fit;
+    if (s == "stretch") return Fit::Stretch;
+    if (s == "center" || s == "centre") return Fit::Center;
+    return Fit::Fill;
+}
+
+void Scene::set_speed(float speed) {
+    speed_ = std::clamp(speed, 0.1f, 4.0f);
+    if (direct_video_) direct_video_->set_speed(speed_);
+    if (tex_cache_) tex_cache_->set_speed(speed_);
+}
+
 void Scene::set_cursor(float norm_x, float norm_y) {
     raw_cursor_.x = std::clamp(norm_x, 0.0f, 1.0f);
     raw_cursor_.y = std::clamp(norm_y, 0.0f, 1.0f);
@@ -762,7 +775,7 @@ int Scene::wake_fd() const {
 
 bool Scene::update(float dt) {
     if (paused_ || mode_ == Mode::None) return false;
-    dt = std::clamp(dt, 0.0f, 0.1f);
+    dt = std::clamp(dt, 0.0f, 0.1f) * speed_;
     time_sec_ += dt;
 
     if (mode_ == Mode::Video) {
@@ -836,20 +849,32 @@ void Scene::render_video_or_image(int fb_w, int fb_h, GLuint tex_id, int tex_w, 
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
 
-    float screen_aspect = static_cast<float>(fb_w) / static_cast<float>(fb_h);
-    float media_aspect = (tex_h > 0) ? (static_cast<float>(tex_w) / static_cast<float>(tex_h)) : screen_aspect;
-
-    glm::vec2 uv_scale(1.0f, 1.0f);
-    glm::vec2 uv_off(0.0f, 0.0f);
-    if (screen_aspect > media_aspect) {
-        // Screen is wider -> crop vertically
-        uv_scale.y = media_aspect / screen_aspect;
-        uv_off.y = (1.0f - uv_scale.y) * 0.5f;
-    } else {
-        // Screen is taller -> crop horizontally
-        uv_scale.x = screen_aspect / media_aspect;
-        uv_off.x = (1.0f - uv_scale.x) * 0.5f;
+    // Where the picture lands (may be larger than the screen), then the part
+    // of it that shows: that part of the texture, drawn into that viewport
+    const float fw = static_cast<float>(fb_w), fh = static_cast<float>(fb_h);
+    const float tw = static_cast<float>(std::max(1, tex_w)), th = static_cast<float>(std::max(1, tex_h));
+    float dw = fw, dh = fh;
+    if (fit_ == Fit::Fill || fit_ == Fit::Fit) {
+        float s = fit_ == Fit::Fill ? std::max(fw / tw, fh / th) : std::min(fw / tw, fh / th);
+        dw = tw * s;
+        dh = th * s;
+    } else if (fit_ == Fit::Center) {
+        dw = tw;
+        dh = th;
     }
+    const float dx = (fw - dw) * 0.5f, dy = (fh - dh) * 0.5f;
+    const float vx0 = std::max(0.0f, dx), vx1 = std::min(fw, dx + dw);
+    const float vy0 = std::max(0.0f, dy), vy1 = std::min(fh, dy + dh);
+    glm::vec2 uv_scale((vx1 - vx0) / dw, (vy1 - vy0) / dh);
+    glm::vec2 uv_off((vx0 - dx) / dw, (vy0 - dy) / dh);
+
+    if (vx0 > 0.0f || vy0 > 0.0f) {
+        // Bars around a picture smaller than the screen
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+    glViewport(static_cast<GLint>(vx0 + 0.5f), static_cast<GLint>(vy0 + 0.5f),
+               static_cast<GLsizei>(vx1 - vx0 + 0.5f), static_cast<GLsizei>(vy1 - vy0 + 0.5f));
 
     glUseProgram(cover_prog_);
     glActiveTexture(GL_TEXTURE0);
@@ -886,10 +911,14 @@ void Scene::render_scene(int fb_w, int fb_h) {
         float scene_aspect = ortho_w_ / std::max(1.0f, ortho_h_);
         float vis_w = ortho_w_;
         float vis_h = ortho_h_;
-        if (screen_aspect > scene_aspect) {
-            vis_h = ortho_w_ / screen_aspect;
-        } else {
-            vis_w = ortho_h_ * screen_aspect;
+        // Fill crops the scene to the screen, fit shows all of it (the
+        // clear color around it), stretch shows all of it squeezed
+        if (fit_ == Fit::Fit) {
+            if (screen_aspect > scene_aspect) vis_w = ortho_h_ * screen_aspect;
+            else vis_h = ortho_w_ / screen_aspect;
+        } else if (fit_ != Fit::Stretch) {
+            if (screen_aspect > scene_aspect) vis_h = ortho_w_ / screen_aspect;
+            else vis_w = ortho_h_ * screen_aspect;
         }
         vis_w /= std::max(0.01f, cam_zoom_);
         vis_h /= std::max(0.01f, cam_zoom_);

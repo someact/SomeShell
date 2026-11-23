@@ -114,6 +114,14 @@ public:
     void set_paused(bool paused);
     void set_cursor(float norm_x, float norm_y); // [0..1] top-left origin
 
+    // How the picture meets the screen: fill (crop, default), fit (whole,
+    // bars), stretch, center (native size; scenes treat it as fill)
+    enum class Fit { Fill, Fit, Stretch, Center };
+    static Fit parse_fit(const std::string& s);
+    void set_fit(Fit f) { fit_ = f; }
+    // Playback speed (0.1..4): scene time and video frame pacing
+    void set_speed(float speed);
+
     // Steps the wallpaper. True when the picture changed and must be drawn
     // again: always for a scene, only on a new frame for a video, never for an image
     bool update(float dt);
@@ -200,6 +208,8 @@ private:
     std::vector<SceneObject> objects_;
 
     // Runtime state
+    Fit fit_ = Fit::Fill;
+    float speed_ = 1.0f;
     double time_sec_ = 0.0;
     bool paused_ = false;
     glm::vec2 raw_cursor_{0.5f, 0.5f};     // normalized [0,1] top-left

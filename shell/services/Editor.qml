@@ -13,7 +13,7 @@ Singleton {
     readonly property bool canUndo: history.length > 0
 
     function look() {
-        return { desktop: Desktop.snapshot(), wallpaper: Wallpaper.snapshot(), mode: Config.theme.mode, scheme: Config.theme.scheme };
+        return { desktop: Desktop.snapshot(), wallpaper: Wallpaper.snapshot(), wallSettings: WallSettings.snapshot(), mode: Config.theme.mode, scheme: Config.theme.scheme };
     }
 
     // Call before changing anything
@@ -29,6 +29,8 @@ Singleton {
         history = history.slice(0, -1);
         Desktop.load(l.desktop, Desktop.preset);
         // matugen only when the colors change
+        if (!WallSettings.sameAs(l.wallSettings))
+            WallSettings.load(l.wallSettings);
         if (!Wallpaper.sameAs(l.wallpaper) || l.mode !== Config.theme.mode || l.scheme !== Config.theme.scheme)
             Wallpaper.applyLook(l.wallpaper, l.mode, l.scheme);
         if (!history.length)

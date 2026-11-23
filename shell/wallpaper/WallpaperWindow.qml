@@ -39,6 +39,9 @@ PanelWindow {
     // one; once it is decoded, `a` fades in or out to reveal it.
     property bool showA: true
     readonly property string still: Wallpaper.stillFor(modelData.name)
+    // The picture's fit (its own setting)
+    readonly property int fill: ({ fit: Image.PreserveAspectFit, stretch: Image.Stretch, center: Image.Pad })[
+        WallSettings.forPath(Wallpaper.pathFor(modelData.name)).fit ?? ""] ?? Image.PreserveAspectCrop
     readonly property string source: still ? "file://" + still : ""
     onSourceChanged: {
         const hidden = showA ? b : a;
@@ -64,7 +67,7 @@ PanelWindow {
         id: b
         visible: !win.live
         anchors.fill: parent
-        fillMode: Image.PreserveAspectCrop
+        fillMode: win.fill
         sourceSize: Qt.size(win.modelData.width, win.modelData.height)
         asynchronous: true
         cache: false
@@ -74,7 +77,7 @@ PanelWindow {
         id: a
         visible: !win.live
         anchors.fill: parent
-        fillMode: Image.PreserveAspectCrop
+        fillMode: win.fill
         sourceSize: Qt.size(win.modelData.width, win.modelData.height)
         asynchronous: true
         cache: false

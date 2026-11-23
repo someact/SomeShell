@@ -610,7 +610,7 @@ void VideoDecoder::decode_loop() {
                     next_pts_time = now;
                 }
             }
-            next_pts_time += std::chrono::duration_cast<clock::duration>(frame_dur);
+            next_pts_time += std::chrono::duration_cast<clock::duration>(frame_dur / std::max(0.1f, speed_.load()));
 
             {
                 std::lock_guard<std::mutex> lk(frame_mtx_);

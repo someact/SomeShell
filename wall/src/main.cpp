@@ -32,6 +32,8 @@ void print_usage(const char* argv0) {
               << "  --assets <dir>       Wallpaper Engine assets/ directory\n"
               << "  --output <names>     Only these outputs, comma-separated (e.g. DP-1,HDMI-A-1)\n"
               << "  --fps <n>            Frame rate cap for scenes (default: 60; videos play at their own rate)\n"
+              << "  --fit <mode>         fill (default), fit, stretch, center\n"
+              << "  --speed <f>          Playback speed 0.1..4 (default: 1)\n"
               << "  --scale <f>          Render scale 0.25..1 (the compositor stretches the picture)\n"
               << "  --hwdec <name>       Video decoding: auto (default), none, cuda, vaapi, vulkan, v4l2m2m\n"
               << "  --windowed [WxH]     Run in an xdg-shell preview window\n"
@@ -114,6 +116,8 @@ int main(int argc, char** argv) {
     int shot_frames = 30;
     std::vector<std::pair<std::string, sw::Json>> prop_overrides;
     float render_scale = 1.0f;
+    std::string fit = "fill";
+    float speed = 1.0f;
     std::string hwdec = std::getenv("SOMEWALL_HWDEC") ? std::getenv("SOMEWALL_HWDEC") : "auto";
 
     for (int i = 1; i < argc; ++i) {
@@ -127,6 +131,10 @@ int main(int argc, char** argv) {
             target_output = argv[++i];
         } else if (a == "--fps" && i + 1 < argc) {
             target_fps = std::clamp(std::atoi(argv[++i]), 1, 240);
+        } else if (a == "--fit" && i + 1 < argc) {
+            fit = argv[++i];
+        } else if (a == "--speed" && i + 1 < argc) {
+            speed = static_cast<float>(std::atof(argv[++i]));
         } else if (a == "--scale" && i + 1 < argc) {
             render_scale = static_cast<float>(std::atof(argv[++i]));
         } else if (a == "--hwdec" && i + 1 < argc) {
@@ -194,6 +202,8 @@ int main(int argc, char** argv) {
             scene.set_user_property(k, v);
         }
     }
+    scene.set_fit(sw::Scene::parse_fit(fit));
+    scene.set_speed(speed);
 
     // Offscreen screenshot mode (for automated visual verification!)
     if (!headless_shot.empty()) {
@@ -253,6 +263,7 @@ int main(int argc, char** argv) {
                   << ",\"decoder\":" << json_str(scene.video_decoders())
                   << ",\"cursor\":" << (scene.uses_cursor() ? "true" : "false")
                   << ",\"fps\":" << target_fps << ",\"scale\":" << app.render_scale()
+                  << ",\"fit\":" << json_str(fit) << ",\"speed\":" << speed
                   << ",\"paused\":" << (global_paused ? "true" : "false") << extra << "}\n" << std::flush;
     };
 
@@ -288,7 +299,20 @@ int main(int argc, char** argv) {
                 for (auto& s : app.surfaces()) {
                     if (s->egl_surface != EGL_NO_SURFACE) { app.make_current(*s); break; }
                 }
+                // The wallpaper's own settings come with it, so its first
+                // frame already has them: {props: {key: value}, fit, speed}
+                if (msg.has("fit")) {
+                    fit = msg["fit"].as_string();
+                    scene.set_fit(sw::Scene::parse_fit(fit));
+                }
+                if (msg.has("speed")) speed = msg["speed"].as_float(1.0f);
                 bool ok = scene.load(p);
+                if (ok) {
+                    if (msg["props"].is_object()) {
+                        for (const auto& [k, v] : msg["props"].as_object()) scene.set_user_property(k, v);
+                    }
+                    scene.set_speed(speed);
+                }
                 if (ok && global_paused) scene.set_paused(true);
                 mark_dirty();
                 report("loaded", ok ? ",\"ok\":true" : ",\"ok\":false");
@@ -297,6 +321,13 @@ int main(int argc, char** argv) {
             std::string k = msg["key"].as_string();
             if (!k.empty()) scene.set_user_property(k, msg["value"]);
             mark_dirty();
+        } else if (cmd == "fit") {
+            fit = msg["value"].as_string();
+            scene.set_fit(sw::Scene::parse_fit(fit));
+            mark_dirty();
+        } else if (cmd == "speed") {
+            speed = msg["value"].as_float(1.0f);
+            scene.set_speed(speed);
         } else if (cmd == "fps") {
             target_fps = std::clamp(msg["value"].as_int(60), 1, 240);
         } else if (cmd == "scale") {
