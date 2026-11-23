@@ -1,5 +1,6 @@
 #include "json.hpp"
 #include "scene.hpp"
+#include "video.hpp"
 #include "wayland.hpp"
 
 #include <GL/glext.h>
@@ -30,7 +31,9 @@ void print_usage(const char* argv0) {
               << "Options:\n"
               << "  --assets <dir>       Wallpaper Engine assets/ directory\n"
               << "  --output <name>      Target a single Wayland output (e.g. DP-1)\n"
-              << "  --fps <n>            Target frame rate (default: 60)\n"
+              << "  --fps <n>            Frame rate cap for scenes (default: 60; videos play at their own rate)\n"
+              << "  --scale <f>          Render scale 0.25..1 (the compositor stretches the picture)\n"
+              << "  --hwdec <name>       Video decoding: auto (default), none, cuda, vaapi, vulkan, v4l2m2m\n"
               << "  --windowed [WxH]     Run in an xdg-shell preview window\n"
               << "  --prop <k=v>         Override a Wallpaper Engine user property (repeatable)\n"
               << "  --no-hypr-cursor     Disable Hyprland IPC cursor tracking\n"
@@ -110,6 +113,8 @@ int main(int argc, char** argv) {
     int win_w = 1280, win_h = 720;
     int shot_frames = 30;
     std::vector<std::pair<std::string, sw::Json>> prop_overrides;
+    float render_scale = 1.0f;
+    std::string hwdec = std::getenv("SOMEWALL_HWDEC") ? std::getenv("SOMEWALL_HWDEC") : "auto";
 
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -122,6 +127,10 @@ int main(int argc, char** argv) {
             target_output = argv[++i];
         } else if (a == "--fps" && i + 1 < argc) {
             target_fps = std::clamp(std::atoi(argv[++i]), 1, 240);
+        } else if (a == "--scale" && i + 1 < argc) {
+            render_scale = static_cast<float>(std::atof(argv[++i]));
+        } else if (a == "--hwdec" && i + 1 < argc) {
+            hwdec = argv[++i];
         } else if (a == "--windowed") {
             windowed = true;
         } else if (a == "--size" && i + 1 < argc) {
@@ -165,6 +174,13 @@ int main(int argc, char** argv) {
     } else {
         if (!app.init(windowed, target_output, win_w, win_h)) return 1;
     }
+
+    {
+        const char* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+        sw::set_hwdec_preference(hwdec, vendor ? vendor : "");
+        if (vendor) std::cerr << "[somewall] GL vendor: " << vendor << ", video decoding: " << hwdec << "\n";
+    }
+    if (headless_shot.empty()) app.set_render_scale(render_scale);
 
     sw::Scene scene;
     scene.set_assets_dir(assets_dir);
@@ -221,6 +237,25 @@ int main(int argc, char** argv) {
     }
 
     bool global_paused = false;
+    auto mark_dirty = [&]() {
+        for (auto& s : app.surfaces()) s->dirty = true;
+    };
+    auto json_str = [](const std::string& v) {
+        std::string o = "\"";
+        for (char c : v) {
+            if (c == '"' || c == '\\') o += '\\';
+            o += c;
+        }
+        return o + "\"";
+    };
+    auto report = [&](const char* event, const char* extra) {
+        std::cout << "{\"event\":\"" << event << "\",\"type\":" << json_str(scene.type())
+                  << ",\"decoder\":" << json_str(scene.video_decoders())
+                  << ",\"cursor\":" << (scene.uses_cursor() ? "true" : "false")
+                  << ",\"fps\":" << target_fps << ",\"scale\":" << app.render_scale()
+                  << ",\"paused\":" << (global_paused ? "true" : "false") << extra << "}\n" << std::flush;
+    };
+
     auto handle_ipc_line = [&](const std::string& line) {
         if (line.empty()) return;
         sw::Json msg = sw::Json::parse(line);
@@ -228,32 +263,25 @@ int main(int argc, char** argv) {
         std::string cmd = msg["cmd"].as_string();
         if (cmd == "quit") {
             app.request_quit();
-        } else if (cmd == "pause") {
+        } else if (cmd == "pause" || cmd == "resume") {
+            const bool on = cmd == "pause";
             std::string mon = msg["monitor"].as_string();
             if (mon.empty()) {
-                global_paused = true;
-                scene.set_paused(true);
+                global_paused = on;
+                for (auto& s : app.surfaces()) s->paused = on;
             } else {
                 for (auto& s : app.surfaces()) {
-                    if (s->name == mon) s->paused = true;
+                    if (s->name == mon) s->paused = on;
                 }
-                bool all_p = true;
-                for (auto& s : app.surfaces()) if (!s->paused) all_p = false;
-                scene.set_paused(all_p);
             }
-        } else if (cmd == "resume") {
-            std::string mon = msg["monitor"].as_string();
-            if (mon.empty()) {
-                global_paused = false;
-                for (auto& s : app.surfaces()) s->paused = false;
-                scene.set_paused(false);
-            } else {
-                for (auto& s : app.surfaces()) {
-                    if (s->name == mon) s->paused = false;
-                }
-                global_paused = false;
-                scene.set_paused(false);
+            bool all_p = true;
+            for (auto& s : app.surfaces()) {
+                if (!s->paused) all_p = false;
+                // Drawn again once it shows: an image or a paused video has no next frame
+                if (!on) s->dirty = true;
             }
+            global_paused = all_p;
+            scene.set_paused(all_p);
         } else if (cmd == "load") {
             std::string p = msg["path"].as_string();
             if (!p.empty()) {
@@ -261,52 +289,72 @@ int main(int argc, char** argv) {
                     if (s->egl_surface != EGL_NO_SURFACE) { app.make_current(*s); break; }
                 }
                 bool ok = scene.load(p);
-                std::cout << "{\"event\":\"loaded\",\"ok\":" << (ok ? "true" : "false")
-                          << ",\"type\":\"" << scene.type() << "\"}\n" << std::flush;
+                if (ok && global_paused) scene.set_paused(true);
+                mark_dirty();
+                report("loaded", ok ? ",\"ok\":true" : ",\"ok\":false");
             }
         } else if (cmd == "set_prop") {
             std::string k = msg["key"].as_string();
             if (!k.empty()) scene.set_user_property(k, msg["value"]);
+            mark_dirty();
         } else if (cmd == "fps") {
             target_fps = std::clamp(msg["value"].as_int(60), 1, 240);
+        } else if (cmd == "scale") {
+            app.set_render_scale(msg["value"].as_float(1.0f));
+        } else if (cmd == "status") {
+            report("status", "");
         }
     };
 
     using clock = std::chrono::steady_clock;
     auto prev_time = clock::now();
+    auto next_frame = clock::now();
+    auto next_cursor = clock::now();
+    const auto cursor_every = std::chrono::milliseconds(33);
 
-    std::cout << "{\"event\":\"ready\",\"type\":\"" << scene.type() << "\"}\n" << std::flush;
+    report("ready", "");
 
     while (!g_stop && !app.should_quit()) {
-        auto frame_start = clock::now();
-        float dt = std::chrono::duration<float>(frame_start - prev_time).count();
-        prev_time = frame_start;
-
-        // Poll Wayland + optional stdin IPC
-        pollfd fds[2]{};
-        int nfds = 0;
-        int wfd = app.wl_fd();
-        if (wfd >= 0) { fds[nfds++] = {wfd, POLLIN, 0}; }
-        if (stdin_ipc) { fds[nfds++] = {STDIN_FILENO, POLLIN, 0}; }
-
         bool any_active = false;
+        bool any_dirty = false;
         if (!global_paused) {
             for (const auto& s : app.surfaces()) {
-                if (s->configured && !s->closed && !s->paused) { any_active = true; break; }
+                if (s->configured && !s->closed && !s->paused) {
+                    any_active = true;
+                    if (s->dirty) any_dirty = true;
+                }
+            }
+        }
+        const bool event_paced = scene.is_static_paced();
+        const int wake = (any_active && event_paced) ? scene.wake_fd() : -1;
+
+        // How long to sleep: paused or a still picture → until something
+        // happens (Wayland, IPC, the next video frame); a scene → until its next frame
+        int poll_ms = -1;
+        auto now = clock::now();
+        if (any_active && scene.is_loaded()) {
+            if (any_dirty) {
+                poll_ms = 0;
+            } else if (!event_paced) {
+                auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(next_frame - now).count();
+                poll_ms = static_cast<int>(std::max<long long>(0, wait));
             }
         }
 
-        // Sleep longer (up to 100ms) when paused -> ~0% CPU!
-        int poll_ms = any_active ? 0 : 100;
+        pollfd fds[3]{};
+        int nfds = 0;
+        int wfd = app.wl_fd();
+        int wl_idx = -1, in_idx = -1;
+        if (wfd >= 0) { wl_idx = nfds; fds[nfds++] = {wfd, POLLIN, 0}; }
+        if (stdin_ipc) { in_idx = nfds; fds[nfds++] = {STDIN_FILENO, POLLIN, 0}; }
+        if (wake >= 0) { fds[nfds++] = {wake, POLLIN, 0}; }
+
+        app.poll_events(); // flush requests before sleeping
         if (nfds > 0 && ::poll(fds, static_cast<nfds_t>(nfds), poll_ms) > 0) {
-            int idx = 0;
-            if (wfd >= 0) {
-                if (fds[idx].revents & (POLLIN | POLLHUP | POLLERR)) {
-                    if (!app.poll_events(true)) break;
-                }
-                ++idx;
+            if (wl_idx >= 0 && (fds[wl_idx].revents & (POLLIN | POLLHUP | POLLERR))) {
+                if (!app.poll_events(true)) break;
             }
-            if (stdin_ipc && (fds[idx].revents & (POLLIN | POLLHUP))) {
+            if (in_idx >= 0 && (fds[in_idx].revents & (POLLIN | POLLHUP))) {
                 char buf[4096];
                 ssize_t n = ::read(STDIN_FILENO, buf, sizeof(buf));
                 if (n > 0) {
@@ -324,41 +372,54 @@ int main(int argc, char** argv) {
                 }
             }
         }
-
         if (!app.poll_events()) break;
 
-        if (any_active && scene.is_loaded()) {
-            // Update cursor (Wayland pointer in windowed mode, Hyprland IPC socket in layer-shell mode)
+        // Recount after events and IPC (a pause or a configure may have come in)
+        any_active = false;
+        if (!global_paused) {
+            for (const auto& s : app.surfaces()) {
+                if (s->configured && !s->closed && !s->paused) { any_active = true; break; }
+            }
+        }
+        if (!any_active || !scene.is_loaded()) {
+            prev_time = clock::now();
+            continue;
+        }
+
+        now = clock::now();
+        if (!event_paced) {
+            if (now < next_frame) continue;
+            auto frame_dur = std::chrono::microseconds(1000000 / std::max(1, target_fps));
+            next_frame += frame_dur;
+            if (next_frame < now) next_frame = now + frame_dur; // fell behind: no catch-up burst
+        }
+        float dt = std::chrono::duration<float>(now - prev_time).count();
+        prev_time = now;
+
+        // The cursor, only when the scene reads it
+        if (scene.uses_cursor()) {
             if (windowed && app.has_pointer()) {
                 scene.set_cursor(app.pointer_x(), app.pointer_y());
-            } else if (use_hypr_cursor) {
+            } else if (use_hypr_cursor && now >= next_cursor) {
+                next_cursor = now + cursor_every;
                 float cx = 0.5f, cy = 0.5f;
-                if (app.query_hypr_cursor(cx, cy)) {
-                    scene.set_cursor(cx, cy);
-                }
-            }
-
-            // Make first active surface current for update (video texture upload + scene step)
-            bool updated = false;
-            for (auto& s : app.surfaces()) {
-                if (!s->configured || s->closed || s->paused || s->egl_surface == EGL_NO_SURFACE) continue;
-                if (!app.make_current(*s)) continue;
-                if (!updated) {
-                    scene.update(dt);
-                    updated = true;
-                }
-                scene.render(s->width, s->height);
-                app.swap_buffers(*s);
+                if (app.query_hypr_cursor(cx, cy)) scene.set_cursor(cx, cy);
             }
         }
 
-        // Frame pacing
-        if (any_active) {
-            auto frame_dur = std::chrono::microseconds(1000000 / std::max(1, target_fps));
-            auto elapsed = clock::now() - frame_start;
-            if (elapsed < frame_dur) {
-                std::this_thread::sleep_for(frame_dur - elapsed);
+        bool changed = false;
+        bool updated = false;
+        for (auto& s : app.surfaces()) {
+            if (!s->configured || s->closed || s->paused || s->egl_surface == EGL_NO_SURFACE) continue;
+            if (!app.make_current(*s)) continue;
+            if (!updated) {
+                changed = scene.update(dt);
+                updated = true;
             }
+            if (!changed && !s->dirty) continue;
+            scene.render(s->width, s->height);
+            app.swap_buffers(*s);
+            s->dirty = false;
         }
     }
 

@@ -300,6 +300,13 @@ void ParticleSystem::spawn_particle(const Emitter& em) {
     }
 }
 
+bool ParticleSystem::uses_mouse() const {
+    for (const auto& cp : control_points_) {
+        if (cp.flags & 1u) return true;
+    }
+    return false;
+}
+
 void ParticleSystem::update(float dt, const glm::vec3& cursor_local) {
     // Update mouse-linked control points
     for (auto& cp : control_points_) {

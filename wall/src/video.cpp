@@ -7,12 +7,16 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sys/eventfd.h>
+#include <unistd.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/imgutils.h>
+#include <libavutil/hwcontext.h>
 #include <libavutil/opt.h>
+#include <libavutil/pixdesc.h>
 #include <libswscale/swscale.h>
 }
 
@@ -123,10 +127,18 @@ uniform sampler2D u_texU;
 uniform sampler2D u_texV;
 uniform int u_bt709;
 uniform int u_fullRange;
+uniform int u_semiPlanar;
 void main() {
     float y = texture(u_texY, v_uv).r;
-    float u = texture(u_texU, v_uv).r - 0.5;
-    float v = texture(u_texV, v_uv).r - 0.5;
+    float u, v;
+    if (u_semiPlanar != 0) {
+        vec2 uv = texture(u_texU, v_uv).rg;
+        u = uv.r - 0.5;
+        v = uv.g - 0.5;
+    } else {
+        u = texture(u_texU, v_uv).r - 0.5;
+        v = texture(u_texV, v_uv).r - 0.5;
+    }
     if (u_fullRange == 0) {
         y = (y - 16.0 / 255.0) * (255.0 / 219.0);
         u = u * (255.0 / 224.0);
@@ -243,11 +255,56 @@ bool decode_image_memory(const uint8_t* data, size_t size, DecodedImage& out) {
     return ok;
 }
 
+namespace {
+
+std::string g_hwdec_pref = "auto";
+std::string g_gl_vendor;
+
+// Hardware device types to try, in order
+std::vector<AVHWDeviceType> hw_order() {
+    std::vector<AVHWDeviceType> out;
+    std::string p = g_hwdec_pref;
+    if (p == "none" || p == "cpu" || p == "no") return out;
+    if (p != "auto") {
+        AVHWDeviceType t = av_hwdevice_find_type_by_name(p.c_str());
+        if (t != AV_HWDEVICE_TYPE_NONE) out.push_back(t);
+        return out;
+    }
+    bool nvidia = g_gl_vendor.find("NVIDIA") != std::string::npos;
+    // CUDA only when GL itself runs on NVIDIA: on a hybrid laptop it would wake the dGPU
+    if (nvidia) out.push_back(AV_HWDEVICE_TYPE_CUDA);
+    out.push_back(AV_HWDEVICE_TYPE_VAAPI);
+    out.push_back(AV_HWDEVICE_TYPE_VULKAN);
+    return out;
+}
+
+enum AVPixelFormat pick_hw_format(AVCodecContext* ctx, const enum AVPixelFormat* fmts) {
+    auto want = static_cast<AVPixelFormat>(reinterpret_cast<intptr_t>(ctx->opaque));
+    for (const AVPixelFormat* f = fmts; *f != AV_PIX_FMT_NONE; ++f) {
+        if (*f == want) return *f;
+    }
+    // Hardware cannot take this stream: let the codec fall back to software
+    for (const AVPixelFormat* f = fmts; *f != AV_PIX_FMT_NONE; ++f) {
+        const AVPixFmtDescriptor* d = av_pix_fmt_desc_get(*f);
+        if (d && !(d->flags & AV_PIX_FMT_FLAG_HWACCEL)) return *f;
+    }
+    return AV_PIX_FMT_NONE;
+}
+
+} // namespace
+
+void set_hwdec_preference(const std::string& pref, const std::string& gl_vendor) {
+    if (!pref.empty()) g_hwdec_pref = pref;
+    g_gl_vendor = gl_vendor;
+}
+
 struct VideoDecoder::Impl {
     SliceBio bio;
     AVIOContext* avio = nullptr;
     AVFormatContext* fmt = nullptr;
     AVCodecContext* dec = nullptr;
+    AVBufferRef* hw_device = nullptr;
+    AVPixelFormat hw_fmt = AV_PIX_FMT_NONE;
     SwsContext* sws = nullptr;
     int vidx = -1;
     AVRational time_base{1, 30};
@@ -294,40 +351,106 @@ bool VideoDecoder::open(const FileSlice& slice) {
         close();
         return false;
     }
+    // Only the picture is read: sound is never decoded (no audio by design)
+    for (unsigned i = 0; i < impl_->fmt->nb_streams; ++i) {
+        if (static_cast<int>(i) != impl_->vidx) impl_->fmt->streams[i]->discard = AVDISCARD_ALL;
+    }
+
+    AVStream* st = impl_->fmt->streams[impl_->vidx];
+    impl_->time_base = st->time_base;
+    AVRational fr = av_guess_frame_rate(impl_->fmt, st, nullptr);
+    fps_ = (fr.num > 0 && fr.den > 0) ? av_q2d(fr) : 30.0;
+    if (fps_ < 1.0 || fps_ > 240.0) fps_ = 30.0;
+
+    if (!open_codec(true)) {
+        close();
+        return false;
+    }
+    width_ = impl_->dec->width;
+    height_ = impl_->dec->height;
+
+    frame_fd_ = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+    running_.store(true);
+    thread_ = std::thread(&VideoDecoder::decode_loop, this);
+    return true;
+}
+
+bool VideoDecoder::open_codec(bool try_hw) {
+    if (impl_->dec) avcodec_free_context(&impl_->dec);
+    if (impl_->hw_device) av_buffer_unref(&impl_->hw_device);
+    impl_->hw_fmt = AV_PIX_FMT_NONE;
 
     AVStream* st = impl_->fmt->streams[impl_->vidx];
     const AVCodec* codec = avcodec_find_decoder(st->codecpar->codec_id);
-    if (!codec) {
-        close();
-        return false;
+    if (!codec) return false;
+
+    auto make_ctx = [&](const AVCodec* c) {
+        AVCodecContext* ctx = avcodec_alloc_context3(c);
+        avcodec_parameters_to_context(ctx, st->codecpar);
+        return ctx;
+    };
+
+    if (try_hw) {
+        for (AVHWDeviceType type : hw_order()) {
+            AVPixelFormat fmt = AV_PIX_FMT_NONE;
+            for (int i = 0;; ++i) {
+                const AVCodecHWConfig* cfg = avcodec_get_hw_config(codec, i);
+                if (!cfg) break;
+                if ((cfg->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX) && cfg->device_type == type) {
+                    fmt = cfg->pix_fmt;
+                    break;
+                }
+            }
+            if (fmt == AV_PIX_FMT_NONE) continue;
+            AVBufferRef* dev = nullptr;
+            if (av_hwdevice_ctx_create(&dev, type, nullptr, nullptr, 0) < 0) continue;
+            AVCodecContext* ctx = make_ctx(codec);
+            ctx->hw_device_ctx = av_buffer_ref(dev);
+            ctx->opaque = reinterpret_cast<void*>(static_cast<intptr_t>(fmt));
+            ctx->get_format = pick_hw_format;
+            if (avcodec_open2(ctx, codec, nullptr) == 0) {
+                impl_->dec = ctx;
+                impl_->hw_device = dev;
+                impl_->hw_fmt = fmt;
+                decoder_name_ = std::string(codec->name) + " (" + av_hwdevice_get_type_name(type) + ")";
+                std::cerr << "[video] decoding " << decoder_name_ << ", " << st->codecpar->width << "x"
+                          << st->codecpar->height << " @ " << fps_ << " fps\n";
+                return true;
+            }
+            avcodec_free_context(&ctx);
+            av_buffer_unref(&dev);
+        }
+#if defined(__aarch64__) || defined(__arm__)
+        // SoCs (Snapdragon venus and the like) decode through V4L2 memory-to-memory
+        if (g_hwdec_pref == "auto" || g_hwdec_pref == "v4l2m2m") {
+            std::string name = std::string(codec->name) + "_v4l2m2m";
+            if (const AVCodec* m2m = avcodec_find_decoder_by_name(name.c_str())) {
+                AVCodecContext* ctx = make_ctx(m2m);
+                if (avcodec_open2(ctx, m2m, nullptr) == 0) {
+                    impl_->dec = ctx;
+                    decoder_name_ = name;
+                    std::cerr << "[video] decoding " << decoder_name_ << "\n";
+                    return true;
+                }
+                avcodec_free_context(&ctx);
+            }
+        }
+#endif
     }
 
-    impl_->dec = avcodec_alloc_context3(codec);
-    avcodec_parameters_to_context(impl_->dec, st->codecpar);
-    // Cap decode threads to 4 so 4K FF_THREAD_FRAME buffers stay lean in RAM
+    AVCodecContext* ctx = make_ctx(codec);
+    // Up to 4 threads so 4K frame-thread buffers stay lean in RAM
     unsigned hw_threads = std::thread::hardware_concurrency();
-    impl_->dec->thread_count = static_cast<int>(std::clamp(hw_threads ? hw_threads : 2u, 2u, 4u));
-    impl_->dec->thread_type = FF_THREAD_FRAME | FF_THREAD_SLICE;
-
-    if (avcodec_open2(impl_->dec, codec, nullptr) != 0) {
-        close();
+    ctx->thread_count = static_cast<int>(std::clamp(hw_threads ? hw_threads : 2u, 2u, 4u));
+    ctx->thread_type = FF_THREAD_FRAME | FF_THREAD_SLICE;
+    if (avcodec_open2(ctx, codec, nullptr) != 0) {
+        avcodec_free_context(&ctx);
         return false;
     }
-
-    width_ = impl_->dec->width;
-    height_ = impl_->dec->height;
-    impl_->time_base = st->time_base;
-
-    AVRational fr = av_guess_frame_rate(impl_->fmt, st, nullptr);
-    if (fr.num > 0 && fr.den > 0) {
-        fps_ = av_q2d(fr);
-    } else {
-        fps_ = 30.0;
-    }
-    if (fps_ < 1.0 || fps_ > 240.0) fps_ = 30.0;
-
-    running_.store(true);
-    thread_ = std::thread(&VideoDecoder::decode_loop, this);
+    impl_->dec = ctx;
+    decoder_name_ = std::string(codec->name) + " (cpu)";
+    std::cerr << "[video] decoding " << decoder_name_ << ", " << st->codecpar->width << "x"
+              << st->codecpar->height << " @ " << fps_ << " fps\n";
     return true;
 }
 
@@ -340,9 +463,17 @@ void VideoDecoder::close() {
     pause_cv_.notify_all();
     if (thread_.joinable()) thread_.join();
 
+    if (pending_) {
+        AVFrame* f = static_cast<AVFrame*>(pending_);
+        av_frame_free(&f);
+        pending_ = nullptr;
+    }
+    if (frame_fd_ >= 0) { ::close(frame_fd_); frame_fd_ = -1; }
+
     if (impl_) {
         if (impl_->sws) sws_freeContext(impl_->sws);
         if (impl_->dec) avcodec_free_context(&impl_->dec);
+        if (impl_->hw_device) av_buffer_unref(&impl_->hw_device);
         if (impl_->fmt) avformat_close_input(&impl_->fmt);
         if (impl_->avio) {
             av_freep(&impl_->avio->buffer);
@@ -370,17 +501,33 @@ void VideoDecoder::set_paused(bool paused) {
     pause_cv_.notify_all();
 }
 
+namespace {
+// Formats the GPU path takes as they are: 8-bit planar, NV12, and 16-bit P010/P016
+bool direct_format(int f) {
+    return f == AV_PIX_FMT_YUV420P || f == AV_PIX_FMT_YUVJ420P || f == AV_PIX_FMT_NV12 ||
+           f == AV_PIX_FMT_P010LE || f == AV_PIX_FMT_P016LE;
+}
+} // namespace
+
 void VideoDecoder::decode_loop() {
     AVPacket* pkt = av_packet_alloc();
     AVFrame* frame = av_frame_alloc();
-    AVFrame* yuv_frame = av_frame_alloc();
-    std::vector<uint8_t> sws_buf;
     int sws_w = 0, sws_h = 0;
     AVPixelFormat sws_fmt = AV_PIX_FMT_NONE;
+    int frames_out = 0;
+    int hw_errors = 0;
 
     using clock = std::chrono::steady_clock;
     auto frame_dur = std::chrono::duration<double>(1.0 / fps_);
     auto next_pts_time = clock::now();
+
+    // The hardware refused this stream before its first frame: start over on the CPU
+    auto fall_back = [&]() {
+        std::cerr << "[video] " << decoder_name_ << " failed, decoding on the CPU\n";
+        av_seek_frame(impl_->fmt, impl_->vidx, 0, AVSEEK_FLAG_BACKWARD);
+        if (!open_codec(false)) running_.store(false);
+        hw_errors = 0;
+    };
 
     while (running_.load()) {
         if (paused_.load()) {
@@ -401,124 +548,120 @@ void VideoDecoder::decode_loop() {
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
             continue;
         }
-
         if (pkt->stream_index != impl_->vidx) {
             av_packet_unref(pkt);
             continue;
         }
 
-        if (avcodec_send_packet(impl_->dec, pkt) == 0) {
-            while (running_.load() && avcodec_receive_frame(impl_->dec, frame) == 0) {
-                AVFrame* src = frame;
-                bool is_yuv420 = (frame->format == AV_PIX_FMT_YUV420P || frame->format == AV_PIX_FMT_YUVJ420P);
+        ret = avcodec_send_packet(impl_->dec, pkt);
+        av_packet_unref(pkt);
+        if (ret < 0 && ret != AVERROR(EAGAIN)) {
+            if (impl_->hw_device && frames_out == 0 && ++hw_errors >= 3) fall_back();
+            continue;
+        }
 
-                if (!is_yuv420) {
-                    if (!impl_->sws || sws_w != frame->width || sws_h != frame->height ||
-                        sws_fmt != static_cast<AVPixelFormat>(frame->format)) {
-                        if (impl_->sws) sws_freeContext(impl_->sws);
-                        sws_w = frame->width;
-                        sws_h = frame->height;
-                        sws_fmt = static_cast<AVPixelFormat>(frame->format);
-                        impl_->sws = sws_getContext(sws_w, sws_h, sws_fmt,
-                                                    sws_w, sws_h, AV_PIX_FMT_YUV420P,
-                                                    SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
-                        int nbytes = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, sws_w, sws_h, 1);
-                        sws_buf.resize(static_cast<size_t>(nbytes));
-                        av_image_fill_arrays(yuv_frame->data, yuv_frame->linesize, sws_buf.data(),
-                                             AV_PIX_FMT_YUV420P, sws_w, sws_h, 1);
-                        yuv_frame->width = sws_w;
-                        yuv_frame->height = sws_h;
-                        yuv_frame->format = AV_PIX_FMT_YUV420P;
-                    }
-                    sws_scale(impl_->sws, frame->data, frame->linesize, 0, frame->height,
-                              yuv_frame->data, yuv_frame->linesize);
-                    src = yuv_frame;
+        while (running_.load()) {
+            ret = avcodec_receive_frame(impl_->dec, frame);
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) break;
+            if (ret < 0) {
+                if (impl_->hw_device && frames_out == 0 && ++hw_errors >= 3) fall_back();
+                break;
+            }
+
+            AVFrame* out = av_frame_alloc();
+            if (frame->format == impl_->hw_fmt && impl_->hw_fmt != AV_PIX_FMT_NONE) {
+                // Download from the GPU (NV12 or P010): the decode itself stays on the GPU
+                if (av_hwframe_transfer_data(out, frame, 0) < 0) {
+                    av_frame_free(&out);
+                    av_frame_unref(frame);
+                    if (frames_out == 0 && ++hw_errors >= 3) fall_back();
+                    break;
                 }
-
-                int w = src->width;
-                int h = src->height;
-                int cw = (w + 1) / 2;
-                int ch = (h + 1) / 2;
-
-                // Pace playback cleanly to the video's native frame rate
-                auto now = clock::now();
-                if (next_pts_time > now) {
-                    auto diff = next_pts_time - now;
-                    if (diff < std::chrono::milliseconds(200)) {
-                        std::this_thread::sleep_until(next_pts_time);
-                    } else {
-                        next_pts_time = now;
-                    }
+                av_frame_copy_props(out, frame);
+            } else if (direct_format(frame->format)) {
+                av_frame_move_ref(out, frame);
+            } else {
+                // Anything else (4:2:2, 4:4:4, RGB): convert to planar 4:2:0 on the CPU
+                if (!impl_->sws || sws_w != frame->width || sws_h != frame->height ||
+                    sws_fmt != static_cast<AVPixelFormat>(frame->format)) {
+                    if (impl_->sws) sws_freeContext(impl_->sws);
+                    sws_w = frame->width;
+                    sws_h = frame->height;
+                    sws_fmt = static_cast<AVPixelFormat>(frame->format);
+                    impl_->sws = sws_getContext(sws_w, sws_h, sws_fmt, sws_w, sws_h, AV_PIX_FMT_YUV420P,
+                                                SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
                 }
-                next_pts_time += std::chrono::duration_cast<clock::duration>(frame_dur);
+                out->format = AV_PIX_FMT_YUV420P;
+                out->width = frame->width;
+                out->height = frame->height;
+                av_frame_get_buffer(out, 0);
+                sws_scale(impl_->sws, frame->data, frame->linesize, 0, frame->height, out->data, out->linesize);
+                av_frame_copy_props(out, frame);
+            }
+            av_frame_unref(frame);
+            ++frames_out;
 
-                {
-                    std::lock_guard<std::mutex> lk(frame_mtx_);
-                    y_plane_.resize(static_cast<size_t>(w) * h);
-                    u_plane_.resize(static_cast<size_t>(cw) * ch);
-                    v_plane_.resize(static_cast<size_t>(cw) * ch);
-
-                    for (int row = 0; row < h; ++row) {
-                        std::memcpy(y_plane_.data() + static_cast<size_t>(row) * w,
-                                    src->data[0] + row * src->linesize[0], static_cast<size_t>(w));
-                    }
-                    for (int row = 0; row < ch; ++row) {
-                        std::memcpy(u_plane_.data() + static_cast<size_t>(row) * cw,
-                                    src->data[1] + row * src->linesize[1], static_cast<size_t>(cw));
-                        std::memcpy(v_plane_.data() + static_cast<size_t>(row) * cw,
-                                    src->data[2] + row * src->linesize[2], static_cast<size_t>(cw));
-                    }
-                    frame_w_ = w;
-                    frame_h_ = h;
-                    color_bt709_ = (frame->colorspace == AVCOL_SPC_BT709 ||
-                                    (frame->colorspace == AVCOL_SPC_UNSPECIFIED && h >= 720));
-                    color_full_range_ = (frame->color_range == AVCOL_RANGE_JPEG ||
-                                         frame->format == AV_PIX_FMT_YUVJ420P);
-                    frame_dirty_ = true;
+            // Pace playback to the video's own frame rate
+            auto now = clock::now();
+            if (next_pts_time > now) {
+                if (next_pts_time - now < std::chrono::milliseconds(200)) {
+                    std::this_thread::sleep_until(next_pts_time);
+                } else {
+                    next_pts_time = now;
                 }
             }
+            next_pts_time += std::chrono::duration_cast<clock::duration>(frame_dur);
+
+            {
+                std::lock_guard<std::mutex> lk(frame_mtx_);
+                if (pending_) {
+                    AVFrame* old = static_cast<AVFrame*>(pending_);
+                    av_frame_free(&old);
+                }
+                pending_ = out;
+            }
+            uint64_t one = 1;
+            if (frame_fd_ >= 0) (void)!::write(frame_fd_, &one, sizeof(one));
         }
-        av_packet_unref(pkt);
     }
 
-    av_frame_free(&yuv_frame);
     av_frame_free(&frame);
     av_packet_free(&pkt);
 }
 
-void VideoDecoder::ensure_gl_resources() {
+void VideoDecoder::ensure_gl_resources(int w, int h, bool semi_planar, bool wide) {
     if (!yuv_prog_) {
         yuv_prog_ = build_yuv_program();
         glGenVertexArrays(1, &dummy_vao_);
     }
-    if (gl_w_ == frame_w_ && gl_h_ == frame_h_ && rgba_tex_ != 0) return;
+    if (gl_w_ == w && gl_h_ == h && gl_semi_planar_ == semi_planar && gl_wide_ == wide && rgba_tex_ != 0) return;
 
-    gl_w_ = frame_w_;
-    gl_h_ = frame_h_;
-    int cw = (gl_w_ + 1) / 2;
-    int ch = (gl_h_ + 1) / 2;
+    gl_w_ = w;
+    gl_h_ = h;
+    gl_semi_planar_ = semi_planar;
+    gl_wide_ = wide;
+    int cw = (w + 1) / 2;
+    int ch = (h + 1) / 2;
 
-    auto make_plane = [](GLuint& tex, int w, int h) {
+    auto make_tex = [](GLuint& tex, int tw, int th, GLint ifmt, GLenum fmt, GLenum type) {
         if (!tex) glGenTextures(1, &tex);
         glBindTexture(GL_TEXTURE_2D, tex);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, ifmt, tw, th, 0, fmt, type, nullptr);
     };
 
-    make_plane(y_tex_, gl_w_, gl_h_);
-    make_plane(u_tex_, cw, ch);
-    make_plane(v_tex_, cw, ch);
-
-    if (!rgba_tex_) glGenTextures(1, &rgba_tex_);
-    glBindTexture(GL_TEXTURE_2D, rgba_tex_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, gl_w_, gl_h_, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    GLenum type = wide ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE;
+    make_tex(y_tex_, w, h, wide ? GL_R16 : GL_R8, GL_RED, type);
+    if (semi_planar) {
+        make_tex(u_tex_, cw, ch, wide ? GL_RG16 : GL_RG8, GL_RG, type);
+    } else {
+        make_tex(u_tex_, cw, ch, GL_R8, GL_RED, type);
+        make_tex(v_tex_, cw, ch, GL_R8, GL_RED, type);
+    }
+    make_tex(rgba_tex_, w, h, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
 
     if (!fbo_) glGenFramebuffers(1, &fbo_);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
@@ -526,25 +669,54 @@ void VideoDecoder::ensure_gl_resources() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void VideoDecoder::update_gl() {
-    std::lock_guard<std::mutex> lk(frame_mtx_);
-    if (!frame_dirty_ || frame_w_ <= 0 || frame_h_ <= 0) return;
+bool VideoDecoder::update_gl() {
+    AVFrame* f = nullptr;
+    {
+        std::lock_guard<std::mutex> lk(frame_mtx_);
+        f = static_cast<AVFrame*>(pending_);
+        pending_ = nullptr;
+    }
+    if (frame_fd_ >= 0) {
+        uint64_t n = 0;
+        (void)!::read(frame_fd_, &n, sizeof(n));
+    }
+    if (!f) return false;
+    if (f->width <= 0 || f->height <= 0) {
+        av_frame_free(&f);
+        return false;
+    }
 
-    ensure_gl_resources();
+    const bool semi = f->format == AV_PIX_FMT_NV12 || f->format == AV_PIX_FMT_P010LE || f->format == AV_PIX_FMT_P016LE;
+    const bool wide = f->format == AV_PIX_FMT_P010LE || f->format == AV_PIX_FMT_P016LE;
+    const int bpp = wide ? 2 : 1;
+    ensure_gl_resources(f->width, f->height, semi, wide);
+    width_ = f->width;
+    height_ = f->height;
+    const int cw = (gl_w_ + 1) / 2;
+    const int ch = (gl_h_ + 1) / 2;
+    const GLenum type = wide ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE;
 
-    int cw = (gl_w_ + 1) / 2;
-    int ch = (gl_h_ + 1) / 2;
-
+    // Rows are uploaded straight from the frame's buffers (its line size as the row length)
+    auto upload = [&](GLuint tex, int plane, int tw, int th, GLenum fmt, int comps) {
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, f->linesize[plane] / (bpp * comps));
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tw, th, fmt, type, f->data[plane]);
+    };
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glBindTexture(GL_TEXTURE_2D, y_tex_);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, gl_w_, gl_h_, GL_RED, GL_UNSIGNED_BYTE, y_plane_.data());
-    glBindTexture(GL_TEXTURE_2D, u_tex_);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cw, ch, GL_RED, GL_UNSIGNED_BYTE, u_plane_.data());
-    glBindTexture(GL_TEXTURE_2D, v_tex_);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cw, ch, GL_RED, GL_UNSIGNED_BYTE, v_plane_.data());
-    frame_dirty_ = false;
+    upload(y_tex_, 0, gl_w_, gl_h_, GL_RED, 1);
+    if (semi) {
+        upload(u_tex_, 1, cw, ch, GL_RG, 2);
+    } else {
+        upload(u_tex_, 1, cw, ch, GL_RED, 1);
+        upload(v_tex_, 2, cw, ch, GL_RED, 1);
+    }
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
-    // Save current GL state that we modify
+    const bool bt709 = f->colorspace == AVCOL_SPC_BT709 ||
+                       (f->colorspace == AVCOL_SPC_UNSPECIFIED && f->height >= 720);
+    const bool full = f->color_range == AVCOL_RANGE_JPEG || f->format == AV_PIX_FMT_YUVJ420P;
+    av_frame_free(&f);
+
     GLint prev_fbo = 0, prev_vp[4] = {0, 0, 0, 0}, prev_prog = 0;
     GLboolean prev_blend = glIsEnabled(GL_BLEND);
     GLboolean prev_depth = glIsEnabled(GL_DEPTH_TEST);
@@ -565,20 +737,23 @@ void VideoDecoder::update_gl() {
     glBindTexture(GL_TEXTURE_2D, u_tex_);
     glUniform1i(glGetUniformLocation(yuv_prog_, "u_texU"), 1);
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, v_tex_);
+    glBindTexture(GL_TEXTURE_2D, semi ? u_tex_ : v_tex_);
     glUniform1i(glGetUniformLocation(yuv_prog_, "u_texV"), 2);
-    glUniform1i(glGetUniformLocation(yuv_prog_, "u_bt709"), color_bt709_ ? 1 : 0);
-    glUniform1i(glGetUniformLocation(yuv_prog_, "u_fullRange"), color_full_range_ ? 1 : 0);
+    glUniform1i(glGetUniformLocation(yuv_prog_, "u_bt709"), bt709 ? 1 : 0);
+    glUniform1i(glGetUniformLocation(yuv_prog_, "u_fullRange"), full ? 1 : 0);
+    glUniform1i(glGetUniformLocation(yuv_prog_, "u_semiPlanar"), semi ? 1 : 0);
 
     glBindVertexArray(dummy_vao_);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
+    glActiveTexture(GL_TEXTURE0);
 
     if (prev_blend) glEnable(GL_BLEND);
     if (prev_depth) glEnable(GL_DEPTH_TEST);
     glUseProgram(prev_prog);
     glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
     glViewport(prev_vp[0], prev_vp[1], prev_vp[2], prev_vp[3]);
+    return true;
 }
 
 } // namespace sw

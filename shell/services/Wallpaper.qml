@@ -57,7 +57,8 @@ Singleton {
         if (engineProc.running) {
             sendEngine({ cmd: "load", path: state.path });
         } else {
-            const args = [helper, "--stdin-ipc", "--fps", "60"];
+            const args = [helper, "--stdin-ipc", "--fps", String(Config.wallpaper.fps),
+                "--scale", String(Config.wallpaper.scale), "--hwdec", Config.wallpaper.hwdec || "auto"];
             if (Config.wallpaper.assets)
                 args.push("--assets", Config.wallpaper.assets);
             args.push(state.path);
@@ -76,14 +77,40 @@ Singleton {
         sendEngine({ cmd: "set_prop", key: key, value: v });
     }
 
+    // Pausing: the rules (WallPause, per monitor) or by hand (IPC `pause`)
+    property bool userPaused: false
+    // somewall's last report: type, decoder, cursor, fps, scale
+    property var engineInfo: ({})
     function setPaused(on) {
-        sendEngine({ cmd: on ? "pause" : "resume" });
+        userPaused = on;
+        syncPause();
+    }
+    // What somewall was last told, per monitor: only changes are sent
+    property var sentPause: ({})
+    function syncPause() {
+        if (!engineProc.running)
+            return;
+        const want = WallPause.paused;
+        const sent = Object.assign({}, sentPause);
+        for (const name in want) {
+            const on = userPaused || want[name];
+            if (sent[name] !== on) {
+                sendEngine({ cmd: on ? "pause" : "resume", monitor: name });
+                sent[name] = on;
+            }
+        }
+        sentPause = sent;
+    }
+    Connections {
+        target: WallPause
+        function onPausedChanged() { root.syncPause(); }
     }
 
-    function setMonitorPaused(monitor, on) {
-        if (!monitor)
-            return;
-        sendEngine({ cmd: on ? "pause" : "resume", monitor: monitor });
+    // Frame rate and render scale apply live
+    Connections {
+        target: Config.wallpaper
+        function onFpsChanged() { root.sendEngine({ cmd: "fps", value: Config.wallpaper.fps }); }
+        function onScaleChanged() { root.sendEngine({ cmd: "scale", value: Config.wallpaper.scale }); }
     }
 
     Process {
@@ -104,8 +131,14 @@ Singleton {
             onRead: line => {
                 try {
                     const ev = JSON.parse(line);
-                    if (ev.event === "ready")
+                    if (ev.event === "ready" || ev.event === "loaded" || ev.event === "status")
+                        root.engineInfo = ev;
+                    if (ev.event === "ready") {
                         root.engineReady = true;
+                        // A new somewall knows nothing: tell it every monitor's state
+                        root.sentPause = {};
+                        root.syncPause();
+                    }
                     else if (ev.event === "loaded")
                         root.engineReady = !!ev.ok;
                 } catch (e) {}

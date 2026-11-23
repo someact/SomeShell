@@ -42,6 +42,9 @@ struct ParticleSystem {
                 float time_sec,
                 float alpha_scale);
 
+    // A control point follows the mouse
+    bool uses_mouse() const;
+
     ~ParticleSystem();
     ParticleSystem() = default;
     ParticleSystem(const ParticleSystem&) = delete;

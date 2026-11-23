@@ -9,6 +9,7 @@
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #undef namespace
 #include "xdg-shell-client-protocol.h"
+#include "viewporter-client-protocol.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -298,6 +299,7 @@ void WaylandApp::shutdown() {
     if (pointer_) { wl_pointer_destroy(pointer_); pointer_ = nullptr; }
     if (seat_) { wl_seat_destroy(seat_); seat_ = nullptr; }
     if (xdg_wm_) { xdg_wm_base_destroy(xdg_wm_); xdg_wm_ = nullptr; }
+    if (viewporter_) { wp_viewporter_destroy(viewporter_); viewporter_ = nullptr; }
     if (layer_shell_) { zwlr_layer_shell_v1_destroy(layer_shell_); layer_shell_ = nullptr; }
     if (compositor_) { wl_compositor_destroy(compositor_); compositor_ = nullptr; }
     if (registry_) { wl_registry_destroy(registry_); registry_ = nullptr; }
@@ -315,6 +317,9 @@ void WaylandApp::on_registry_global(uint32_t name, const char* iface, uint32_t v
         xdg_wm_ = static_cast<xdg_wm_base*>(
             wl_registry_bind(registry_, name, &xdg_wm_base_interface, std::min(ver, 2u)));
         xdg_wm_base_add_listener(xdg_wm_, &kXdgWmListener, this);
+    } else if (std::strcmp(iface, wp_viewporter_interface.name) == 0) {
+        viewporter_ = static_cast<wp_viewporter*>(
+            wl_registry_bind(registry_, name, &wp_viewporter_interface, 1u));
     } else if (std::strcmp(iface, wl_seat_interface.name) == 0) {
         seat_ = static_cast<wl_seat*>(
             wl_registry_bind(registry_, name, &wl_seat_interface, std::min(ver, 5u)));
@@ -354,13 +359,43 @@ void WaylandApp::on_output_mode(OutputSurface* s, uint32_t flags, int32_t w, int
 
 void WaylandApp::on_output_scale(OutputSurface* s, int32_t factor) {
     s->scale = std::max(1, factor);
-    if (s->surface) {
-        wl_surface_set_buffer_scale(s->surface, s->scale);
-        if (s->egl_win && s->logical_w > 0 && s->logical_h > 0) {
-            s->width = s->logical_w * s->scale;
-            s->height = s->logical_h * s->scale;
-            wl_egl_window_resize(s->egl_win, s->width, s->height, 0, 0);
-        }
+    if (s->surface && s->egl_win) apply_size(*s);
+}
+
+// The buffer's size: the output's pixels times the render scale. With a
+// viewport the compositor stretches it to the surface; without one the
+// buffer scale says how many pixels a point has.
+void WaylandApp::apply_size(OutputSurface& s) {
+    if (s.logical_w <= 0 || s.logical_h <= 0) return;
+    float rs = s.viewport ? render_scale_ : 1.0f;
+    int px_w = std::max(1, static_cast<int>(s.logical_w * s.scale * rs + 0.5f));
+    int px_h = std::max(1, static_cast<int>(s.logical_h * s.scale * rs + 0.5f));
+    if (s.viewport) {
+        wl_surface_set_buffer_scale(s.surface, 1);
+        wp_viewport_set_destination(s.viewport, s.logical_w, s.logical_h);
+    } else {
+        wl_surface_set_buffer_scale(s.surface, s.scale);
+    }
+    bool changed = px_w != s.width || px_h != s.height;
+    s.width = px_w;
+    s.height = px_h;
+    if (!s.egl_win) {
+        s.egl_win = wl_egl_window_create(s.surface, px_w, px_h);
+        s.egl_surface = eglCreateWindowSurface(egl_dpy_, egl_cfg_,
+                                               reinterpret_cast<EGLNativeWindowType>(s.egl_win), nullptr);
+    } else if (changed) {
+        wl_egl_window_resize(s.egl_win, px_w, px_h, 0, 0);
+    }
+    s.dirty = true;
+}
+
+void WaylandApp::set_render_scale(float scale) {
+    render_scale_ = std::clamp(scale, 0.25f, 1.0f);
+    if (!viewporter_ && render_scale_ < 1.0f) {
+        std::cerr << "[wayland] no wp_viewporter: render scale stays 1\n";
+    }
+    for (auto& s : surfaces_) {
+        if (s->layer_surface && s->configured) apply_size(*s);
     }
 }
 
@@ -379,7 +414,11 @@ void WaylandApp::on_output_done(OutputSurface* s) {
 void WaylandApp::create_layer_surface(OutputSurface& s) {
     if (s.surface) return;
     s.surface = wl_compositor_create_surface(compositor_);
-    wl_surface_set_buffer_scale(s.surface, s.scale);
+    if (viewporter_) {
+        s.viewport = wp_viewporter_get_viewport(viewporter_, s.surface);
+    } else {
+        wl_surface_set_buffer_scale(s.surface, s.scale);
+    }
 
     // Empty input region so desktop clicks & SomeShell widgets above us are never blocked
     wl_region* empty_reg = wl_compositor_create_region(compositor_);
@@ -433,6 +472,7 @@ void WaylandApp::destroy_output_surface(OutputSurface& s) {
     if (s.egl_win) { wl_egl_window_destroy(s.egl_win); s.egl_win = nullptr; }
     if (s.xdg_top) { xdg_toplevel_destroy(s.xdg_top); s.xdg_top = nullptr; }
     if (s.xdg_surf) { xdg_surface_destroy(s.xdg_surf); s.xdg_surf = nullptr; }
+    if (s.viewport) { wp_viewport_destroy(s.viewport); s.viewport = nullptr; }
     if (s.layer_surface) { zwlr_layer_surface_v1_destroy(s.layer_surface); s.layer_surface = nullptr; }
     if (s.surface) { wl_surface_destroy(s.surface); s.surface = nullptr; }
 }
@@ -443,21 +483,11 @@ void WaylandApp::on_layer_configure(OutputSurface* s, uint32_t serial, uint32_t 
         s->logical_w = static_cast<int32_t>(w);
         s->logical_h = static_cast<int32_t>(h);
     }
-    int px_w = std::max(1, s->logical_w * s->scale);
-    int px_h = std::max(1, s->logical_h * s->scale);
-    s->width = px_w;
-    s->height = px_h;
-
-    if (!s->egl_win) {
-        s->egl_win = wl_egl_window_create(s->surface, px_w, px_h);
-        s->egl_surface = eglCreateWindowSurface(egl_dpy_, egl_cfg_,
-                                                reinterpret_cast<EGLNativeWindowType>(s->egl_win), nullptr);
-    } else {
-        wl_egl_window_resize(s->egl_win, px_w, px_h, 0, 0);
-    }
+    apply_size(*s);
     s->configured = true;
     std::cerr << "[wayland] configured layer on " << (s->name.empty() ? "output" : s->name)
-              << " (" << px_w << "x" << px_h << ", scale=" << s->scale << ")\n";
+              << " (" << s->width << "x" << s->height << ", scale=" << s->scale
+              << ", render scale=" << (s->viewport ? render_scale_ : 1.0f) << ")\n";
 }
 
 void WaylandApp::on_layer_closed(OutputSurface* s) {
@@ -476,6 +506,7 @@ void WaylandApp::on_xdg_toplevel_configure(OutputSurface* s, int32_t w, int32_t 
         s->width = w;
         s->height = h;
         if (s->egl_win) wl_egl_window_resize(s->egl_win, w, h, 0, 0);
+        s->dirty = true;
     }
 }
 

@@ -19,6 +19,8 @@ struct zwlr_layer_surface_v1;
 struct xdg_wm_base;
 struct xdg_surface;
 struct xdg_toplevel;
+struct wp_viewporter;
+struct wp_viewport;
 
 namespace sw {
 
@@ -36,6 +38,7 @@ struct OutputSurface {
     zwlr_layer_surface_v1* layer_surface = nullptr;
     xdg_surface* xdg_surf = nullptr;
     xdg_toplevel* xdg_top = nullptr;
+    wp_viewport* viewport = nullptr;
     wl_egl_window* egl_win = nullptr;
     EGLSurface egl_surface = EGL_NO_SURFACE;
 
@@ -44,6 +47,8 @@ struct OutputSurface {
     bool configured = false;
     bool closed = false;
     bool paused = false;
+    // Must be drawn again (new size, just configured) even if nothing moved
+    bool dirty = true;
 };
 
 class WaylandApp {
@@ -60,6 +65,11 @@ public:
 
     bool poll_events(bool fd_readable = false);
     int wl_fd() const;
+
+    // Draw at a fraction of the screen's pixels (0.25..1); the compositor
+    // stretches the picture (wp_viewporter). Without viewporter: always 1.
+    void set_render_scale(float scale);
+    float render_scale() const { return render_scale_; }
 
     bool make_current(OutputSurface& surf);
     void swap_buffers(OutputSurface& surf);
@@ -97,6 +107,7 @@ private:
     void create_layer_surface(OutputSurface& s);
     void create_window_surface(int w, int h);
     void destroy_output_surface(OutputSurface& s);
+    void apply_size(OutputSurface& s);
 
     bool windowed_ = false;
     bool headless_ = false;
@@ -110,6 +121,8 @@ private:
     wl_pointer* pointer_ = nullptr;
     zwlr_layer_shell_v1* layer_shell_ = nullptr;
     xdg_wm_base* xdg_wm_ = nullptr;
+    wp_viewporter* viewporter_ = nullptr;
+    float render_scale_ = 1.0f;
 
     EGLDisplay egl_dpy_ = EGL_NO_DISPLAY;
     EGLContext egl_ctx_ = EGL_NO_CONTEXT;

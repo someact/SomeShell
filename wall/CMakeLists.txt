@@ -43,6 +43,7 @@ function(gen_wayland_proto XML_FILE NAME)
 endfunction()
 
 gen_wayland_proto("/usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml" "xdg-shell")
+gen_wayland_proto("/usr/share/wayland-protocols/stable/viewporter/viewporter.xml" "viewporter")
 gen_wayland_proto("${CMAKE_SOURCE_DIR}/protocols/wlr-layer-shell-unstable-v1.xml" "wlr-layer-shell-unstable-v1")
 
 add_executable(somewall

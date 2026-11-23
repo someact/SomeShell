@@ -81,6 +81,8 @@ public:
     Texture* black();
 
     void update_videos();
+    // The decoders of the videos inside the scene, e.g. "h264 (cuda)"
+    std::string video_decoders() const;
     void set_paused(bool paused);
     void clear();
 

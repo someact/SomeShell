@@ -77,7 +77,6 @@ PanelWindow {
     // while a game or a fullscreen window is on this monitor
     readonly property bool covered: GameMode.active
         || (Hyprland.monitors.values.find(m => m.name === win.modelData.name)?.activeWorkspace?.hasFullscreen ?? false)
-    onCoveredChanged: Wallpaper.setMonitorPaused(win.modelData.name, win.covered)
     Loader {
         active: Desktop.widgets.length > 0 && !win.covered
         sourceComponent: WidgetLayer {

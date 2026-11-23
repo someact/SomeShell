@@ -742,16 +742,33 @@ void Scene::ensure_fbos(int w, int h) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Scene::update(float dt) {
-    if (paused_ || mode_ == Mode::None) return;
+bool Scene::uses_cursor() const {
+    if (mode_ != Mode::Scene) return false;
+    if (parallax_enabled_) return true;
+    for (const auto& obj : objects_) {
+        if (obj.particle_sys && obj.particle_sys->uses_mouse()) return true;
+    }
+    return false;
+}
+
+std::string Scene::video_decoders() const {
+    if (direct_video_) return direct_video_->decoder_name();
+    return tex_cache_ ? tex_cache_->video_decoders() : std::string();
+}
+
+int Scene::wake_fd() const {
+    return (mode_ == Mode::Video && direct_video_) ? direct_video_->frame_fd() : -1;
+}
+
+bool Scene::update(float dt) {
+    if (paused_ || mode_ == Mode::None) return false;
     dt = std::clamp(dt, 0.0f, 0.1f);
     time_sec_ += dt;
 
     if (mode_ == Mode::Video) {
-        if (direct_video_) direct_video_->update_gl();
-        return;
+        return direct_video_ && direct_video_->update_gl();
     }
-    if (mode_ != Mode::Scene) return;
+    if (mode_ != Mode::Scene) return false;
 
     // Update any embedded video-in-TEX decoders
     if (tex_cache_) tex_cache_->update_videos();
@@ -779,6 +796,7 @@ void Scene::update(float dt) {
             obj.text_value = obj.text_script->update_string(obj.text_value, dt, time_sec_);
         }
     }
+    return true;
 }
 
 void Scene::render(int fb_width, int fb_height) {
@@ -787,7 +805,8 @@ void Scene::render(int fb_width, int fb_height) {
 
     if (mode_ == Mode::Video) {
         if (direct_video_) {
-            direct_video_->update_gl();
+            // The frame was uploaded in update(): every monitor draws the same one
+            if (direct_video_->texture() == 0) direct_video_->update_gl();
             if (direct_video_->texture() != 0) {
                 render_video_or_image(fb_width, fb_height, direct_video_->texture(),
                                       direct_video_->width(), direct_video_->height());

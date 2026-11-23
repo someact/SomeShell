@@ -114,8 +114,20 @@ public:
     void set_paused(bool paused);
     void set_cursor(float norm_x, float norm_y); // [0..1] top-left origin
 
-    void update(float dt);
+    // Steps the wallpaper. True when the picture changed and must be drawn
+    // again: always for a scene, only on a new frame for a video, never for an image
+    bool update(float dt);
     void render(int fb_width, int fb_height);
+
+    // Whether anything reads the cursor (camera parallax, particles linked to
+    // the mouse): without it, the cursor is never asked for
+    bool uses_cursor() const;
+    // For a plain video: readable when its next frame is ready (else -1)
+    int wake_fd() const;
+    // A plain video or image: drawn only when it changes, not on a timer
+    // Which decoders play its videos ("" without video)
+    std::string video_decoders() const;
+    bool is_static_paced() const { return mode_ == Mode::Video || mode_ == Mode::Image; }
 
     bool is_loaded() const { return mode_ != Mode::None; }
     std::string title() const { return title_; }

@@ -96,6 +96,20 @@ Singleton {
                 // Wallpaper Engine's assets/ folder for scenes (empty = the
                 // usual Steam paths; wall/install.sh --assets writes it)
                 property string assets: ""
+                // Animated wallpapers (somewall): frame rate cap for scenes
+                // (videos play at their own rate), render scale 0.25..1 (the
+                // compositor stretches it), video decoding (auto, none, cuda,
+                // vaapi, vulkan, v4l2m2m). A wallpaper's own settings win.
+                property int fps: 60
+                property real scale: 1
+                property string hwdec: "auto"
+                // When an animated wallpaper stops (per monitor)
+                property JsonObject pause: JsonObject {
+                    property bool fullscreen: true   // a fullscreen window or a game
+                    property bool covered: false     // windows cover the desktop
+                    property bool battery: false     // running on battery
+                    property bool locked: true       // the lock screen is up (it shows no wallpaper)
+                }
             }
 
             property JsonObject share: JsonObject {

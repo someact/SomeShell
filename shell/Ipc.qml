@@ -116,6 +116,11 @@ Scope {
         function recolor(): void { Wallpaper.recolor(); }
         function setProp(key: string, value: string): void { Wallpaper.setProp(key, value); }
         function pause(on: bool): void { Wallpaper.setPaused(on); }
+        // somewall's last report and the pause state per monitor (JSON)
+        function engine(): string {
+            return JSON.stringify({ running: Wallpaper.live, info: Wallpaper.engineInfo,
+                rules: WallPause.paused, user: Wallpaper.userPaused, sent: Wallpaper.sentPause });
+        }
     }
 
     IpcHandler {
