@@ -54,6 +54,22 @@ Item {
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                 }
+                Rectangle {
+                    visible: cell.modelData.kind === "scene" || cell.modelData.kind === "video"
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 6
+                    width: 22
+                    height: 22
+                    radius: 11
+                    color: Qt.rgba(0, 0, 0, 0.55)
+                    Icon {
+                        anchors.centerIn: parent
+                        name: cell.modelData.kind === "scene" ? "auto_awesome" : "movie"
+                        size: 13
+                        color: "white"
+                    }
+                }
             }
         }
 

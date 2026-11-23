@@ -9,3 +9,6 @@ hypr/hyprland/shellOverrides/
 browser/host/target/
 share/target/
 browser/*.xpi
+
+# Wallpaper engine build
+wall/build/

@@ -106,7 +106,7 @@ Item {
 
         Image {
             anchors.fill: parent
-            source: Wallpaper.path ? "file://" + Wallpaper.path : ""
+            source: Wallpaper.stillPath ? "file://" + Wallpaper.stillPath : ""
             sourceSize: root.wallSize
             fillMode: Image.PreserveAspectCrop
             asynchronous: true

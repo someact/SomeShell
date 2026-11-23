@@ -93,6 +93,9 @@ Singleton {
             property JsonObject wallpaper: JsonObject {
                 // Where /wall looks for images (empty = ~/Pictures/Wallpapers)
                 property string folder: ""
+                // Wallpaper Engine's assets/ folder for scenes (empty = the
+                // usual Steam paths; wall/install.sh --assets writes it)
+                property string assets: ""
             }
 
             property JsonObject share: JsonObject {

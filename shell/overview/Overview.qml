@@ -199,7 +199,7 @@ PanelWindow {
         // The wallpaper, faintly, under the paper
         Image {
             anchors.fill: parent
-            source: Wallpaper.path ? "file://" + Wallpaper.path : ""
+            source: Wallpaper.stillPath ? "file://" + Wallpaper.stillPath : ""
             sourceSize: win.wallSize
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
@@ -388,7 +388,7 @@ PanelWindow {
                                 Image {
                                     anchors.fill: parent
                                     anchors.margins: parent.border.width
-                                    source: Wallpaper.path ? "file://" + Wallpaper.path : ""
+                                    source: Wallpaper.stillPath ? "file://" + Wallpaper.stillPath : ""
                                     sourceSize: win.wallSize
                                     fillMode: Image.PreserveAspectCrop
                                     asynchronous: true

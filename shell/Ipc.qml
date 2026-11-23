@@ -114,6 +114,8 @@ Scope {
         function set(path: string): void { Wallpaper.set(path); }
         function get(): string { return Wallpaper.path; }
         function recolor(): void { Wallpaper.recolor(); }
+        function setProp(key: string, value: string): void { Wallpaper.setProp(key, value); }
+        function pause(on: bool): void { Wallpaper.setPaused(on); }
     }
 
     IpcHandler {

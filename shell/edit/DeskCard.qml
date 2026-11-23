@@ -54,7 +54,7 @@ Item {
 
         Image {
             anchors.fill: parent
-            source: Wallpaper.path ? "file://" + Wallpaper.path : ""
+            source: Wallpaper.stillPath ? "file://" + Wallpaper.stillPath : ""
             // Decoded once at the screen's size: a size that follows the
             // card would decode again on every frame of the zoom
             sourceSize: Qt.size(root.sw, root.sh)

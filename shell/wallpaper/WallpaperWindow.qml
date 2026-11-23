@@ -19,15 +19,23 @@ PanelWindow {
     anchors.left: true
     anchors.right: true
     exclusionMode: ExclusionMode.Ignore
-    color: "black"
+    // Always transparent so Qt Wayland allocates an ARGB surface from start;
+    // the black backdrop lives in a child Rectangle hidden while somewall runs.
+    color: "transparent"
 
     WlrLayershell.namespace: "someshell:wallpaper"
-    WlrLayershell.layer: WlrLayer.Background
+    WlrLayershell.layer: Wallpaper.live ? WlrLayer.Bottom : WlrLayer.Background
+
+    Rectangle {
+        anchors.fill: parent
+        color: "black"
+        visible: !Wallpaper.live
+    }
 
     // Two images: `a` lies on top of `b`. A new wallpaper loads into the hidden
     // one; once it is decoded, `a` fades in or out to reveal it.
     property bool showA: true
-    readonly property string source: Wallpaper.path ? "file://" + Wallpaper.path : ""
+    readonly property string source: Wallpaper.stillPath ? "file://" + Wallpaper.stillPath : ""
     onSourceChanged: (showA ? b : a).source = source
     Component.onCompleted: a.source = source
 
@@ -42,6 +50,7 @@ PanelWindow {
 
     Image {
         id: b
+        visible: !Wallpaper.live
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
         sourceSize: Qt.size(win.modelData.width, win.modelData.height)
@@ -51,6 +60,7 @@ PanelWindow {
     }
     Image {
         id: a
+        visible: !Wallpaper.live
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
         sourceSize: Qt.size(win.modelData.width, win.modelData.height)
@@ -67,6 +77,7 @@ PanelWindow {
     // while a game or a fullscreen window is on this monitor
     readonly property bool covered: GameMode.active
         || (Hyprland.monitors.values.find(m => m.name === win.modelData.name)?.activeWorkspace?.hasFullscreen ?? false)
+    onCoveredChanged: Wallpaper.setMonitorPaused(win.modelData.name, win.covered)
     Loader {
         active: Desktop.widgets.length > 0 && !win.covered
         sourceComponent: WidgetLayer {
