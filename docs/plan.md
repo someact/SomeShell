@@ -202,6 +202,19 @@ Goal: with no mouse connected, everything works by finger. Decision in `SomeShel
 - [ ] Settings, Input page: Touch screen section (on/off, monitor, pen on/off) only with a touch screen
 - [ ] Test on the tablet with the mouse unplugged (and the keyboard, for the on-screen keyboard), dark and light. ydotool sends no touch: a virtual touch device (uinput) for scripted tests, else by finger (user)
 
+## Wallpaper engine (user, 2026-11-23)
+Decision in `SomeShell.md` section 4 ("wallpaper engine"). Scenes and videos from Wallpaper Engine drawn by somewall (`wall/`); the Wallpaper tab of edit mode rebuilt around it. Test assets on the desktop: `/mnt/ssd_backup/program/wallpaper_engine/assets`, workshop items `3825103811` (4K60 scene) and `3839711244` (4K video).
+- [ ] Engine into the repo: `wall/` (sources, CMake, `install.sh`), assets folder from `shell.json` or the Steam paths (no hardcoded path), the shell's first wiring (`Wallpaper.stillPath`, the engine process, the list with videos and Wallpaper Engine folders) committed as the base
+- [ ] Engine light: hardware video decoding (VAAPI / NVDEC / V4L2, CPU fallback), video at its own frame rate, cursor read only when the scene uses it (no new socket every frame), render scale; CPU and memory before and after (desktop: 118 % CPU, ~480 MB RSS for the 4K60 scene)
+- [ ] Pause rules: fullscreen or game (default on), covered by windows (default off), on battery, while locked; per monitor
+- [ ] Per monitor: one wallpaper for all or each its own; one somewall per distinct animated wallpaper (`--output`), pictures stay in `WallpaperWindow`; colors from a chosen monitor; `wall.json` per monitor, presets carry it
+- [ ] Library: sources (wallpaper folder, extra folders, Steam workshop 431960), cached index from `project.json`, unsupported kinds greyed
+- [ ] Per-wallpaper settings (`wallpapers.json`): properties, fit, speed, fps cap, scale, pause overrides; live, Undo, presets; IPC `wallpaper prop|props|setting`
+- [ ] Wallpaper tab rebuilt: monitors row, library (filters, search, sort), chosen wallpaper's panel (properties as switches, sliders, dropdowns, colors, fields; playback; pause), colors (mode, scheme, palette, colors from); the card plays `preview.gif`; keyboard (`kbNav`) and touch
+- [ ] Failures: load error keeps the previous wallpaper with an alert; crash restarts (3 times), then the still frame
+- [ ] Laptop: battery pause, hybrid GPU decoding, 165 Hz
+- [ ] Tablet: build on aarch64 (GL on freedreno, V4L2 decoding on SM8250), memory with a scene running
+
 ## Later steps
 - Step 7: lock screen, dock, settings window, installer (the overview moved up)
 - Step 8: GIFs, WARP, capture tools, game overlay, on-screen keyboard
