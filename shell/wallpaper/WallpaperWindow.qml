@@ -36,7 +36,15 @@ PanelWindow {
     // one; once it is decoded, `a` fades in or out to reveal it.
     property bool showA: true
     readonly property string source: Wallpaper.stillPath ? "file://" + Wallpaper.stillPath : ""
-    onSourceChanged: (showA ? b : a).source = source
+    onSourceChanged: {
+        const hidden = showA ? b : a;
+        // Back to the picture the hidden image already holds (A → B → A):
+        // its source does not change, so no Ready comes; show it at once
+        if (hidden.source == source && hidden.status === Image.Ready)
+            showA = !showA;
+        else
+            hidden.source = source;
+    }
     Component.onCompleted: a.source = source
 
     // A right click or a long press on the empty desktop opens edit mode
