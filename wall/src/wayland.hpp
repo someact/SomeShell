@@ -108,6 +108,7 @@ private:
     void create_window_surface(int w, int h);
     void destroy_output_surface(OutputSurface& s);
     void apply_size(OutputSurface& s);
+    bool wants_output(const std::string& name) const;
 
     bool windowed_ = false;
     bool headless_ = false;

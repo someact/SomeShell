@@ -105,6 +105,11 @@ Singleton {
     // workspaces, presets.
     property bool editing: false
     property string editTab: "wallpaper"
+    // Wallpaper tab with each monitor its own: the monitor the thumbnails set
+    // (a click on a monitor's card picks it; "" = the panel's monitor)
+    property string wallTarget: ""
+    readonly property string wallMonitor: (Quickshell.screens.some(s => s.name === wallTarget) ? wallTarget : "")
+        || monitor || (Quickshell.screens[0]?.name ?? "")
     // Closing: the card zooms back to the full desktop, then edit mode ends
     property bool editClosing: false
     // Widgets tab: the chosen widget's id ("" for none: the drawer shows),

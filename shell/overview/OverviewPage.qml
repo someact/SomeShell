@@ -106,7 +106,9 @@ Item {
 
         Image {
             anchors.fill: parent
-            source: Wallpaper.stillPath ? "file://" + Wallpaper.stillPath : ""
+            // The wallpaper of the monitor showing it (else the overview's own)
+            readonly property string still: Wallpaper.stillFor(root.shownOn || Ui.overviewMonitor)
+            source: still ? "file://" + still : ""
             sourceSize: root.wallSize
             fillMode: Image.PreserveAspectCrop
             asynchronous: true

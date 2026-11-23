@@ -341,7 +341,7 @@ Item {
                             cache: false
                         }
                         Rectangle {
-                            visible: cell.wall && cell.modelData.data.path === Wallpaper.path
+                            visible: cell.wall && Wallpaper.shown(cell.modelData.data.path)
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom
                             anchors.margins: 6

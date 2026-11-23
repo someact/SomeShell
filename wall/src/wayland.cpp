@@ -263,7 +263,7 @@ bool WaylandApp::init(bool windowed, const std::string& target_output, int win_w
         create_window_surface(win_w, win_h);
     } else {
         for (auto& s : surfaces_) {
-            if (target_output_.empty() || s->name == target_output_) {
+            if (wants_output(s->name)) {
                 create_layer_surface(*s);
             }
         }
@@ -279,6 +279,19 @@ bool WaylandApp::init(bool windowed, const std::string& target_output, int win_w
         }
     }
     return true;
+}
+
+// --output takes one name or several, comma-separated; none = every output
+bool WaylandApp::wants_output(const std::string& name) const {
+    if (target_output_.empty()) return true;
+    size_t start = 0;
+    while (start <= target_output_.size()) {
+        size_t end = target_output_.find(',', start);
+        if (end == std::string::npos) end = target_output_.size();
+        if (target_output_.compare(start, end - start, name) == 0 && end - start == name.size()) return true;
+        start = end + 1;
+    }
+    return false;
 }
 
 void WaylandApp::shutdown() {
@@ -405,7 +418,7 @@ void WaylandApp::on_output_name(OutputSurface* s, const char* name) {
 
 void WaylandApp::on_output_done(OutputSurface* s) {
     if (!windowed_ && egl_ctx_ != EGL_NO_CONTEXT && !s->surface) {
-        if (target_output_.empty() || s->name == target_output_) {
+        if (wants_output(s->name)) {
             create_layer_surface(*s);
         }
     }

@@ -30,7 +30,7 @@ void print_usage(const char* argv0) {
     std::cerr << "Usage: " << argv0 << " [options] <wallpaper-dir-or-file>\n"
               << "Options:\n"
               << "  --assets <dir>       Wallpaper Engine assets/ directory\n"
-              << "  --output <name>      Target a single Wayland output (e.g. DP-1)\n"
+              << "  --output <names>     Only these outputs, comma-separated (e.g. DP-1,HDMI-A-1)\n"
               << "  --fps <n>            Frame rate cap for scenes (default: 60; videos play at their own rate)\n"
               << "  --scale <f>          Render scale 0.25..1 (the compositor stretches the picture)\n"
               << "  --hwdec <name>       Video decoding: auto (default), none, cuda, vaapi, vulkan, v4l2m2m\n"

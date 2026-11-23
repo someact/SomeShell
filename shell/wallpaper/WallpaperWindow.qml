@@ -24,18 +24,22 @@ PanelWindow {
     color: "transparent"
 
     WlrLayershell.namespace: "someshell:wallpaper"
-    WlrLayershell.layer: Wallpaper.live ? WlrLayer.Bottom : WlrLayer.Background
+    // somewall draws this monitor's wallpaper on the Background layer: this
+    // window moves above it and draws nothing but widgets
+    readonly property bool live: Wallpaper.liveOn(modelData.name)
+    WlrLayershell.layer: live ? WlrLayer.Bottom : WlrLayer.Background
 
     Rectangle {
         anchors.fill: parent
         color: "black"
-        visible: !Wallpaper.live
+        visible: !win.live
     }
 
     // Two images: `a` lies on top of `b`. A new wallpaper loads into the hidden
     // one; once it is decoded, `a` fades in or out to reveal it.
     property bool showA: true
-    readonly property string source: Wallpaper.stillPath ? "file://" + Wallpaper.stillPath : ""
+    readonly property string still: Wallpaper.stillFor(modelData.name)
+    readonly property string source: still ? "file://" + still : ""
     onSourceChanged: {
         const hidden = showA ? b : a;
         // Back to the picture the hidden image already holds (A → B → A):
@@ -58,7 +62,7 @@ PanelWindow {
 
     Image {
         id: b
-        visible: !Wallpaper.live
+        visible: !win.live
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
         sourceSize: Qt.size(win.modelData.width, win.modelData.height)
@@ -68,7 +72,7 @@ PanelWindow {
     }
     Image {
         id: a
-        visible: !Wallpaper.live
+        visible: !win.live
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
         sourceSize: Qt.size(win.modelData.width, win.modelData.height)

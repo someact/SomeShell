@@ -111,16 +111,21 @@ Scope {
     IpcHandler {
         target: "wallpaper"
 
+        // With "each", set changes the focused monitor; setOn names one
         function set(path: string): void { Wallpaper.set(path); }
+        function setOn(monitor: string, path: string): void { Wallpaper.set(path, monitor); }
         function get(): string { return Wallpaper.path; }
+        function getOn(monitor: string): string { return Wallpaper.pathFor(monitor); }
+        // "all" (one wallpaper everywhere) or "each" (every monitor its own)
+        function mode(m: string): void { Wallpaper.setMode(m); }
+        // The monitor whose wallpaper makes the colors ("" = the first)
+        function colorsFrom(monitor: string): void { Wallpaper.setColorsFrom(monitor); }
+        function walls(): string { return JSON.stringify(Wallpaper.snapshot()); }
         function recolor(): void { Wallpaper.recolor(); }
         function setProp(key: string, value: string): void { Wallpaper.setProp(key, value); }
         function pause(on: bool): void { Wallpaper.setPaused(on); }
-        // somewall's last report and the pause state per monitor (JSON)
-        function engine(): string {
-            return JSON.stringify({ running: Wallpaper.live, info: Wallpaper.engineInfo,
-                rules: WallPause.paused, user: Wallpaper.userPaused, sent: Wallpaper.sentPause });
-        }
+        // Each somewall (its monitors, wallpaper, decoder) and the pause state (JSON)
+        function engine(): string { return JSON.stringify(Wallpaper.engineState()); }
     }
 
     IpcHandler {

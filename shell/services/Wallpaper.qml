@@ -2,210 +2,223 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import qs.core
 
-// The wallpaper and the colors made from it. Supports static images, video
-// files, and Wallpaper Engine folders (`scene` / `video` with `project.json`)
-// rendered by ~/.local/lib/someshell/somewall on WlrLayer.Background.
-// Setting a wallpaper, or changing light/dark or the scheme, runs matugen on
-// the still image (`stillPath`). State: ~/.local/state/someshell/wall.json.
+// The wallpapers and the colors made from them. One wallpaper on every
+// monitor (`mode` "all"), or each monitor its own ("each"). A wallpaper is a
+// picture (drawn by WallpaperWindow), a video file, or a Wallpaper Engine
+// folder (`scene` / `video` with `project.json`); the animated ones are drawn
+// by somewall (WallEngine: one per distinct animated wallpaper). The colors
+// (matugen) come from one monitor's wallpaper (`colorsFrom`, empty = the
+// first monitor), through its still picture.
+// State: ~/.local/state/someshell/wall.json.
 Singleton {
     id: root
 
-    readonly property string path: state.path
     readonly property bool ready: file.loaded
-    readonly property string helper: Paths.home + "/.local/lib/someshell/somewall"
-    property bool engineInstalled: false
-    property bool engineReady: false
-    readonly property bool animated: isAnimatedPath(state.path)
-    // True once somewall is actively rendering on the background layer
-    readonly property bool live: animated && engineInstalled && engineReady
-    // Static image representing the current wallpaper (for matugen, brightness,
-    // DeskCard, Overview). Same as `path` for static images; cached PNG preview
-    // frame for Wallpaper Engine folders and videos.
-    property string stillPath: ""
+    readonly property string mode: state.mode === "each" ? "each" : "all"
+    readonly property var monitorNames: Quickshell.screens.map(s => s.name)
+    readonly property string colorsFrom: state.colorsFrom
+    readonly property string colorsMonitor: monitorNames.indexOf(state.colorsFrom) >= 0 ? state.colorsFrom : (monitorNames[0] ?? "")
+
+    // The wallpaper the colors come from, and its still picture
+    readonly property string path: pathFor(colorsMonitor)
+    readonly property string stillPath: stills[path] ?? ""
+
+    function pathFor(monitor) {
+        if (mode === "each" && monitor && state.monitors[monitor])
+            return state.monitors[monitor];
+        return state.path;
+    }
+    // A picture for a monitor: the wallpaper itself, or a still frame of it
+    function stillFor(monitor) {
+        return stills[pathFor(monitor)] ?? "";
+    }
+    // Some monitor shows it
+    function shown(p) {
+        for (const n of monitorNames)
+            if (pathFor(n) === p)
+                return true;
+        return false;
+    }
 
     function isImagePath(p) {
         return /\.(jpe?g|png|webp|bmp|avif)$/i.test(p || "");
     }
     function isAnimatedPath(p) {
-        if (!p)
-            return false;
-        if (/\.(mp4|webm|mkv|mov)$/i.test(p))
-            return true;
-        if (/\/project\.json$/i.test(p))
-            return true;
-        return !isImagePath(p);
+        return !!p && !isImagePath(p);
+    }
+    function clean(p) {
+        return (p || "").replace(/^file:\/\//, "").replace(/\/+$/, "");
     }
 
-    function sendEngine(obj) {
-        if (engineProc.running)
-            engineProc.write(JSON.stringify(obj) + "\n");
-    }
+    // ── Choosing ────────────────────────────────────────────────────────
 
-    function syncEngine() {
-        if (!engineInstalled || !state.path)
+    // Set a wallpaper: on every monitor, or with "each" on `monitor` (default:
+    // the focused one)
+    function set(newPath, monitor) {
+        if (!newPath)
             return;
-        if (!isAnimatedPath(state.path)) {
-            if (engineProc.running) {
-                sendEngine({ cmd: "quit" });
-                engineProc.running = false;
-            }
-            engineReady = false;
-            return;
-        }
-        if (engineProc.running) {
-            sendEngine({ cmd: "load", path: state.path });
+        const p = clean(newPath);
+        if (mode === "each") {
+            const m = monitor || Hyprland.focusedMonitor?.name || colorsMonitor;
+            const mons = Object.assign({}, state.monitors);
+            mons[m] = p;
+            state.monitors = mons;
         } else {
-            const args = [helper, "--stdin-ipc", "--fps", String(Config.wallpaper.fps),
-                "--scale", String(Config.wallpaper.scale), "--hwdec", Config.wallpaper.hwdec || "auto"];
-            if (Config.wallpaper.assets)
-                args.push("--assets", Config.wallpaper.assets);
-            args.push(state.path);
-            engineProc.command = args;
-            engineProc.running = true;
+            state.path = p;
         }
+        save();
     }
 
-    function setProp(key, rawValue) {
-        if (!key)
+    // "all" or "each". Going back to one wallpaper keeps the one the colors
+    // come from (each monitor's own choice is remembered); going to "each"
+    // brings those back, and a monitor without one starts with what it shows
+    function setMode(m) {
+        if (m === mode)
             return;
-        let v = rawValue;
-        if (rawValue === "true") v = true;
-        else if (rawValue === "false") v = false;
-        else if (typeof rawValue === "string" && rawValue !== "" && !isNaN(Number(rawValue))) v = Number(rawValue);
-        sendEngine({ cmd: "set_prop", key: key, value: v });
-    }
-
-    // Pausing: the rules (WallPause, per monitor) or by hand (IPC `pause`)
-    property bool userPaused: false
-    // somewall's last report: type, decoder, cursor, fps, scale
-    property var engineInfo: ({})
-    function setPaused(on) {
-        userPaused = on;
-        syncPause();
-    }
-    // What somewall was last told, per monitor: only changes are sent
-    property var sentPause: ({})
-    function syncPause() {
-        if (!engineProc.running)
-            return;
-        const want = WallPause.paused;
-        const sent = Object.assign({}, sentPause);
-        for (const name in want) {
-            const on = userPaused || want[name];
-            if (sent[name] !== on) {
-                sendEngine({ cmd: on ? "pause" : "resume", monitor: name });
-                sent[name] = on;
-            }
-        }
-        sentPause = sent;
-    }
-    Connections {
-        target: WallPause
-        function onPausedChanged() { root.syncPause(); }
-    }
-
-    // Frame rate and render scale apply live
-    Connections {
-        target: Config.wallpaper
-        function onFpsChanged() { root.sendEngine({ cmd: "fps", value: Config.wallpaper.fps }); }
-        function onScaleChanged() { root.sendEngine({ cmd: "scale", value: Config.wallpaper.scale }); }
-    }
-
-    Process {
-        id: checkEngine
-        running: true
-        command: ["test", "-x", root.helper]
-        onExited: code => {
-            root.engineInstalled = (code === 0);
-            if (root.engineInstalled && root.isAnimatedPath(state.path))
-                root.syncEngine();
-        }
-    }
-
-    Process {
-        id: engineProc
-        stdinEnabled: true
-        stdout: SplitParser {
-            onRead: line => {
-                try {
-                    const ev = JSON.parse(line);
-                    if (ev.event === "ready" || ev.event === "loaded" || ev.event === "status")
-                        root.engineInfo = ev;
-                    if (ev.event === "ready") {
-                        root.engineReady = true;
-                        // A new somewall knows nothing: tell it every monitor's state
-                        root.sentPause = {};
-                        root.syncPause();
-                    }
-                    else if (ev.event === "loaded")
-                        root.engineReady = !!ev.ok;
-                } catch (e) {}
-            }
-        }
-        stderr: SplitParser {
-            onRead: line => { if (line.trim()) console.log("somewall:", line); }
-        }
-        onExited: root.engineReady = false
-    }
-
-    onPathChanged: {
-        syncEngine();
-        if (!path) {
-            stillPath = "";
-            return;
-        }
-        if (isImagePath(path)) {
-            stillPath = path;
-            tone.running = true;
-            if (pendingRecolor) {
-                pendingRecolor = false;
-                recolorNow();
-            }
+        if (m === "each") {
+            const mons = Object.assign({}, state.monitors);
+            for (const n of monitorNames)
+                if (!mons[n])
+                    mons[n] = state.path;
+            state.monitors = mons;
         } else {
-            resolveStill.command = ["sh", "-c",
-                "p=\"$1\"; outdir=\"$2\"; mkdir -p \"$outdir\"; " +
+            state.path = path;
+        }
+        state.mode = m;
+        save();
+    }
+
+    function setColorsFrom(monitor) {
+        state.colorsFrom = monitor;
+        save();
+    }
+
+    function save() {
+        write();
+        if (path !== colored)
+            recolor();
+    }
+
+    // The whole choice, for presets and Undo
+    function snapshot() {
+        return { mode: mode, path: state.path, monitors: Object.assign({}, state.monitors), colorsFrom: state.colorsFrom };
+    }
+    function sameAs(walls) {
+        return JSON.stringify(normal(walls)) === JSON.stringify(snapshot());
+    }
+    // Older presets keep one path
+    function normal(walls) {
+        if (typeof walls === "string")
+            return { mode: "all", path: clean(walls), monitors: {}, colorsFrom: "" };
+        return { mode: walls?.mode === "each" ? "each" : "all", path: clean(walls?.path), monitors: walls?.monitors ?? {}, colorsFrom: walls?.colorsFrom ?? "" };
+    }
+
+    // Wallpapers, light/dark and scheme together (a preset, Undo): one matugen run
+    function applyLook(walls, mode, scheme) {
+        holding = true;
+        if (walls) {
+            const w = normal(walls);
+            if (w.path)
+                state.path = w.path;
+            state.monitors = w.monitors;
+            state.colorsFrom = w.colorsFrom;
+            state.mode = w.mode;
+        }
+        if (mode)
+            Config.theme.mode = mode;
+        if (scheme)
+            Config.theme.scheme = scheme;
+        holding = false;
+        write();
+        recolor();
+    }
+    property bool holding: false
+
+    // ── Still pictures ──────────────────────────────────────────────────
+
+    // Path → its still picture: itself for a picture, the project's preview
+    // or a video's frame (cached in ~/.cache/someshell/we-stills) otherwise
+    property var stills: ({})
+    readonly property var allPaths: {
+        const out = [];
+        if (state.path)
+            out.push(state.path);
+        if (mode === "each")
+            for (const n of monitorNames) {
+                const p = pathFor(n);
+                if (p && out.indexOf(p) < 0)
+                    out.push(p);
+            }
+        return out;
+    }
+    onAllPathsChanged: resolveStills()
+    function resolveStills() {
+        const add = Object.assign({}, stills);
+        const missing = [];
+        for (const p of allPaths) {
+            if (add[p])
+                continue;
+            if (isImagePath(p))
+                add[p] = p;
+            else if (stillProc.asked.indexOf(p) < 0)
+                missing.push(p);
+        }
+        stills = add;
+        if (missing.length && !stillProc.running) {
+            stillProc.asked = stillProc.asked.concat(missing);
+            stillProc.command = ["sh", "-c",
+                "outdir=\"$1\"; shift; mkdir -p \"$outdir\"; for p in \"$@\"; do " +
                 "h=$(printf '%s' \"$p\" | cksum | awk '{print $1}'); out=\"$outdir/$h.png\"; " +
-                "if [ -s \"$out\" ]; then printf '%s' \"$out\"; exit 0; fi; " +
-                "d=\"$p\"; [ -f \"$d\" ] && [ \"$(basename \"$d\")\" = \"project.json\" ] && d=\"$(dirname \"$d\")\"; " +
-                "if [ -d \"$d\" ] && [ -f \"$d/project.json\" ]; then " +
-                "  prev=$(jq -r '.preview // empty' \"$d/project.json\" 2>/dev/null); " +
-                "  if [ -n \"$prev\" ] && [ -f \"$d/$prev\" ]; then " +
-                "    magick \"$d/$prev[0]\" \"$out\" 2>/dev/null && [ -s \"$out\" ] && { printf '%s' \"$out\"; exit 0; }; " +
+                "if [ ! -s \"$out\" ]; then " +
+                "  d=\"$p\"; [ -f \"$d\" ] && [ \"$(basename \"$d\")\" = \"project.json\" ] && d=\"$(dirname \"$d\")\"; " +
+                "  if [ -d \"$d\" ] && [ -f \"$d/project.json\" ]; then " +
+                "    prev=$(jq -r '.preview // empty' \"$d/project.json\" 2>/dev/null); " +
+                "    [ -n \"$prev\" ] && [ -f \"$d/$prev\" ] && magick \"$d/$prev[0]\" \"$out\" 2>/dev/null; " +
+                "  elif [ -f \"$p\" ]; then " +
+                "    ffmpeg -y -loglevel error -ss 00:00:01 -i \"$p\" -frames:v 1 \"$out\" 2>/dev/null " +
+                "    || ffmpeg -y -loglevel error -i \"$p\" -frames:v 1 \"$out\" 2>/dev/null; " +
                 "  fi; " +
                 "fi; " +
-                "if [ -f \"$p\" ]; then " +
-                "  ffmpeg -y -loglevel error -ss 00:00:01 -i \"$p\" -frames:v 1 \"$out\" 2>/dev/null " +
-                "  || ffmpeg -y -loglevel error -i \"$p\" -frames:v 1 \"$out\" 2>/dev/null; " +
-                "  [ -s \"$out\" ] && { printf '%s' \"$out\"; exit 0; }; " +
-                "fi",
-                "sh", path, Paths.cache + "/we-stills"];
-            resolveStill.running = true;
+                "[ -s \"$out\" ] && printf '%s\\t%s\\n' \"$p\" \"$out\"; done",
+                "sh", Paths.cache + "/we-stills", ...missing];
+            stillProc.running = true;
         }
     }
-
-    property bool pendingRecolor: false
     Process {
-        id: resolveStill
+        id: stillProc
+        property var asked: []
         stdout: StdioCollector {
             onStreamFinished: {
-                const s = text.trim();
-                if (s) {
-                    root.stillPath = s;
-                    tone.running = true;
-                    if (root.pendingRecolor) {
-                        root.pendingRecolor = false;
-                        root.recolorNow();
-                    }
+                const add = Object.assign({}, root.stills);
+                for (const line of text.split("\n")) {
+                    const parts = line.split("\t");
+                    if (parts.length === 2)
+                        add[parts[0]] = parts[1];
                 }
+                root.stills = add;
             }
         }
+        // Paths that came in while this one ran
+        onExited: root.resolveStills()
     }
 
-    // How bright the wallpaper is (0..1), measured once per wallpaper: bare
-    // desktop widgets draw light type on a dark wallpaper and dark on a light
-    // one, whatever the theme mode (Theme.onWall)
+    onStillPathChanged: {
+        if (!stillPath)
+            return;
+        tone.running = true;
+        if (pendingRecolor) {
+            pendingRecolor = false;
+            recolorNow();
+        }
+        checkPalette();
+    }
+
+    // How bright the colors' wallpaper is (0..1), measured once per wallpaper:
+    // bare desktop widgets draw light type on a dark wallpaper and dark on a
+    // light one, whatever the theme mode (Theme.onWall)
     Process {
         id: tone
         command: ["magick", root.stillPath + "[0]", "-resize", "64x64!", "-colorspace", "gray", "-format", "%[fx:mean]", "info:"]
@@ -218,64 +231,54 @@ Singleton {
         }
     }
 
-    function set(newPath) {
-        if (!newPath)
-            return;
-        const clean = newPath.replace(/^file:\/\//, "").replace(/\/+$/, "");
-        state.path = clean;
-        file.writeAdapter();
-        root.recolor();
-    }
+    // ── Colors ──────────────────────────────────────────────────────────
 
-    // Wallpaper, light/dark and scheme together (a preset): one matugen run
-    function applyLook(newPath, mode, scheme) {
-        holding = true;
-        if (newPath)
-            state.path = newPath.replace(/^file:\/\//, "").replace(/\/+$/, "");
-        if (mode)
-            Config.theme.mode = mode;
-        if (scheme)
-            Config.theme.scheme = scheme;
-        holding = false;
-        file.writeAdapter();
-        recolor();
-    }
-    property bool holding: false
-
-    // Run matugen for the current wallpaper, mode and scheme. A run already
+    // The wallpaper matugen last ran for
+    property string colored: ""
+    // Run matugen for the colors' wallpaper, mode and scheme. A run already
     // going is replaced, so only the last change counts.
     function recolor() {
-        if (!state.path)
+        if (!path)
             return;
-        if (!stillPath || (!isImagePath(state.path) && resolveStill.running)) {
+        colored = path;
+        if (!stillPath) {
             pendingRecolor = true;
             return;
         }
         recolorNow();
     }
+    property bool pendingRecolor: false
     function recolorNow() {
         if (!stillPath)
             return;
-        if (matugen.running)
+        if (matugen.running) {
             pending = true;
-        else
-            matugen.running = true;
+        } else {
+            matugen.begin();
+        }
     }
     property bool pending: false
 
     Process {
         id: matugen
-        command: ["matugen", "image", root.stillPath, "-c", Paths.matugenConfig,
-            "-t", Config.theme.scheme, "-m", Config.theme.mode, "--source-color-index", "0"]
+        // The command is made when a run starts: a binding could change
+        // (or be empty for a moment) while it runs
+        property string image: ""
+        function begin() {
+            image = root.stillPath;
+            command = ["matugen", "image", image, "-c", Paths.matugenConfig,
+                "-t", Config.theme.scheme, "-m", Config.theme.mode, "--source-color-index", "0"];
+            running = true;
+        }
         stderr: StdioCollector {
             onStreamFinished: if (text.trim()) console.warn("matugen:", text.trim())
         }
         onExited: code => {
             if (code !== 0)
-                console.warn("matugen exited with", code, "for", root.stillPath);
+                console.warn("matugen exited with", code, "for", image);
             if (root.pending) {
                 root.pending = false;
-                running = true;
+                begin();
             }
         }
     }
@@ -283,8 +286,12 @@ Singleton {
     // At start: recolor when the palette was made from another wallpaper
     // (or does not exist yet)
     function checkPalette() {
-        if (file.loaded && Theme.paletteRead && stillPath && Theme.image !== stillPath)
+        if (!file.loaded || !Theme.paletteRead || !stillPath)
+            return;
+        if (Theme.image !== stillPath)
             recolor();
+        else
+            colored = path;
     }
     Connections {
         target: Theme
@@ -298,11 +305,129 @@ Singleton {
         function onSchemeChanged() { if (!root.holding) root.recolor(); }
     }
 
+    // ── Animated wallpapers (somewall) ─────────────────────────────────
+
+    readonly property string helper: Paths.home + "/.local/lib/someshell/somewall"
+    property bool engineInstalled: false
+    Process {
+        running: true
+        command: ["test", "-x", root.helper]
+        onExited: code => root.engineInstalled = code === 0
+    }
+
+    // Which somewalls should run: key → { path, outputs }. One wallpaper on
+    // every monitor: one somewall for all ("*", it also takes monitors plugged
+    // in later). Each its own: one per animated wallpaper, on its monitors.
+    readonly property var groups: {
+        const out = {};
+        if (!file.loaded || !engineInstalled)
+            return out;
+        if (mode === "all") {
+            if (isAnimatedPath(state.path))
+                out["*"] = { path: state.path, outputs: [] };
+            return out;
+        }
+        const byPath = {};
+        for (const n of monitorNames) {
+            const p = pathFor(n);
+            if (isAnimatedPath(p))
+                (byPath[p] = byPath[p] ?? []).push(n);
+        }
+        for (const p in byPath) {
+            const outs = byPath[p].sort();
+            out[outs.join(",")] = { path: p, outputs: outs };
+        }
+        return out;
+    }
+    onGroupsChanged: syncEngines()
+
+    property var engines: ({})
+    function syncEngines() {
+        const next = {};
+        for (const key in engines) {
+            const e = engines[key];
+            if (groups[key]) {
+                e.load(groups[key].path);
+                next[key] = e;
+            } else {
+                e.stop();
+                e.destroy();
+            }
+        }
+        for (const key in groups) {
+            if (next[key])
+                continue;
+            const e = engineComp.createObject(root, {
+                helper: root.helper,
+                path: groups[key].path,
+                outputs: groups[key].outputs
+            });
+            e.userPaused = Qt.binding(() => root.userPaused);
+            e.start();
+            next[key] = e;
+        }
+        engines = next;
+    }
+    Component {
+        id: engineComp
+        WallEngine {}
+    }
+
+    // Monitors where somewall draws now (WallpaperWindow stops drawing there)
+    readonly property var liveMonitors: {
+        const out = {};
+        for (const key in engines) {
+            const e = engines[key];
+            if (!e.ready)
+                continue;
+            for (const n of (e.outputs.length ? e.outputs : monitorNames))
+                out[n] = true;
+        }
+        return out;
+    }
+    function liveOn(monitor) {
+        return !!liveMonitors[monitor];
+    }
+    readonly property bool live: Object.keys(liveMonitors).length > 0
+
+    // Pausing by hand (IPC `pause`), on top of the rules (WallPause)
+    property bool userPaused: false
+    function setPaused(on) {
+        userPaused = on;
+    }
+
+    // A Wallpaper Engine property, live, on every somewall
+    function setProp(key, rawValue) {
+        if (!key)
+            return;
+        let v = rawValue;
+        if (rawValue === "true") v = true;
+        else if (rawValue === "false") v = false;
+        else if (typeof rawValue === "string" && rawValue !== "" && !isNaN(Number(rawValue))) v = Number(rawValue);
+        for (const k in engines)
+            engines[k].send({ cmd: "set_prop", key: key, value: v });
+    }
+
+    // For `ipc call wallpaper engine`
+    function engineState() {
+        const list = [];
+        for (const key in engines) {
+            const e = engines[key];
+            list.push({ outputs: e.outputs, path: e.path, ready: e.ready, info: e.info, sent: e.sentPause });
+        }
+        return { mode: mode, colorsFrom: colorsMonitor, colors: path, still: stillPath, colored: colored, stills: stills, rules: WallPause.paused, user: userPaused, engines: list };
+    }
+
+    // ── State file ─────────────────────────────────────────────────────
+
     FileView {
         id: file
         path: Paths.state + "/wall.json"
         watchChanges: true
-        onFileChanged: reload()
+        // Our own write also changes the file: ignore that echo for a moment,
+        // or the reload empties the state while a change is still being made
+        property real lastWrite: 0
+        onFileChanged: if (Date.now() - lastWrite > 600) reload()
         onLoaded: root.checkPalette()
 
         onLoadFailed: error => {
@@ -313,8 +438,19 @@ Singleton {
         }
         JsonAdapter {
             id: state
+            // The wallpaper on every monitor (and for monitors "each" has none for)
             property string path: ""
+            property string mode: "all"
+            // Monitor name → wallpaper, used with "each"
+            property var monitors: ({})
+            // The monitor the colors come from ("" = the first)
+            property string colorsFrom: ""
         }
+    }
+
+    function write() {
+        file.lastWrite = Date.now();
+        file.writeAdapter();
     }
 
     // The poster that ships with the shell (scripts/poster-wallpaper.sh)

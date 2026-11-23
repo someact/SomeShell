@@ -54,7 +54,8 @@ Item {
 
         Image {
             anchors.fill: parent
-            source: Wallpaper.stillPath ? "file://" + Wallpaper.stillPath : ""
+            readonly property string still: Wallpaper.stillFor(root.screen.name)
+            source: still ? "file://" + still : ""
             // Decoded once at the screen's size: a size that follows the
             // card would decode again on every frame of the zoom
             sourceSize: Qt.size(root.sw, root.sh)
@@ -302,7 +303,9 @@ Item {
         // Wallpaper tab: a thin accent frame around the whole card
         Rectangle {
             anchors.fill: parent
+            // With each monitor its own wallpaper: only the monitor the tab sets
             visible: root.showChoice && Ui.editTab === "wallpaper"
+                && (Wallpaper.mode === "all" || Ui.wallMonitor === root.screen.name)
             radius: frame.radius
             color: "transparent"
             border.width: 2
@@ -329,8 +332,10 @@ Item {
                 Ui.editTab = "dock";
             else if (root.widgetsTab)
                 Ui.editWidget = "";
-            else
+            else {
                 Ui.editTab = "wallpaper";
+                Ui.wallTarget = root.screen.name;
+            }
         }
     }
 

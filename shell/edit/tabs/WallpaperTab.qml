@@ -1,9 +1,12 @@
 import QtQuick
+import Quickshell
 import qs.core
 import qs.components
 import qs.services
 
-// Wallpaper: a row of thumbnails (a click applies it and recolors), light or
+// Wallpaper: with more than one monitor, a row for one wallpaper on all or
+// each its own (which monitor the thumbnails set, which one the colors come
+// from); a row of thumbnails (a click applies it and recolors), light or
 // dark, the color scheme, and the palette it made.
 Item {
     id: root
@@ -17,10 +20,76 @@ Item {
         ["scheme-neutral", "Neutral"], ["scheme-rainbow", "Rainbow"]
     ]
 
+    // Monitors, left to right
+    readonly property var screens: Quickshell.screens.slice().sort((a, b) => a.x - b.x || a.y - b.y)
+    readonly property bool several: screens.length > 1
+    readonly property bool each: Wallpaper.mode === "each"
+
+    Item {
+        id: monitors
+        visible: root.several
+        width: parent.width
+        height: root.several ? 34 : 0
+
+        Row {
+            spacing: 4
+            Chip {
+                icon: "select_all"
+                label: "Same on all"
+                active: !root.each
+                onClicked: if (!active) { Editor.record(); Wallpaper.setMode("all"); }
+            }
+            Chip {
+                icon: "splitscreen_left"
+                label: "Each its own"
+                active: root.each
+                onClicked: if (!active) { Editor.record(); Wallpaper.setMode("each"); }
+            }
+            Item { width: 14; height: 1 }
+            // Which monitor the thumbnails set
+            Repeater {
+                model: root.each ? root.screens : []
+                Chip {
+                    required property var modelData
+                    icon: "monitor"
+                    label: modelData.name
+                    active: Ui.wallMonitor === modelData.name
+                    onClicked: Ui.wallTarget = modelData.name
+                }
+            }
+        }
+
+        // Which monitor's wallpaper makes the colors
+        Row {
+            visible: root.each
+            anchors.right: parent.right
+            spacing: 4
+            Txt {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Colors from"
+                caps: true
+                color: Theme.ink.mute
+                rightPadding: 6
+            }
+            Repeater {
+                model: root.each ? root.screens : []
+                Chip {
+                    required property var modelData
+                    icon: "palette"
+                    label: modelData.name
+                    active: Wallpaper.colorsMonitor === modelData.name
+                    onClicked: if (!active) { Editor.record(); Wallpaper.setColorsFrom(modelData.name); }
+                }
+            }
+        }
+    }
+
     ListView {
         id: walls
+        anchors.top: monitors.bottom
+        anchors.topMargin: root.several ? 12 : 0
         width: parent.width
-        height: 104
+        height: root.several ? 84 : 104
         orientation: ListView.Horizontal
         spacing: 10
         clip: true
@@ -34,11 +103,11 @@ Item {
         delegate: Tap {
             id: cell
             required property var modelData
-            readonly property bool current: modelData.path === Wallpaper.path
-            width: 168
-            height: 104
+            readonly property bool current: modelData.path === Wallpaper.pathFor(Ui.wallMonitor)
+            width: walls.height * 1.62
+            height: walls.height
             radius: 14
-            onClicked: if (!current) { Editor.record(); Wallpaper.set(modelData.path); }
+            onClicked: if (!current) { Editor.record(); Wallpaper.set(modelData.path, Ui.wallMonitor); }
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 3
