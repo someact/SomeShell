@@ -61,6 +61,9 @@ Singleton {
         if (!newPath)
             return;
         const p = clean(newPath);
+        remember();
+        // Chosen again on purpose: try it again even if it failed before
+        forgetBad(p);
         if (mode === "each") {
             const m = monitor || Hyprland.focusedMonitor?.name || colorsMonitor;
             const mons = Object.assign({}, state.monitors);
@@ -78,6 +81,7 @@ Singleton {
     function setMode(m) {
         if (m === mode)
             return;
+        remember();
         if (m === "each") {
             const mons = Object.assign({}, state.monitors);
             for (const n of monitorNames)
@@ -118,6 +122,8 @@ Singleton {
 
     // Wallpapers, light/dark and scheme together (a preset, Undo): one matugen run
     function applyLook(walls, mode, scheme) {
+        if (!reverting)
+            remember();
         holding = true;
         if (walls) {
             const w = normal(walls);
@@ -137,11 +143,66 @@ Singleton {
     }
     property bool holding: false
 
+    // ── Failures ───────────────────────────────────────────────────────
+
+    // The choice before the last change: a wallpaper that does not load puts it back
+    property var previous: null
+    property bool reverting: false
+    function remember() {
+        previous = snapshot();
+    }
+    // Wallpapers that did not load (or kept crashing) this session: no
+    // somewall is started for them again until one is chosen again
+    property var bad: ({})
+    function forgetBad(p) {
+        if (bad[p]) {
+            const b = Object.assign({}, bad);
+            delete b[p];
+            bad = b;
+        }
+    }
+    function titleOf(p) {
+        return WallSettings.infos[p]?.title || p.split("/").pop();
+    }
+    function engineFailed(p) {
+        // Back to the choice before (unless that is this one too), first: the
+        // same somewall then loads it instead of being started again
+        const prev = previous;
+        const back = prev && JSON.stringify(prev).indexOf(JSON.stringify(p)) < 0;
+        Ui.showAlert("Wallpaper did not load", titleOf(p) + (back ? " · the previous one is back" : ""), "Wallpaper", "broken_image");
+        if (back) {
+            reverting = true;
+            applyLook(prev, "", "");
+            reverting = false;
+        }
+        const b = Object.assign({}, bad);
+        b[p] = true;
+        bad = b;
+    }
+    function engineGaveUp(p) {
+        const b = Object.assign({}, bad);
+        b[p] = true;
+        bad = b;
+        Ui.showAlert("Animated wallpaper stopped", titleOf(p) + " crashed again and again · its picture shows instead", "Wallpaper", "error");
+    }
+
     // ── Still pictures ──────────────────────────────────────────────────
 
-    // Path → its still picture: itself for a picture, the project's preview
-    // or a video's frame (cached in ~/.cache/someshell/we-stills) otherwise
+    // Path → its still picture: itself for a picture; a frame rendered by
+    // somewall for a scene, a video's own frame, else the project's preview
+    // (made once at the largest screen's size, cached in ~/.cache/someshell/we-stills)
     property var stills: ({})
+    readonly property string stillSize: {
+        let w = 1920, h = 1080;
+        for (const sc of Quickshell.screens) {
+            const r = sc.devicePixelRatio || 1;
+            if (sc.width * sc.height * r * r > w * h) {
+                w = Math.round(sc.width * r);
+                h = Math.round(sc.height * r);
+            }
+        }
+        return w + "x" + h;
+    }
     readonly property var allPaths: {
         const out = [];
         if (state.path)
@@ -169,20 +230,37 @@ Singleton {
         if (missing.length && !stillProc.running) {
             stillProc.asked = stillProc.asked.concat(missing);
             stillProc.command = ["sh", "-c",
-                "outdir=\"$1\"; shift; mkdir -p \"$outdir\"; for p in \"$@\"; do " +
-                "h=$(printf '%s' \"$p\" | cksum | awk '{print $1}'); out=\"$outdir/$h.png\"; " +
+                "outdir=\"$1\"; helper=\"$2\"; assets=\"$3\"; size=\"$4\"; shift 4; mkdir -p \"$outdir\"; " +
+                "w=${size%x*}; h=${size#*x}; " +
+                "for p in \"$@\"; do " +
+                "h1=$(printf '%s %s' \"$p\" \"$size\" | cksum | awk '{print $1}'); out=\"$outdir/$h1.png\"; " +
                 "if [ ! -s \"$out\" ]; then " +
                 "  d=\"$p\"; [ -f \"$d\" ] && [ \"$(basename \"$d\")\" = \"project.json\" ] && d=\"$(dirname \"$d\")\"; " +
                 "  if [ -d \"$d\" ] && [ -f \"$d/project.json\" ]; then " +
-                "    prev=$(jq -r '.preview // empty' \"$d/project.json\" 2>/dev/null); " +
-                "    [ -n \"$prev\" ] && [ -f \"$d/$prev\" ] && magick \"$d/$prev[0]\" \"$out\" 2>/dev/null; " +
+                "    type=$(jq -r '(.type // \"scene\") | ascii_downcase' \"$d/project.json\" 2>/dev/null); " +
+                "    file=$(jq -r '.file // empty' \"$d/project.json\" 2>/dev/null); " +
+                // A scene: one frame rendered by somewall at the screen's size
+                "    if [ \"$type\" = scene ] && [ -x \"$helper\" ]; then " +
+                // No assets folder set: a harmless pair in its place (somewall then looks in the Steam paths)
+                "      if [ -n \"$assets\" ]; then sa=--assets; sv=\"$assets\"; else sa=--fps; sv=60; fi; " +
+                "      timeout 60 \"$helper\" \"$sa\" \"$sv\" --headless-shot \"$out.ppm\" --size \"$size\" --frames 30 \"$d\" >/dev/null 2>&1 " +
+                "        && magick \"$out.ppm\" \"$out\" 2>/dev/null; rm -f \"$out.ppm\"; " +
+                // A video: its own frame, covering the screen
+                "    elif [ \"$type\" = video ] && [ -n \"$file\" ] && [ -f \"$d/$file\" ]; then " +
+                "      ffmpeg -y -loglevel error -ss 00:00:01 -i \"$d/$file\" -frames:v 1 -vf \"scale=$w:$h:force_original_aspect_ratio=increase\" \"$out\" 2>/dev/null; " +
+                "    fi; " +
+                // Else (or when that failed) the project's preview
+                "    if [ ! -s \"$out\" ]; then " +
+                "      prev=$(jq -r '.preview // empty' \"$d/project.json\" 2>/dev/null); " +
+                "      [ -n \"$prev\" ] && [ -f \"$d/$prev\" ] && magick \"$d/$prev[0]\" \"$out\" 2>/dev/null; " +
+                "    fi; " +
                 "  elif [ -f \"$p\" ]; then " +
-                "    ffmpeg -y -loglevel error -ss 00:00:01 -i \"$p\" -frames:v 1 \"$out\" 2>/dev/null " +
+                "    ffmpeg -y -loglevel error -ss 00:00:01 -i \"$p\" -frames:v 1 -vf \"scale=$w:$h:force_original_aspect_ratio=increase\" \"$out\" 2>/dev/null " +
                 "    || ffmpeg -y -loglevel error -i \"$p\" -frames:v 1 \"$out\" 2>/dev/null; " +
                 "  fi; " +
                 "fi; " +
                 "[ -s \"$out\" ] && printf '%s\\t%s\\n' \"$p\" \"$out\"; done",
-                "sh", Paths.cache + "/we-stills", ...missing];
+                "sh", Paths.cache + "/we-stills", root.helper, Config.wallpaper.assets, root.stillSize, ...missing];
             stillProc.running = true;
         }
     }
@@ -322,14 +400,14 @@ Singleton {
         if (!file.loaded || !engineInstalled)
             return out;
         if (mode === "all") {
-            if (isAnimatedPath(state.path))
+            if (isAnimatedPath(state.path) && !bad[state.path])
                 out["*"] = { path: state.path, outputs: [] };
             return out;
         }
         const byPath = {};
         for (const n of monitorNames) {
             const p = pathFor(n);
-            if (isAnimatedPath(p))
+            if (isAnimatedPath(p) && !bad[p])
                 (byPath[p] = byPath[p] ?? []).push(n);
         }
         for (const p in byPath) {
@@ -362,6 +440,8 @@ Singleton {
                 outputs: groups[key].outputs
             });
             e.userPaused = Qt.binding(() => root.userPaused);
+            e.failed.connect(root.engineFailed);
+            e.gaveUp.connect(root.engineGaveUp);
             e.start();
             next[key] = e;
         }
@@ -450,7 +530,7 @@ Singleton {
             const e = engines[key];
             list.push({ outputs: e.outputs, path: e.path, ready: e.ready, info: e.info, sent: e.sentPause, settings: e.settings });
         }
-        return { mode: mode, colorsFrom: colorsMonitor, colors: path, still: stillPath, colored: colored, stills: stills, rules: WallPause.paused, user: userPaused, engines: list };
+        return { bad: bad, mode: mode, colorsFrom: colorsMonitor, colors: path, still: stillPath, colored: colored, stills: stills, rules: WallPause.paused, user: userPaused, engines: list };
     }
 
     // ── State file ─────────────────────────────────────────────────────

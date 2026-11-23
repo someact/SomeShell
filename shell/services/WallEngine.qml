@@ -28,6 +28,17 @@ Scope {
     // Waiting for project.json before a start or a load
     property string waiting: ""
 
+    // Failures. `failed`: this wallpaper did not load (Wallpaper puts the
+    // previous one back). A crash restarts somewall up to three times (the
+    // count starts over after two minutes running well); then `gaveUp`, and
+    // the still picture shows.
+    signal failed(string path)
+    signal gaveUp(string path)
+    property bool stopping: false
+    property bool everReady: false
+    property int crashes: 0
+    readonly property int maxCrashes: 3
+
     function fpsOf(s) {
         return s.fps || Config.wallpaper.fps;
     }
@@ -66,6 +77,7 @@ Scope {
             args.push("--prop", k + "=" + String(settings.props[k]));
         args.push(path);
         sent = n;
+        everReady = false;
         proc.command = args;
         proc.running = true;
     }
@@ -93,8 +105,23 @@ Scope {
     }
 
     function stop() {
+        stopping = true;
+        restart.stop();
         send({ cmd: "quit" });
         proc.running = false;
+    }
+
+    Timer {
+        id: restart
+        interval: 1000
+        onTriggered: if (!eng.stopping) eng.start()
+    }
+    // Two minutes running well: earlier crashes no longer count
+    Timer {
+        id: healthy
+        interval: 120000
+        running: eng.ready
+        onTriggered: eng.crashes = 0
     }
 
     // project.json read: go on with what was waiting
@@ -185,17 +212,37 @@ Scope {
                     eng.info = ev;
                 if (ev.event === "ready") {
                     eng.ready = true;
+                    eng.everReady = true;
                     // A new somewall knows nothing: tell it every monitor's state
                     eng.sentPause = {};
                     eng.syncPause();
                 } else if (ev.event === "loaded") {
                     eng.ready = !!ev.ok;
+                    if (!ev.ok)
+                        eng.failed(eng.path);
                 }
             }
         }
         stderr: SplitParser {
             onRead: line => { if (line.trim()) console.log("somewall:", line); }
         }
-        onExited: eng.ready = false
+        onExited: (code, status) => {
+            eng.ready = false;
+            if (eng.stopping)
+                return;
+            // Ended before it was ready with an error: the wallpaper itself
+            // did not load (somewall exits 1); no restart
+            if (!eng.everReady && status === 0 && code !== 0) {
+                console.warn("somewall could not load", eng.path);
+                eng.failed(eng.path);
+                return;
+            }
+            eng.crashes++;
+            console.warn("somewall ended (code", code + ", status", status + "), crash", eng.crashes, "of", eng.maxCrashes);
+            if (eng.crashes > eng.maxCrashes)
+                eng.gaveUp(eng.path);
+            else
+                restart.start();
+        }
     }
 }
