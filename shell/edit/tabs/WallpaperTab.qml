@@ -104,6 +104,9 @@ Item {
             id: cell
             required property var modelData
             readonly property bool current: modelData.path === Wallpaper.pathFor(Ui.wallMonitor)
+            // A web or application wallpaper: shown, never set
+            readonly property bool usable: modelData.kind !== "unsupported"
+            enabled: usable
             width: walls.height * 1.62
             height: walls.height
             radius: 14
@@ -124,7 +127,7 @@ Item {
                     asynchronous: true
                 }
                 Rectangle {
-                    visible: cell.modelData.kind === "scene" || cell.modelData.kind === "video"
+                    visible: cell.modelData.kind !== "image"
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     anchors.margins: 6
@@ -134,7 +137,7 @@ Item {
                     color: Qt.rgba(0, 0, 0, 0.55)
                     Icon {
                         anchors.centerIn: parent
-                        name: cell.modelData.kind === "scene" ? "auto_awesome" : "movie"
+                        name: cell.modelData.kind === "scene" ? "auto_awesome" : cell.modelData.kind === "video" ? "movie" : "block"
                         size: 13
                         color: "white"
                     }
@@ -145,7 +148,7 @@ Item {
         Txt {
             visible: Wallpapers.files.length === 0
             anchors.centerIn: parent
-            text: "No images in " + Wallpapers.folder
+            text: "No wallpapers in " + Wallpapers.folder
             caps: true
             color: Theme.ink.mute
         }

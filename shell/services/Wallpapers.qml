@@ -4,8 +4,11 @@ import Quickshell
 import Quickshell.Io
 import qs.core
 
-// Images in the wallpaper folder (shell.json "wallpaper.folder", default
-// ~/Pictures/Wallpapers, subfolders included), listed when /wall opens.
+// Wallpapers in the wallpaper folder (shell.json "wallpaper.folder", default
+// ~/Pictures/Wallpapers, subfolders included), listed when /wall or the
+// Wallpaper tab opens: pictures, videos, and Wallpaper Engine folders dropped
+// there as they came (lib/wallpapers.sh). Web and application wallpapers are
+// listed as "unsupported" and never chosen.
 // Thumbnails are made once with ImageMagick into ~/.cache/someshell/thumbs,
 // so the picker never decodes a full-size image.
 Singleton {
@@ -15,7 +18,7 @@ Singleton {
     // The posters that ship with the shell are listed too
     readonly property string bundled: Quickshell.shellDir + "/assets/wallpapers"
     readonly property string thumbDir: Paths.cache + "/thumbs"
-    // { path, name, thumb }
+    // { path, name, thumb, kind: image | video | scene | unsupported }
     property var files: []
     // Thumbnails that exist, by path: each shows as soon as it is made
     property var ready: ({})
@@ -34,14 +37,14 @@ Singleton {
         if (!pickRandom)
             return;
         pickRandom = false;
-        const others = files.filter(f => f.path !== Wallpaper.path);
+        const others = files.filter(f => f.kind !== "unsupported" && f.path !== Wallpaper.path);
         if (others.length)
             Wallpaper.set(others[Math.floor(Math.random() * others.length)].path);
     }
 
     function search(query, limit) {
         const q = query.trim().toLowerCase();
-        return files.filter(f => !q || f.name.toLowerCase().includes(q)).slice(0, limit ?? 12);
+        return files.filter(f => f.kind !== "unsupported" && (!q || f.name.toLowerCase().includes(q))).slice(0, limit ?? 12);
     }
 
     function thumbFor(path) {
@@ -51,32 +54,8 @@ Singleton {
 
     Process {
         id: find
-        // Lists static images, standalone videos, and Wallpaper Engine project
-        // folders (containing project.json). Format per line: kind\tpath\tname\tpreview
-        command: ["sh", "-c",
-            "folder=\"$1\"; bundled=\"$2\"; " +
-            "we_dirs=$(find -L \"$folder\" -maxdepth 3 -type f -name project.json 2>/dev/null | sed 's|/project\\.json$||' | sort -u); " +
-            "printf '%s\\n' \"$we_dirs\" | while IFS= read -r d; do " +
-            "  [ -z \"$d\" ] && continue; " +
-            "  t=$(jq -r '.type // \"scene\" | ascii_downcase' \"$d/project.json\" 2>/dev/null); " +
-            "  title=$(jq -r '.title // empty' \"$d/project.json\" 2>/dev/null); " +
-            "  [ -z \"$title\" ] && title=$(basename \"$d\"); " +
-            "  prev=$(jq -r '.preview // empty' \"$d/project.json\" 2>/dev/null); " +
-            "  pfile=\"\"; [ -n \"$prev\" ] && [ -f \"$d/$prev\" ] && pfile=\"$d/$prev\"; " +
-            "  printf '%s\\t%s\\t%s\\t%s\\n' \"$t\" \"$d\" \"$title\" \"$pfile\"; " +
-            "done; " +
-            "find -L \"$folder\" \"$bundled\" -maxdepth 3 -type f " +
-            "  \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' \\) 2>/dev/null | sort | " +
-            "while IFS= read -r f; do " +
-            "  [ -f \"$(dirname \"$f\")/project.json\" ] && continue; " +
-            "  base=$(basename \"$f\"); name=\"${base%.*}\"; " +
-            "  case \"$(printf '%s' \"$base\" | tr 'A-Z' 'a-z')\" in " +
-            "    *.mp4|*.webm|*.mkv) k=video ;; " +
-            "    *) k=image ;; " +
-            "  esac; " +
-            "  printf '%s\\t%s\\t%s\\t%s\\n' \"$k\" \"$f\" \"$name\" \"$f\"; " +
-            "done",
-            "sh", root.folder, root.bundled]
+        // kind, path, name, picture for the thumbnail (lib/wallpapers.sh)
+        command: [Quickshell.shellPath("lib/wallpapers.sh"), root.folder, root.bundled]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = text.split("\n").filter(Boolean);
