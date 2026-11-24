@@ -311,7 +311,8 @@ std::string ShaderCache::transpile_stage(const std::string& body,
     return out.str();
 }
 
-CompiledShader* ShaderCache::get(const std::string& shader_name, const std::map<std::string, int>& combos) {
+CompiledShader* ShaderCache::get(const std::string& shader_name, const std::map<std::string, int>& combos,
+                                 const std::set<int>& bound) {
     // Normalize combos to uppercase
     std::map<std::string, int> norm_combos;
     for (const auto& [k, v] : combos) {
@@ -323,6 +324,7 @@ CompiledShader* ShaderCache::get(const std::string& shader_name, const std::map<
     for (const auto& [k, v] : norm_combos) {
         key_ss << "|" << k << "=" << v;
     }
+    for (int slot : bound) key_ss << "|t" << slot;
     std::string key = key_ss.str();
     if (auto it = cache_.find(key); it != cache_.end()) {
         return it->second.get();
@@ -359,6 +361,10 @@ CompiledShader* ShaderCache::get(const std::string& shader_name, const std::map<
     std::map<std::string, int> final_combos;
     for (const auto& [k, v] : combo_defaults) {
         if (v != 0) final_combos[k] = v;
+    }
+    // Combos switched on by a bound texture (the material's own value wins)
+    for (const auto& [slot, name] : cs->texture_combos) {
+        if (bound.count(slot) && !norm_combos.count(name)) final_combos[name] = 1;
     }
     for (const auto& [k, v] : norm_combos) {
         if (v == 0) {

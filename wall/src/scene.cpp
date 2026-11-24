@@ -515,7 +515,11 @@ bool Scene::load_scene(const Json& /*proj_json*/, const std::string& scene_file)
                 }
             }
 
-            obj.shader = shader_cache_->get(shader_name, combos);
+            std::set<int> bound;
+            for (size_t ti = 0; ti < obj.textures.size(); ++ti) {
+                if (obj.textures[ti]) bound.insert(static_cast<int>(ti));
+            }
+            obj.shader = shader_cache_->get(shader_name, combos, bound);
             if (!obj.shader) {
                 ++no_shader;
                 continue;
@@ -587,7 +591,11 @@ bool Scene::load_scene(const Json& /*proj_json*/, const std::string& scene_file)
                         }
                     }
 
-                    ep.shader = shader_cache_->get(pshader, pcombos);
+                    std::set<int> bound;
+                    for (size_t ti = 0; ti < ep.textures.size(); ++ti) {
+                        if (ep.textures[ti] || ep.slot_is_fb[ti]) bound.insert(static_cast<int>(ti));
+                    }
+                    ep.shader = shader_cache_->get(pshader, pcombos, bound);
                     if (ep.shader) fx.passes.push_back(std::move(ep));
                 }
 

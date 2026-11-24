@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 
@@ -48,7 +49,11 @@ public:
     explicit ShaderCache(const Vfs& vfs) : vfs_(vfs) {}
     ~ShaderCache() { clear(); }
 
-    CompiledShader* get(const std::string& shader_name, const std::map<std::string, int>& combos);
+    // `bound`: texture slots the material fills. A slot whose sampler comment
+    // names a combo (e.g. an opacity mask: "combo":"MASK") turns it on when
+    // bound, as Wallpaper Engine does, unless the material sets that combo itself
+    CompiledShader* get(const std::string& shader_name, const std::map<std::string, int>& combos,
+                        const std::set<int>& bound = {});
     void clear();
 
 private:
