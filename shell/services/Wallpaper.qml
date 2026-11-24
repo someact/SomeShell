@@ -511,7 +511,7 @@ Singleton {
         if (key)
             WallSettings.setProp(targetPath(monitor), key, parseValue(value));
     }
-    // fit, speed, fps, scale, or pause.<rule> ("default" removes it)
+    // fit, speed, fps, scale, texres, or pause.<rule> ("default" removes it)
     function setting(name, value, monitor) {
         const p = targetPath(monitor);
         const v = value === "default" ? null : parseValue(value);

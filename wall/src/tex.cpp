@@ -18,6 +18,35 @@ constexpr uint32_t kFlagClampUVs        = 1u << 1;
 constexpr uint32_t kFlagIsGif           = 1u << 2;
 constexpr uint32_t kFlagIsVideoTexture  = 1u << 5;
 
+// Box-filters an 8-bit image (1, 2 or 4 channels) to half its size, in place
+void halve_image(std::vector<uint8_t>& px, int& w, int& h, int ch) {
+    int nw = std::max(1, w / 2), nh = std::max(1, h / 2);
+    std::vector<uint8_t> out(static_cast<size_t>(nw) * nh * ch);
+    for (int y = 0; y < nh; ++y) {
+        int y0 = std::min(h - 1, y * 2), y1 = std::min(h - 1, y * 2 + 1);
+        for (int x = 0; x < nw; ++x) {
+            int x0 = std::min(w - 1, x * 2), x1 = std::min(w - 1, x * 2 + 1);
+            for (int c = 0; c < ch; ++c) {
+                int s = px[(static_cast<size_t>(y0) * w + x0) * ch + c] + px[(static_cast<size_t>(y0) * w + x1) * ch + c] +
+                        px[(static_cast<size_t>(y1) * w + x0) * ch + c] + px[(static_cast<size_t>(y1) * w + x1) * ch + c];
+                out[(static_cast<size_t>(y) * nw + x) * ch + c] = static_cast<uint8_t>((s + 2) / 4);
+            }
+        }
+    }
+    px.swap(out);
+    w = nw;
+    h = nh;
+}
+
+int channels_of(TexFormat f) {
+    switch (f) {
+        case TexFormat::RGBA8888: return 4;
+        case TexFormat::RG88: return 2;
+        case TexFormat::R8: return 1;
+        default: return 0; // compressed or float: kept as it is
+    }
+}
+
 // Wallpaper Engine TEXI format field values -> TexFormat
 TexFormat map_we_format(uint32_t fmt) {
     switch (fmt) {
@@ -215,6 +244,13 @@ Texture* TextureCache::load(const std::string& name) {
     return white();
 }
 
+int TextureCache::halvings(int w, int h) const {
+    // Only pictures with a side of 1024 or more, and never below 512
+    int n = 0;
+    for (int d = divisor_; d > 1 && std::max(w, h) >> n >= 1024; d >>= 1) ++n;
+    return n;
+}
+
 std::unique_ptr<Texture> TextureCache::load_regular_image(const FileSlice& slice) {
     std::ifstream f(slice.disk_path, std::ios::binary);
     if (!f) return nullptr;
@@ -229,6 +265,7 @@ std::unique_ptr<Texture> TextureCache::load_regular_image(const FileSlice& slice
     t->tex_width = t->img_width = img.width;
     t->tex_height = t->img_height = img.height;
     t->format = TexFormat::RGBA8888;
+    for (int k = halvings(img.width, img.height); k > 0; --k) halve_image(img.rgba, img.width, img.height, 4);
     glGenTextures(1, &t->id);
     apply_tex_params(t->id, kFlagClampUVs, false);
     upload_mip_raw(0, img.width, img.height, TexFormat::RGBA8888, img.rgba.data(), img.rgba.size());
@@ -351,9 +388,15 @@ std::unique_ptr<Texture> TextureCache::load_tex_file(const FileSlice& slice, con
     glBindTexture(GL_TEXTURE_2D, t->id);
 
     int uploaded_mips = 0;
+    const int skip_want = halvings(static_cast<int>(tex_w), static_cast<int>(tex_h));
+    bool img0_done = false;
     for (uint32_t img_i = 0; img_i < img_count; ++img_i) {
         uint32_t mcount = 0;
         if (!r.read_u32(mcount)) break;
+        // Lower resolution: the file's own smaller mip levels when it has
+        // them (the top ones are skipped), else the picture halved here
+        const uint32_t skip = std::min<uint32_t>(static_cast<uint32_t>(skip_want), mcount > 0 ? mcount - 1 : 0);
+        const int cpu_halve = skip_want - static_cast<int>(skip);
         for (uint32_t m = 0; m < mcount; ++m) {
             uint32_t mw = 0, mh = 0, lz4 = 0, decomp_sz = 0, data_sz = 0;
             if (!r.read_u32(mw) || !r.read_u32(mh)) break;
@@ -365,8 +408,9 @@ std::unique_ptr<Texture> TextureCache::load_tex_file(const FileSlice& slice, con
             const uint8_t* payload = r.data + r.pos;
             r.pos += data_sz;
 
-            // Upload only image 0 into our GL_TEXTURE_2D (still consume remaining images so TEXS parses cleanly)
-            if (img_i != 0) continue;
+            // Upload only image 0 into our GL_TEXTURE_2D (still consume remaining images so TEXS parses cleanly);
+            // skipped levels are not even decompressed
+            if (img_i != 0 || img0_done || (free_img_fmt < 0 && m < skip)) continue;
 
             std::vector<uint8_t> decomp;
             const uint8_t* src_ptr = payload;
@@ -393,12 +437,23 @@ std::unique_ptr<Texture> TextureCache::load_tex_file(const FileSlice& slice, con
                         t->format = TexFormat::RGBA8888;
                         t->tex_width = dec.width;
                         t->tex_height = dec.height;
+                        for (int k = halvings(dec.width, dec.height); k > 0; --k) halve_image(dec.rgba, dec.width, dec.height, 4);
                         upload_mip_raw(0, dec.width, dec.height, TexFormat::RGBA8888, dec.rgba.data(), dec.rgba.size());
                         uploaded_mips = 1;
                     }
                 }
+            } else if (cpu_halve > 0 && m == skip && channels_of(t->format) > 0) {
+                // No smaller level in the file: halve this one, then stop
+                int ch = channels_of(t->format), w = static_cast<int>(mw), h = static_cast<int>(mh);
+                if (src_sz >= static_cast<size_t>(w) * h * ch) {
+                    std::vector<uint8_t> px(src_ptr, src_ptr + static_cast<size_t>(w) * h * ch);
+                    for (int k = 0; k < cpu_halve; ++k) halve_image(px, w, h, ch);
+                    upload_mip_raw(0, w, h, t->format, px.data(), px.size());
+                    uploaded_mips = 1;
+                }
+                img0_done = true;
             } else {
-                upload_mip_raw(static_cast<int>(m), static_cast<int>(mw), static_cast<int>(mh),
+                upload_mip_raw(static_cast<int>(m - skip), static_cast<int>(mw), static_cast<int>(mh),
                                t->format, src_ptr, src_sz);
                 uploaded_mips++;
             }

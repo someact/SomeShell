@@ -6,8 +6,8 @@ import qs.core
 
 // Each wallpaper's own settings (~/.config/someshell/wallpapers.json), only
 // what differs from the defaults: the Wallpaper Engine properties (`props`),
-// `fit` (fill, fit, stretch, center), `speed`, `fps` and `scale` (0 = the
-// shell's), `pause` rules that override wallpaper.pause. Keyed by the
+// `fit` (fill, fit, stretch, center), `speed`, `fps`, `scale` and `texres`
+// (texture resolution for scenes: 1, 2, 4; 0 = the shell's), `pause` rules that override wallpaper.pause. Keyed by the
 // workshop id ("ws:<id>", so moving the folder or another machine keeps
 // them), else by the path. `describe(path)` reads project.json once (title,
 // kind, properties with their defaults); WallEngine waits for it.
@@ -108,9 +108,9 @@ Singleton {
         });
     }
 
-    // fit, speed, fps, scale, colors ("picture", or "scheme": the colors
+    // fit, speed, fps, scale, texres, colors ("picture", or "scheme": the colors
     // from its `schemecolor`); the default value (or null) removes it
-    readonly property var defaults: ({ fit: "fill", speed: 1, fps: 0, scale: 0, colors: "picture" })
+    readonly property var defaults: ({ fit: "fill", speed: 1, fps: 0, scale: 0, texres: 0, colors: "picture" })
     function setValue(path, name, value) {
         if (!(name in defaults))
             return;

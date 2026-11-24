@@ -269,7 +269,7 @@ bool Scene::load(const fs::path& path) {
 
     vfs_.set_assets_dir(assets_dir_);
     vfs_.mount_wallpaper(path);
-    tex_cache_ = std::make_unique<TextureCache>(vfs_);
+    tex_cache_ = std::make_unique<TextureCache>(vfs_, tex_divisor_);
     shader_cache_ = std::make_unique<ShaderCache>(vfs_);
 
     auto proj_txt = vfs_.read_text("project.json");
@@ -326,7 +326,7 @@ bool Scene::load_video(const fs::path& video_path) {
 
 bool Scene::load_image(const fs::path& image_path) {
     vfs_.mount_wallpaper(image_path.parent_path());
-    tex_cache_ = std::make_unique<TextureCache>(vfs_);
+    tex_cache_ = std::make_unique<TextureCache>(vfs_, tex_divisor_);
     direct_image_ = tex_cache_->load(image_path.filename().string());
     if (!direct_image_) return false;
     mode_ = Mode::Image;

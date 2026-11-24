@@ -121,6 +121,9 @@ public:
     void set_fit(Fit f) { fit_ = f; }
     // Playback speed (0.1..4): scene time and video frame pacing
     void set_speed(float speed);
+    // Texture resolution for the next load: 1 (full), 2 (half), 4 (quarter)
+    void set_texture_divisor(int d) { tex_divisor_ = (d == 2 || d == 4) ? d : 1; }
+    int texture_divisor() const { return tex_divisor_; }
 
     // Steps the wallpaper. True when the picture changed and must be drawn
     // again: always for a scene, only on a new frame for a video, never for an image
@@ -214,6 +217,7 @@ private:
     // Runtime state
     Fit fit_ = Fit::Fill;
     float speed_ = 1.0f;
+    int tex_divisor_ = 1;
     double time_sec_ = 0.0;
     bool paused_ = false;
     glm::vec2 raw_cursor_{0.5f, 0.5f};     // normalized [0,1] top-left

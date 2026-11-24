@@ -44,6 +44,7 @@ void print_usage(const char* argv0) {
               << "  --fit <mode>         fill (default), fit, stretch, center\n"
               << "  --speed <f>          Playback speed 0.1..4 (default: 1)\n"
               << "  --scale <f>          Render scale 0.25..1 (the compositor stretches the picture)\n"
+              << "  --texres <n>         Texture resolution for scenes: 1 full (default), 2 half, 4 quarter\n"
               << "  --hwdec <name>       Video decoding: auto (default), none, cuda, vaapi, vulkan, v4l2m2m\n"
               << "  --windowed [WxH]     Run in an xdg-shell preview window\n"
               << "  --prop <k=v>         Override a Wallpaper Engine user property (repeatable)\n"
@@ -127,6 +128,7 @@ int main(int argc, char** argv) {
     float render_scale = 1.0f;
     std::string fit = "fill";
     float speed = 1.0f;
+    int texres = 1;
     std::string hwdec = std::getenv("SOMEWALL_HWDEC") ? std::getenv("SOMEWALL_HWDEC") : "auto";
 
     for (int i = 1; i < argc; ++i) {
@@ -146,6 +148,8 @@ int main(int argc, char** argv) {
             speed = static_cast<float>(std::atof(argv[++i]));
         } else if (a == "--scale" && i + 1 < argc) {
             render_scale = static_cast<float>(std::atof(argv[++i]));
+        } else if (a == "--texres" && i + 1 < argc) {
+            texres = std::atoi(argv[++i]);
         } else if (a == "--hwdec" && i + 1 < argc) {
             hwdec = argv[++i];
         } else if (a == "--windowed") {
@@ -201,6 +205,7 @@ int main(int argc, char** argv) {
 
     sw::Scene scene;
     scene.set_assets_dir(assets_dir);
+    scene.set_texture_divisor(texres);
 
     if (!wallpaper_path.empty()) {
         if (!scene.load(wallpaper_path)) {
@@ -275,6 +280,7 @@ int main(int argc, char** argv) {
                   << ",\"cursor\":" << (scene.uses_cursor() ? "true" : "false")
                   << ",\"fps\":" << target_fps << ",\"scale\":" << app.render_scale()
                   << ",\"fit\":" << json_str(fit) << ",\"speed\":" << speed
+                  << ",\"texres\":" << scene.texture_divisor()
                   << ",\"paused\":" << (global_paused ? "true" : "false") << extra << "}\n" << std::flush;
     };
 
@@ -317,6 +323,7 @@ int main(int argc, char** argv) {
                     scene.set_fit(sw::Scene::parse_fit(fit));
                 }
                 if (msg.has("speed")) speed = msg["speed"].as_float(1.0f);
+                if (msg.has("texres")) scene.set_texture_divisor(msg["texres"].as_int(1));
                 bool ok = scene.load(p);
                 if (ok) {
                     if (msg["props"].is_object()) {

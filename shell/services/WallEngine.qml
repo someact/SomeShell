@@ -47,13 +47,17 @@ Scope {
     function scaleOf(s) {
         return s.scale || Config.wallpaper.scale;
     }
+    function texresOf(s) {
+        return s.texres || Config.wallpaper.texres || 1;
+    }
     function now() {
         return {
             props: WallSettings.propValues(path),
             fit: settings.fit ?? "fill",
             speed: settings.speed ?? 1,
             fps: fpsOf(settings),
-            scale: scaleOf(settings)
+            scale: scaleOf(settings),
+            texres: texresOf(settings)
         };
     }
 
@@ -70,7 +74,7 @@ Scope {
         }
         const n = now();
         const args = [helper, "--stdin-ipc", "--fps", String(n.fps), "--scale", String(n.scale),
-            "--fit", n.fit, "--speed", String(n.speed), "--hwdec", Config.wallpaper.hwdec || "auto"];
+            "--fit", n.fit, "--speed", String(n.speed), "--texres", String(n.texres), "--hwdec", Config.wallpaper.hwdec || "auto"];
         if (Config.wallpaper.assets)
             args.push("--assets", Config.wallpaper.assets);
         if (outputs.length)
@@ -98,7 +102,7 @@ Scope {
         }
         waiting = "";
         const n = now();
-        send({ cmd: "load", path: p, props: settings.props ?? {}, fit: n.fit, speed: n.speed });
+        send({ cmd: "load", path: p, props: settings.props ?? {}, fit: n.fit, speed: n.speed, texres: n.texres });
         if (!sent || n.fps !== sent.fps)
             send({ cmd: "fps", value: n.fps });
         if (!sent || n.scale !== sent.scale)
@@ -147,6 +151,13 @@ Scope {
         if (!sent || waiting || !proc.running)
             return;
         const n = now();
+        // Textures are made when a scene loads: load it again (with
+        // everything, so nothing else needs sending)
+        if (n.texres !== sent.texres) {
+            send({ cmd: "load", path: path, props: n.props, fit: n.fit, speed: n.speed, texres: n.texres });
+            ready = false;
+            sent = Object.assign({}, n, { fps: sent.fps, scale: sent.scale });
+        }
         for (const k in n.props)
             if (JSON.stringify(n.props[k]) !== JSON.stringify(sent.props[k]))
                 send({ cmd: "set_prop", key: k, value: n.props[k] });
@@ -166,6 +177,7 @@ Scope {
         target: Config.wallpaper
         function onFpsChanged() { eng.applySettings(); }
         function onScaleChanged() { eng.applySettings(); }
+        function onTexresChanged() { eng.applySettings(); }
     }
 
     // Pausing: the shell's rules with this wallpaper's own on top

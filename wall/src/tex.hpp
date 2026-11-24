@@ -71,7 +71,10 @@ struct Texture {
 
 class TextureCache {
 public:
-    explicit TextureCache(const Vfs& vfs) : vfs_(vfs) {}
+    // `divisor`: texture resolution, 1 (full), 2 (half) or 4 (quarter). Large
+    // pictures are kept smaller in memory; their sizes as the scene sees them
+    // (tex_/img_width) stay the same, so UVs and shaders do not change
+    explicit TextureCache(const Vfs& vfs, int divisor = 1) : vfs_(vfs), divisor_(divisor) {}
     ~TextureCache() { clear(); }
 
     // Load a texture by WE material texture name (e.g. "particle/nature/rosepetals"
@@ -92,7 +95,12 @@ private:
     std::unique_ptr<Texture> load_regular_image(const FileSlice& slice);
     std::unique_ptr<Texture> make_solid(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
+    // How many times a picture is halved: 0 for a small one, so masks,
+    // particles and the like stay sharp
+    int halvings(int w, int h) const;
+
     const Vfs& vfs_;
+    int divisor_ = 1;
     std::unordered_map<std::string, std::unique_ptr<Texture>> cache_;
     std::unique_ptr<Texture> white_;
     std::unique_ptr<Texture> black_;

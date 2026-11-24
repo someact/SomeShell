@@ -102,6 +102,9 @@ Singleton {
                 // vaapi, vulkan, v4l2m2m). A wallpaper's own settings win.
                 property int fps: 60
                 property real scale: 1
+                // Texture resolution for scenes: 1 full, 2 half, 4 quarter
+                // (large pictures kept smaller in memory)
+                property int texres: 1
                 property string hwdec: "auto"
                 // When an animated wallpaper stops (per monitor)
                 property JsonObject pause: JsonObject {

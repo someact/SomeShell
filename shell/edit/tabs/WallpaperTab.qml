@@ -13,7 +13,7 @@ import qs.services
 //   come from, the palette.
 //   Chosen: the wallpaper the library's monitor shows: its preview, title,
 //   Reset; Properties (Wallpaper Engine's own), Playback (fit; speed, frame
-//   rate, render scale for animated ones), Pause (each rule: the shell's, on
+//   rate, render scale for animated ones; texture resolution for scenes), Pause (each rule: the shell's, on
 //   or off). Every change records Undo first (Editor.record).
 Item {
     id: root
@@ -98,7 +98,7 @@ Item {
     readonly property bool animated: kind === "scene" || kind === "video"
     readonly property var props: info?.props ?? []
     readonly property int changes: Object.keys(entry.props ?? {}).length + Object.keys(entry.pause ?? {}).length
-        + ["fit", "speed", "fps", "scale", "colors"].filter(k => entry[k] !== undefined).length
+        + ["fit", "speed", "fps", "scale", "texres", "colors"].filter(k => entry[k] !== undefined).length
     onChosenChanged: {
         body.contentY = 0;
         if (Wallpaper.isAnimatedPath(chosen))
@@ -763,6 +763,22 @@ Item {
                             .concat([1, 0.75, 0.5, 0.25].map(n => ({ value: n, label: Math.round(n * 100) + "%" })))
                         value: root.entry.scale ?? 0
                         onPicked: v => root.setValue("scale", v)
+                    }
+                }
+                Line {
+                    visible: root.shownSection === "playback" && root.kind === "scene"
+                    label: "Textures"
+                    changed: root.entry.texres !== undefined
+                    Select {
+                        readonly property var names: ({ 1: "Full", 2: "Half", 4: "Quarter" })
+                        c: root.ink
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 180
+                        height: 34
+                        options: [{ value: 0, label: "Shell (" + (names[Config.wallpaper.texres] ?? "Full") + ")" }]
+                            .concat([1, 2, 4].map(n => ({ value: n, label: names[n] })))
+                        value: root.entry.texres ?? 0
+                        onPicked: v => root.setValue("texres", v)
                     }
                 }
 
