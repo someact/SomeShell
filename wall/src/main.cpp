@@ -23,6 +23,15 @@ namespace fs = std::filesystem;
 
 namespace {
 
+std::string json_quote(const std::string& v) {
+    std::string o = "\"";
+    for (char c : v) {
+        if (c == '"' || c == '\\') o += '\\';
+        o += c;
+    }
+    return o + "\"";
+}
+
 volatile sig_atomic_t g_stop = 0;
 void handle_sig(int) { g_stop = 1; }
 
@@ -196,6 +205,8 @@ int main(int argc, char** argv) {
     if (!wallpaper_path.empty()) {
         if (!scene.load(wallpaper_path)) {
             std::cerr << "[somewall] failed to load wallpaper: " << wallpaper_path << "\n";
+            // The shell reads why from here before the exit
+            std::cout << "{\"event\":\"error\",\"reason\":" << json_quote(scene.error()) << "}\n" << std::flush;
             return 1;
         }
         for (const auto& [k, v] : prop_overrides) {
@@ -315,7 +326,8 @@ int main(int argc, char** argv) {
                 }
                 if (ok && global_paused) scene.set_paused(true);
                 mark_dirty();
-                report("loaded", ok ? ",\"ok\":true" : ",\"ok\":false");
+                std::string extra = ok ? ",\"ok\":true" : ",\"ok\":false,\"reason\":" + json_quote(scene.error());
+                report("loaded", extra.c_str());
             }
         } else if (cmd == "set_prop") {
             std::string k = msg["key"].as_string();

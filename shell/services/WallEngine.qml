@@ -32,10 +32,12 @@ Scope {
     // previous one back). A crash restarts somewall up to three times (the
     // count starts over after two minutes running well); then `gaveUp`, and
     // the still picture shows.
-    signal failed(string path)
+    // `reason`: why, in words, when somewall knows ("" otherwise)
+    signal failed(string path, string reason)
     signal gaveUp(string path)
     property bool stopping: false
     property bool everReady: false
+    property string reason: ""
     property int crashes: 0
     readonly property int maxCrashes: 3
 
@@ -210,7 +212,9 @@ Scope {
                 }
                 if (ev.event === "ready" || ev.event === "loaded" || ev.event === "status")
                     eng.info = ev;
-                if (ev.event === "ready") {
+                if (ev.event === "error") {
+                    eng.reason = ev.reason ?? "";
+                } else if (ev.event === "ready") {
                     eng.ready = true;
                     eng.everReady = true;
                     // A new somewall knows nothing: tell it every monitor's state
@@ -219,7 +223,7 @@ Scope {
                 } else if (ev.event === "loaded") {
                     eng.ready = !!ev.ok;
                     if (!ev.ok)
-                        eng.failed(eng.path);
+                        eng.failed(eng.path, ev.reason ?? "");
                 }
             }
         }
@@ -234,7 +238,8 @@ Scope {
             // did not load (somewall exits 1); no restart
             if (!eng.everReady && status === 0 && code !== 0) {
                 console.warn("somewall could not load", eng.path);
-                eng.failed(eng.path);
+                eng.failed(eng.path, eng.reason);
+                eng.reason = "";
                 return;
             }
             eng.crashes++;

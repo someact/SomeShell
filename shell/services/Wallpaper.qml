@@ -164,12 +164,12 @@ Singleton {
     function titleOf(p) {
         return WallSettings.infos[p]?.title || p.split("/").pop();
     }
-    function engineFailed(p) {
+    function engineFailed(p, reason) {
         // Back to the choice before (unless that is this one too), first: the
         // same somewall then loads it instead of being started again
         const prev = previous;
         const back = prev && JSON.stringify(prev).indexOf(JSON.stringify(p)) < 0;
-        Ui.showAlert("Wallpaper did not load", titleOf(p) + (back ? " · the previous one is back" : ""), "Wallpaper", "broken_image");
+        Ui.showAlert("Wallpaper did not load", titleOf(p) + (reason ? " · " + reason : "") + (back ? " · the previous one is back" : ""), "Wallpaper", "broken_image", { wide: !!reason });
         if (back) {
             reverting = true;
             applyLook(prev, "", "");

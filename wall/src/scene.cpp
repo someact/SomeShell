@@ -243,6 +243,7 @@ void Scene::set_cursor(float norm_x, float norm_y) {
 
 bool Scene::load(const fs::path& path) {
     unload();
+    error_.clear();
     std::error_code ec;
 
     // Direct video or image file
@@ -380,8 +381,12 @@ bool Scene::load_scene(const Json& /*proj_json*/, const std::string& scene_file)
     bloom_threshold_ = gen["bloomthreshold"].as_float(0.65f);
     bloom_strength_ = resolve_binding(parse_binding(gen["bloomstrength"])).as_float(1.0f);
 
-    // Objects
+    // Objects. Those whose shader is missing are dropped; without the
+    // assets/ folder that is every object on Wallpaper Engine's stock shaders
+    int no_shader = 0;
+    size_t listed = 0;
     for (const auto& oj : sj["objects"].as_array()) {
+        if (oj.is_object()) ++listed;
         if (!oj.is_object()) continue;
 
         SceneObject obj;
@@ -511,7 +516,10 @@ bool Scene::load_scene(const Json& /*proj_json*/, const std::string& scene_file)
             }
 
             obj.shader = shader_cache_->get(shader_name, combos);
-            if (!obj.shader) continue;
+            if (!obj.shader) {
+                ++no_shader;
+                continue;
+            }
 
             // Parse optional multi-pass effects chain on this image object
             for (const auto& fxj : oj["effects"].as_array()) {
@@ -588,6 +596,20 @@ bool Scene::load_scene(const Json& /*proj_json*/, const std::string& scene_file)
 
             objects_.push_back(std::move(obj));
         }
+    }
+
+    // A scene that would draw only part of itself (or nothing) is a failed
+    // load, so the previous wallpaper comes back instead of a bare clear color
+    if (no_shader > 0 && assets_dir_.empty()) {
+        error_ = "needs Wallpaper Engine's assets folder";
+    } else if (objects_.empty() && listed > 0) {
+        error_ = "nothing in it could be drawn";
+    }
+    if (!error_.empty()) {
+        std::cerr << "[scene] " << error_ << " (" << objects_.size() << " of " << listed
+                  << " objects, " << no_shader << " without a shader)\n";
+        objects_.clear();
+        return false;
     }
 
     mode_ = Mode::Scene;

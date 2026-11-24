@@ -140,6 +140,9 @@ public:
     bool is_loaded() const { return mode_ != Mode::None; }
     std::string title() const { return title_; }
     std::string type() const { return type_str_; }
+    // Why the last load failed, in words for the user ("" when it did not fail
+    // or there is nothing more to say)
+    std::string error() const { return error_; }
 
 private:
     enum class Mode { None, Scene, Video, Image };
@@ -169,6 +172,7 @@ private:
     Mode mode_ = Mode::None;
     std::string title_;
     std::string type_str_;
+    std::string error_;
     std::filesystem::path assets_dir_;
 
     // User properties from project.json + runtime overrides
