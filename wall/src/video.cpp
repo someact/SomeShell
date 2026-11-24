@@ -390,7 +390,27 @@ bool VideoDecoder::open_codec(bool try_hw) {
         return ctx;
     };
 
+    hw_ = false;
     if (try_hw) {
+#if defined(__aarch64__) || defined(__arm__)
+        // SoCs (Snapdragon venus and the like) decode through V4L2 memory-to-memory.
+        // First: a Vulkan driver there (turnip) opens a device without video decode
+        if (g_hwdec_pref == "auto" || g_hwdec_pref == "v4l2m2m") {
+            std::string name = std::string(codec->name) + "_v4l2m2m";
+            if (const AVCodec* m2m = avcodec_find_decoder_by_name(name.c_str())) {
+                AVCodecContext* ctx = make_ctx(m2m);
+                if (avcodec_open2(ctx, m2m, nullptr) == 0) {
+                    impl_->dec = ctx;
+                    hw_ = true;
+                    set_decoder_name(name);
+                    std::cerr << "[video] decoding " << name << ", " << st->codecpar->width << "x"
+                              << st->codecpar->height << " @ " << fps_ << " fps\n";
+                    return true;
+                }
+                avcodec_free_context(&ctx);
+            }
+        }
+#endif
         for (AVHWDeviceType type : hw_order()) {
             AVPixelFormat fmt = AV_PIX_FMT_NONE;
             for (int i = 0;; ++i) {
@@ -412,30 +432,15 @@ bool VideoDecoder::open_codec(bool try_hw) {
                 impl_->dec = ctx;
                 impl_->hw_device = dev;
                 impl_->hw_fmt = fmt;
-                decoder_name_ = std::string(codec->name) + " (" + av_hwdevice_get_type_name(type) + ")";
-                std::cerr << "[video] decoding " << decoder_name_ << ", " << st->codecpar->width << "x"
+                hw_ = true;
+                set_decoder_name(std::string(codec->name) + " (" + av_hwdevice_get_type_name(type) + ")");
+                std::cerr << "[video] decoding " << decoder_name() << ", " << st->codecpar->width << "x"
                           << st->codecpar->height << " @ " << fps_ << " fps\n";
                 return true;
             }
             avcodec_free_context(&ctx);
             av_buffer_unref(&dev);
         }
-#if defined(__aarch64__) || defined(__arm__)
-        // SoCs (Snapdragon venus and the like) decode through V4L2 memory-to-memory
-        if (g_hwdec_pref == "auto" || g_hwdec_pref == "v4l2m2m") {
-            std::string name = std::string(codec->name) + "_v4l2m2m";
-            if (const AVCodec* m2m = avcodec_find_decoder_by_name(name.c_str())) {
-                AVCodecContext* ctx = make_ctx(m2m);
-                if (avcodec_open2(ctx, m2m, nullptr) == 0) {
-                    impl_->dec = ctx;
-                    decoder_name_ = name;
-                    std::cerr << "[video] decoding " << decoder_name_ << "\n";
-                    return true;
-                }
-                avcodec_free_context(&ctx);
-            }
-        }
-#endif
     }
 
     AVCodecContext* ctx = make_ctx(codec);
@@ -448,8 +453,8 @@ bool VideoDecoder::open_codec(bool try_hw) {
         return false;
     }
     impl_->dec = ctx;
-    decoder_name_ = std::string(codec->name) + " (cpu)";
-    std::cerr << "[video] decoding " << decoder_name_ << ", " << st->codecpar->width << "x"
+    set_decoder_name(std::string(codec->name) + " (cpu)");
+    std::cerr << "[video] decoding " << decoder_name() << ", " << st->codecpar->width << "x"
               << st->codecpar->height << " @ " << fps_ << " fps\n";
     return true;
 }
@@ -493,6 +498,11 @@ void VideoDecoder::close() {
     gl_w_ = gl_h_ = 0;
 }
 
+void VideoDecoder::set_decoder_name(std::string name) {
+    std::lock_guard<std::mutex> lk(name_mtx_);
+    decoder_name_ = std::move(name);
+}
+
 void VideoDecoder::set_paused(bool paused) {
     {
         std::lock_guard<std::mutex> lk(pause_mtx_);
@@ -523,7 +533,7 @@ void VideoDecoder::decode_loop() {
 
     // The hardware refused this stream before its first frame: start over on the CPU
     auto fall_back = [&]() {
-        std::cerr << "[video] " << decoder_name_ << " failed, decoding on the CPU\n";
+        std::cerr << "[video] " << decoder_name() << " failed, decoding on the CPU\n";
         av_seek_frame(impl_->fmt, impl_->vidx, 0, AVSEEK_FLAG_BACKWARD);
         if (!open_codec(false)) running_.store(false);
         hw_errors = 0;
@@ -556,7 +566,7 @@ void VideoDecoder::decode_loop() {
         ret = avcodec_send_packet(impl_->dec, pkt);
         av_packet_unref(pkt);
         if (ret < 0 && ret != AVERROR(EAGAIN)) {
-            if (impl_->hw_device && frames_out == 0 && ++hw_errors >= 3) fall_back();
+            if (hw_ && frames_out == 0 && ++hw_errors >= 3) fall_back();
             continue;
         }
 
@@ -564,7 +574,15 @@ void VideoDecoder::decode_loop() {
             ret = avcodec_receive_frame(impl_->dec, frame);
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) break;
             if (ret < 0) {
-                if (impl_->hw_device && frames_out == 0 && ++hw_errors >= 3) fall_back();
+                if (hw_ && frames_out == 0 && ++hw_errors >= 3) fall_back();
+                break;
+            }
+
+            // The device opened but hands back software frames (no decode for this
+            // stream, e.g. Vulkan without video queues): decode on the CPU properly
+            if (impl_->hw_device && frames_out == 0 && frame->format != impl_->hw_fmt) {
+                av_frame_unref(frame);
+                fall_back();
                 break;
             }
 

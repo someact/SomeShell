@@ -24,7 +24,7 @@ struct DecodedImage {
 bool decode_image_memory(const uint8_t* data, size_t size, DecodedImage& out);
 
 // How video is decoded: "auto" picks a hardware device (CUDA when GL runs on
-// NVIDIA, else VAAPI, then Vulkan; V4L2 m2m on aarch64), "none" forces the CPU,
+// NVIDIA, else VAAPI, then Vulkan; on aarch64 V4L2 m2m first), "none" forces the CPU,
 // or one name. Set once at start (--hwdec, SOMEWALL_HWDEC).
 void set_hwdec_preference(const std::string& pref, const std::string& gl_vendor);
 
@@ -61,7 +61,11 @@ public:
     int height() const { return height_; }
     double fps() const { return fps_; }
     // The decoder in use, e.g. "h264 (cuda)" or "hevc (cpu)"
-    const std::string& decoder_name() const { return decoder_name_; }
+    // (set again by the decode thread when it falls back to the CPU)
+    std::string decoder_name() const {
+        std::lock_guard<std::mutex> lk(name_mtx_);
+        return decoder_name_;
+    }
 
 private:
     struct Impl;
@@ -70,6 +74,7 @@ private:
     bool open_codec(bool try_hw);
     void decode_loop();
     void ensure_gl_resources(int w, int h, bool semi_planar, bool wide);
+    void set_decoder_name(std::string name);
 
     std::thread thread_;
     std::atomic<bool> running_{false};
@@ -86,7 +91,10 @@ private:
     int width_ = 0;
     int height_ = 0;
     double fps_ = 30.0;
+    mutable std::mutex name_mtx_;
     std::string decoder_name_;
+    // Decoding on hardware (a device or V4L2 m2m): errors before the first frame fall back to the CPU
+    bool hw_ = false;
 
     // GL resources (owned by GL thread)
     GLuint y_tex_ = 0;
