@@ -34,14 +34,16 @@ Item {
         visible: !root.plain
         readonly property real e: Theme.shape.ear
         x: -e
-        width: e
+        // 1 px into the tab: edge-to-edge shapes leave an antialiased seam
+        width: e + 1
         height: e
         preferredRendererType: Shape.CurveRenderer
         ShapePath {
             fillColor: Theme.ink.bg
             strokeWidth: -1
             startX: 0; startY: 0
-            PathLine { x: Theme.shape.ear; y: 0 }
+            PathLine { x: Theme.shape.ear + 1; y: 0 }
+            PathLine { x: Theme.shape.ear + 1; y: Theme.shape.ear }
             PathLine { x: Theme.shape.ear; y: Theme.shape.ear }
             PathCubic { x: 0; y: 0; control1X: Theme.shape.ear; control1Y: Theme.shape.ear * 0.4477; control2X: Theme.shape.ear * 0.5523; control2Y: 0 }
         }

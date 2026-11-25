@@ -197,7 +197,9 @@ Item {
             readonly property real e: Theme.shape.ear
             x: index === 0 ? -e : root.width
             y: 0
-            width: e
+            // 1 px wider, under the body: two shapes meeting edge to edge
+            // leave an antialiased seam the wallpaper shows through
+            width: e + 1
             height: e
             preferredRendererType: Shape.CurveRenderer
             transform: Scale { xScale: index === 0 ? 1 : -1; origin.x: e / 2 }
@@ -205,7 +207,8 @@ Item {
                 fillColor: Theme.ink.bg
                 strokeWidth: -1
                 startX: 0; startY: 0
-                PathLine { x: e; y: 0 }
+                PathLine { x: e + 1; y: 0 }
+                PathLine { x: e + 1; y: e }
                 PathLine { x: e; y: e }
                 // Quarter circle centred on the ear's bottom-left corner: the tab
                 // side flows into the screen edge

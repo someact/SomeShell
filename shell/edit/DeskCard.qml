@@ -187,7 +187,8 @@ Item {
                         required property int index
                         readonly property real e: Theme.shape.ear
                         x: index === 0 ? -e : islandShape.width
-                        width: e
+                        // 1 px under the tab: no antialiased seam between them
+                        width: e + 1
                         height: e
                         preferredRendererType: Shape.CurveRenderer
                         transform: Scale { xScale: index === 0 ? 1 : -1; origin.x: e / 2 }
@@ -195,7 +196,8 @@ Item {
                             fillColor: Theme.ink.bg
                             strokeWidth: -1
                             startX: 0; startY: 0
-                            PathLine { x: e; y: 0 }
+                            PathLine { x: e + 1; y: 0 }
+                            PathLine { x: e + 1; y: e }
                             PathLine { x: e; y: e }
                             PathCubic { x: 0; y: 0; control1X: e; control1Y: e * 0.4477; control2X: e * 0.5523; control2Y: 0 }
                         }
