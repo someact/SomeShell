@@ -387,6 +387,9 @@ Scope {
         // The separate dock with Notch and Plain: on/off, auto-hide, pin a desktop id
         function dock(on: bool): void { Desktop.dock.enabled = on; }
         function dockAutoHide(on: bool): void { Desktop.dock.autoHide = on; }
+        // The extra dock buttons (either bar): the overview and the trash
+        function dockOverview(on: bool): void { Desktop.dock.overview = on; }
+        function dockTrash(on: bool): void { Desktop.dock.trash = on; }
         function pin(id: string): void {
             const p = Desktop.dock.pinned.slice();
             const at = p.indexOf(id);

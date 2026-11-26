@@ -85,6 +85,7 @@ PanelWindow {
             }
             DockApps {
                 anchors.verticalCenter: parent.verticalCenter
+                monitorName: win.monitor?.name ?? ""
             }
             Item {
                 id: islandSlot

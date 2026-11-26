@@ -93,11 +93,9 @@ Flickable {
             }
         }
 
-        // ── Dock (its own bar only with the Notch and Plain styles) ──
-        SetSection {
-            visible: Desktop.style !== "dock"
-            text: "Dock"
-        }
+        // ── Dock (its own bar only with the Notch and Plain styles; the
+        // extra buttons go in whichever bar is there) ──
+        SetSection { text: "Dock" }
         SetRow {
             visible: Desktop.style !== "dock"
             label: "Show the dock"
@@ -112,6 +110,24 @@ Flickable {
             Switch {
                 checked: Desktop.dock.autoHide
                 onToggled: on => Desktop.dock.autoHide = on
+            }
+        }
+        SetRow {
+            visible: Desktop.style === "dock" || Desktop.dock.enabled
+            label: "Overview button"
+            hint: "Opens the workspace overview, like Super+Tab."
+            Switch {
+                checked: Desktop.dock.overview
+                onToggled: on => Desktop.dock.overview = on
+            }
+        }
+        SetRow {
+            visible: Desktop.style === "dock" || Desktop.dock.enabled
+            label: "Trash can"
+            hint: "Click opens the trash, drop files on it to trash them, right click twice empties it."
+            Switch {
+                checked: Desktop.dock.trash
+                onToggled: on => Desktop.dock.trash = on
             }
         }
 

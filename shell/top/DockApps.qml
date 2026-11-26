@@ -9,11 +9,13 @@ import qs.services
 // ids), then the others that have a window open. A dot under an icon means it
 // is running, a line that it has the focus. Click: launch, or focus its window
 // (again: the next window). Middle click: a new window. Right click: pin/unpin.
+// Optional extras (Desktop.dock): the overview button first, the trash last.
 Row {
     id: root
 
     property int iconSize: 30
     property int cellSize: 42
+    property string monitorName: ""
     spacing: 4
 
     function keyOf(appId) {
@@ -66,6 +68,32 @@ Row {
         }
         const at = app.windows.findIndex(w => w.activated);
         app.windows[(at + 1) % app.windows.length].activate();
+    }
+
+    // The overview (Super+Tab), opened on this dock's monitor
+    Item {
+        visible: Desktop.dock.overview
+        width: root.cellSize
+        height: root.cellSize
+        Rectangle {
+            anchors.fill: parent
+            radius: 12
+            color: ovMouse.pressed ? Theme.ink.fg : ovMouse.containsMouse || Ui.overview ? Theme.ink.raised : "transparent"
+        }
+        Icon {
+            anchors.centerIn: parent
+            name: "view_carousel"
+            filled: Ui.overview
+            size: 24
+            color: ovMouse.pressed ? Theme.ink.bg : Theme.ink.fg
+        }
+        MouseArea {
+            id: ovMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: Ui.overview ? Ui.closeOverview() : Ui.openOverview(root.monitorName)
+        }
     }
 
     Repeater {
@@ -126,5 +154,19 @@ Row {
                 }
             }
         }
+    }
+
+    // A thin line before the trash, as long as something stands before it
+    Rectangle {
+        visible: Desktop.dock.trash && (Desktop.dock.overview || root.apps.length > 0)
+        anchors.verticalCenter: parent.verticalCenter
+        width: 1
+        height: root.cellSize - 16
+        color: Theme.ink.line
+    }
+    DockTrash {
+        visible: Desktop.dock.trash
+        iconSize: root.iconSize
+        cellSize: root.cellSize
     }
 }

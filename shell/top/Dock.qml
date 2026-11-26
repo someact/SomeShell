@@ -102,6 +102,7 @@ PanelWindow {
         DockApps {
             id: apps
             anchors.centerIn: parent
+            monitorName: win.monitor?.name ?? ""
         }
         // A finger on the bar keeps a touch-shown dock up a while longer
         PointHandler {

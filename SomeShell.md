@@ -258,7 +258,7 @@ One edit mode for the whole desktop, like a phone home screen. Open it with `/ed
 - The desktop zooms out a little and a grid appears.
 - **Widgets:** a drawer at the bottom, drag a widget onto the desktop, it snaps to the grid, pull to resize.
 - **Island:** choose a style, position (top center, top left…) and what it shows when resting.
-- **Dock:** on/off, position, auto-hide, pinned apps.
+- **Dock:** on/off, position, auto-hide, pinned apps (pick one to move it or unpin it), and two optional buttons in either dock bar: the overview (first) and a trash can (last; click opens it, drop files on it, right click twice empties it). The buttons are also switches in Settings → General (user, 2026-11-26).
 - **Wallpaper:** swipe through wallpapers right there, the colors update live.
 - **Workspaces:** name each workspace and design what its island shows (section 3.3).
 

@@ -26,7 +26,7 @@ Singleton {
     function snapshot() {
         return {
             island: { style: island.style, color: island.color },
-            dock: { enabled: dock.enabled, autoHide: dock.autoHide, pinned: dock.pinned.slice() },
+            dock: { enabled: dock.enabled, autoHide: dock.autoHide, pinned: dock.pinned.slice(), overview: dock.overview, trash: dock.trash },
             control: JSON.parse(JSON.stringify(control)),
             widgets: JSON.parse(JSON.stringify(widgets)),
             workspaces: JSON.parse(JSON.stringify(workspaces))
@@ -45,6 +45,8 @@ Singleton {
         dock.enabled = k.enabled;
         dock.autoHide = k.autoHide;
         dock.pinned = k.pinned;
+        dock.overview = k.overview;
+        dock.trash = k.trash;
         control = look?.control ?? d.control;
         widgets = look?.widgets ?? d.widgets;
         workspaces = look?.workspaces ?? d.workspaces;
@@ -56,7 +58,7 @@ Singleton {
     function defaults() {
         return {
             island: { style: "notch", color: "ink" },
-            dock: { enabled: false, autoHide: true, pinned: [] },
+            dock: { enabled: false, autoHide: true, pinned: [], overview: false, trash: false },
             control: [],
             widgets: [],
             workspaces: []
@@ -92,6 +94,9 @@ Singleton {
                 property bool enabled: false
                 property bool autoHide: true
                 property var pinned: []          // desktop entry ids
+                // Extra buttons in either dock bar: the overview (first) and the trash (last)
+                property bool overview: false
+                property bool trash: false
             }
             // Control tiles in order: [{ id, size: "1x1" | "2x1" | "2x2" }]; empty = the default layout
             property var control: []
