@@ -23,7 +23,8 @@ SomeShell Reimagined (`../SomeShell-Reimagined`) is a fork; its `scripts/switch.
 6. Animated wallpapers (videos, Wallpaper Engine scenes): `wall/install.sh` builds somewall into `~/.local/lib/someshell/`; a Wallpaper Engine wallpaper is its folder (with `project.json`) dropped into the wallpaper folder as it came (from steamcmd or another machine; `lib/wallpapers.sh` lists them); scenes also need Wallpaper Engine's `assets/` folder (Steam paths are found; elsewhere `wall/install.sh --assets <dir>`, never commit it).
 7. Quick Share (machines with Bluetooth): `share/install.sh` builds the helper into `~/.local/lib/someshell/` (obexd comes with `bluez`); restart the shell.
 8. Login screen (machines with SDDM): `sudo sddm/install.sh`.
-9. Check: `hyprctl configerrors` (empty), `qs -c someshell ipc call island state`, `qs -c someshell ipc call control state`.
+9. Tablet sound (Qualcomm): the userspace `pd-mapper` service can start after the ADSP boots, and then there is no sound card (only "Dummy Output"; `snd-sm8250` stays in deferred probe). Use the kernel's mapper instead: `echo qcom_pd_mapper | sudo tee /etc/modules-load.d/qcom-pd-mapper.conf`, `sudo systemctl disable pd-mapper`. To fix it without a reboot: stop `pd-mapper`, `modprobe qcom_pd_mapper`, then write `stop` and `start` to the ADSP's `/sys/class/remoteproc/*/state`.
+10. Check: `hyprctl configerrors` (empty), `qs -c someshell ipc call island state`, `qs -c someshell ipc call control state`.
 
 ## The old version (v1)
 - Archived as tag `archive/shell-v1`. Since 2026-11-02 this machine runs the new version (links point at this repo); the detached worktree `../SomeShell-v1` stays as the rollback for now. Never edit or commit in that worktree.
