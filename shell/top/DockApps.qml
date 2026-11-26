@@ -91,7 +91,6 @@ Row {
                 height: root.iconSize
                 source: Quickshell.iconPath(cell.modelData.entry?.icon ?? "", true)
                 sourceSize: Qt.size(root.iconSize * 2, root.iconSize * 2)
-                asynchronous: true
             }
             Icon {
                 anchors.centerIn: parent
